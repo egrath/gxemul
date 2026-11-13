@@ -362,6 +362,11 @@ struct alpha_cpu {
 	uint32_t		astrr, aster;	/*  <3:0>: K, E, S, U  */
 	int			sl_rcv;
 	int			sl_xmit;
+	/*  Serial line output, decoded from SL_XMIT (see ev4_sl_xmit()):  */
+	int			sl_state;
+	int			sl_char;
+	char			sl_line[160];
+	int			sl_line_len;
 	int			crd_pending;
 	int			slr_pending;
 

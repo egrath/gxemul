@@ -226,9 +226,21 @@ static void tb_fill(struct cpu *cpu, struct ev4_tb_entry *e, uint64_t pte,
 }
 
 /*  TB entries in the read format of ITB_PTE_TEMP and DTB_PTE_TEMP:  */
+/*
+ *  An entry as read through ITB_PTE/DTB_PTE (into ITB_PTE_TEMP/DTB_PTE_TEMP).
+ *  An invalidated entry reads as zero: the console PALcode of the Avanti
+ *  SRM V7.0 tells a pass 1 21064 from later ones by writing an ITB entry,
+ *  flushing the ITB (ITBZAP) and reading the entry back; a pass 1 chip
+ *  returns the PFN it was written with, a production chip doesn't (the
+ *  PALcode records the CPU as a pass 1, and halts: "PALcode is not built
+ *  for this CPU chip version").
+ */
 static uint64_t tb_read_format(struct ev4_tb_entry *e, int istream)
 {
 	uint64_t x = (e->pfn << 13) | ((uint64_t)e->asm_bit << 34);
+
+	if (!e->valid)
+		return 0;
 
 	x |= ((e->prot >> 8) & 0xf) << 9;		/*  xRE  */
 	if (!istream) {
@@ -733,6 +745,58 @@ uint64_t ev4_cycles(struct cpu *cpu)
 	return c;
 }
 
+/*
+ *  ev4_sl_xmit():
+ *
+ *  The serial line (the SROM port's TxD, SL_XMIT) as a 1-start, 8-data,
+ *  1-stop character stream, for what serial ROM and diagnostic code (such
+ *  as the Avanti DROM) print on it. The software bit-bangs it with delay
+ *  loops, writing SL_XMIT once for each bit time, so the writes are decoded
+ *  by counting them: a 0 when idle starts a character, the next eight are
+ *  the data bits (least significant first), and a 1 stops it. The output
+ *  goes to the "srom" log subsystem, a line at a time.
+ */
+static void ev4_sl_xmit(struct cpu *cpu, int bit)
+{
+	static int srom_subsys = -1;
+	struct alpha_cpu *a = &cpu->cd.alpha;
+	int c;
+
+	if (a->sl_state == 0) {
+		if (bit == 0) {
+			a->sl_state = 1;
+			a->sl_char = 0;
+		}
+		return;
+	}
+
+	if (a->sl_state <= 8) {
+		a->sl_char |= bit << (a->sl_state - 1);
+		a->sl_state ++;
+		return;
+	}
+
+	/*  The stop bit:  */
+	a->sl_state = 0;
+	if (bit == 0)
+		return;
+
+	c = a->sl_char;
+	if (c == '\r')
+		return;
+	if (c != '\n' && a->sl_line_len < (int) sizeof(a->sl_line) - 1) {
+		a->sl_line[a->sl_line_len++] = (c >= 32 && c < 127)? c : '.';
+		if (a->sl_line_len < (int) sizeof(a->sl_line) - 1)
+			return;
+	}
+
+	if (srom_subsys < 0)
+		srom_subsys = debugmsg_register_subsystem("srom");
+	a->sl_line[a->sl_line_len] = '\0';
+	debugmsg(srom_subsys, "srom", VERBOSITY_INFO, "%s\n", a->sl_line);
+	a->sl_line_len = 0;
+}
+
 uint64_t ev4_read_cc(struct cpu *cpu)
 {
 	uint32_t count = cpu->cd.alpha.cc_base;
@@ -954,6 +1018,7 @@ void ev4_mtpr(struct cpu *cpu, int ipr, uint64_t value, int unused)
 			break;
 		case EV4_IPR_SL_XMIT:
 			a->sl_xmit = (value >> 4) & 1;
+			ev4_sl_xmit(cpu, a->sl_xmit);
 			break;
 		default:
 			debugmsg_cpu(cpu, SUBSYS_CPU, "ipr",
