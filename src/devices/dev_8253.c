@@ -27,16 +27,21 @@
  *
  *  COMMENT: Intel 8253/8254 Programmable Interval Timer
  *
- *  Timer 0 causes clock interrupts at its frequency.  The counters don't
- *  count down: reading one gives the value that was loaded.  Each counter
- *  has its own access mode (LSB, MSB or both) and byte order, and the
- *  counter latch and 8254 read-back commands latch counts.  Nothing is
- *  done with counters 1 and 2 (DMA refresh and the speaker tone).
+ *  Timer 0 causes clock interrupts at its frequency.  On machines that ask
+ *  for it ("name2=counting"), counters 0 and 2 count down at 1.193182 MHz in
+ *  host time, as the CPU's cycle counter does on machines that know their
+ *  clock rate, so firmware that times the CPU against them finds that rate;
+ *  otherwise, and for counter 1 (DMA refresh), a counter reads back the
+ *  value loaded (see pit_count()).  Each counter has its own access mode
+ *  (LSB, MSB or both) and byte order, and the counter latch and 8254
+ *  read-back commands latch counts.  Counter 2 makes no tone, and its
+ *  output isn't emulated.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "cpu.h"
 #include "device.h"
@@ -58,6 +63,7 @@
 
 struct pit8253_data {
 	int		in_use;
+	int		counting;	/*  counters 0 and 2 count down  */
 
 	int		mode[3];
 	int		counter[3];		/*  reload value  */
@@ -71,6 +77,11 @@ struct pit8253_data {
 	int		read_msb_next[3];
 	int		latched[3];
 	int		latch_value[3];
+
+	/*  Counting (see pit_count()): when the counter was loaded, and how
+	    many times it had reached zero when it was last read.  */
+	struct timeval	load_time[3];
+	uint64_t	zeros_shown[3];
 
 	struct timer	*timer0;
 	struct interrupt irq;
@@ -102,21 +113,63 @@ DEVICE_TICK(8253)
 
 
 /*
- *  The current count of a counter.  The counters don't count down: this is
- *  the value that was loaded.  (Firmware tests such as the Jensen ARC
- *  console's "Timer 1" check expect the count read back soon after loading
- *  to be close to the loaded value, which host-time counting at the
- *  emulator's speed does not give.)
+ *  The current count of a counter: counters 0 and 2 count down from the
+ *  value loaded at 1.193182 MHz in host time. In mode 3 (square wave) the
+ *  count goes down by two, from the even value at or below the one loaded,
+ *  and shows zero for one clock as it reloads; firmware that waits for zero
+ *  by polling (as the Avanti DROM does to time the CPU) would miss that one
+ *  clock between the reads of an emulated loop, so a zero not yet shown is
+ *  returned by the next read. In mode 2, the count goes from the value
+ *  loaded down to 1; in the one-shot modes, it runs down through zero.
+ *
+ *  Counter 1 (DMA refresh), and all counters on machines that don't ask for
+ *  counting, read back the value loaded: firmware tests such as the Jensen
+ *  ARC console's "Timer 1" check expect the count read back soon after
+ *  loading to be close to the loaded value, which host-time counting at the
+ *  emulator's speed does not give, and with counters 0 and 2 counting, the
+ *  Jensen's ARC console finds its EISA configuration inconsistent.
  */
 static int pit_count(struct pit8253_data *d, int c)
 {
-	return d->counter[c] & 0xffff;
+	uint64_t n = d->counter[c] & 0xffff, t, zeros;
+	struct timeval now;
+
+	if (c == 1 || !d->counting)
+		return n;
+
+	if (n == 0)
+		n = 65536;
+
+	gettimeofday(&now, NULL);
+	t = (uint64_t) ((now.tv_sec - d->load_time[c].tv_sec) * 1e6 +
+	    (now.tv_usec - d->load_time[c].tv_usec)) * I8253_TIMER_FREQ /
+	    1000000;
+
+	switch (d->mode[c] & 6) {
+	case I8253_TIMER_SQWAVE & 6:
+		n &= ~1;
+		if (n == 0)
+			n = 65536;
+		zeros = t * 2 / n;
+		if (zeros > d->zeros_shown[c]) {
+			d->zeros_shown[c] = zeros;
+			return 0;
+		}
+		return (n - (t * 2) % n) & 0xffff;
+	case I8253_TIMER_RATEGEN & 6:
+		return n - t % n;
+	default:
+		return (n - t) & 0xffff;
+	}
 }
 
 
 /*  A new reload value has been written to counter c:  */
 static void pit_load(struct pit8253_data *d, int c)
 {
+	gettimeofday(&d->load_time[c], NULL);
+	d->zeros_shown[c] = 0;
+
 	if (d->counter[c] != 0)
 		d->hz[c] = (int) (I8253_TIMER_FREQ / (float) d->counter[c] + 0.5);
 	else
@@ -271,6 +324,8 @@ DEVINIT(8253)
 	memset(d, 0, sizeof(struct pit8253_data));
 
 	d->in_use = devinit->in_use;
+	d->counting = devinit->name2 != NULL &&
+	    strcmp(devinit->name2, "counting") == 0;
 
 	INTERRUPT_CONNECT(devinit->interrupt_path, d->irq);
 

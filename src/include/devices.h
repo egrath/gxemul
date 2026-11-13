@@ -170,6 +170,23 @@ void dev_jensen_set_rom(struct jensen_data *d, const unsigned char *image,
 	size_t len);
 uint64_t dev_jensen_srom(struct jensen_data *d, struct cpu *cpu);
 
+/*  dev_apecs.c:  */
+struct apecs_data;
+struct pci_data;
+struct apecs_data *dev_apecs_init(struct machine *machine, struct memory *mem,
+	uint64_t io_base, uint64_t mem_base, const char *pci_irq_path,
+	const char *isa_irq_path);
+struct pci_data *dev_apecs_pci(struct apecs_data *d);
+void dev_apecs_set_memory(struct apecs_data *d, uint64_t ram_size);
+
+/*  dev_avanti.c:  */
+struct avanti_data;
+struct avanti_data *dev_avanti_init(struct machine *machine,
+	struct memory *mem, uint64_t ram_size, const char *cpu_irq);
+void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
+	const unsigned char *drom);
+uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu);
+
 struct dec_ioasic_data *dev_dec_ioasic_init(struct cpu *cpu, struct memory *mem, uint64_t baseaddr, int rackmount_flag, struct interrupt* irq);
 
 /*  dev_asc.c:  */

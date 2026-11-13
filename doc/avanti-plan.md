@@ -68,12 +68,12 @@ and a few ABOX/BIU differences, a small step later.
                                       | ISA
      +--------------------------------+---------------------------+
      | SIO: 2x 8259, 8254, 2x 8237 DMA, PIRQ routing, X-bus        |
-     | Super I/O (PC87312 (verify)): 2x 16550, LPT, 82077 floppy   |
+     | Super I/O (PC87312): 2x 16550, LPT, 82077 floppy            |
      | 8242 keyboard and mouse, MC146818 RTC, 1 MB flash (SRM+ARC) |
      +-------------------------------------------------------------+
 ```
 
-### Physical address map (from Linux `core_apecs.h` (verify))
+### Physical address map (as the DROM and SRM use it; NetBSD `apecsreg.h`)
 
 | Address | |
 |---------|--|
@@ -128,7 +128,7 @@ SRM writes). The 8254 timer is the system clock (IRQ 0). Error interrupts
    X-bus chip selects (which enable the RTC, keyboard, flash, ...), and
    its 8237 without the EISA extensions.
 3. The Super I/O's configuration registers (index/data at 398h (verify)).
-4. The flash (28F008SA (verify)), programmable from SRM, kept in a file as
+4. The flash (four 28F020), programmable from SRM, kept in a file as
    on the Jensen.
 5. **NCR 53C810** (PCI 1000:0001): the biggest piece. The register layout
    differs from the 710, and the SCRIPTS set adds things (memory move,
@@ -231,7 +231,51 @@ it decompresses the console.
 
 ---
 
-## 6. Risks
+## 6. Status (2026-11-13)
+
+**M1 done, M2 mostly:** the real DROM V1.7 runs all its power-up tests
+and starts SRM V7.0-9 from the flash, which comes up to `>>>` on COM1;
+`show config` shows the 21064-3 at 166 MHz, 64 MB, the NCR 810 in PCI slot
+6 (`pka0`) and the SIO in slot 7, and the ISA devices. Run it with
+`"machine": { "type": "avanti" }` and the ROM file (the five chip dumps
+concatenated, `cat E13 E19 E33 E46 E47`).
+
+What it took (`dev_avanti.c`, `dev_apecs.c`):
+
+- **The serial ROM handoff:** the DROM's code (after its header) in memory
+  at 8000, which is also the PAL base, started in PALmode; PAL_TEMP14 and
+  PAL_TEMP18 hold ABOX_CTL and BIU_CTL; 2 at physical 70 makes the DROM
+  time the CPU (166 MHz).
+- **The ROM bus** at 1.0000.0000 (address latch, `address << 8`) and
+  1.0010.0000 (data byte); address bit 23 set for a write. Flash at 0,
+  "NVRAM on WART" at 10.0000 (8 KB so far; the SRM's ISA configuration
+  table), progress display at 14.0000, jumpers at 1C.0000 (bit 0: boot the
+  console, bit 1: clear runs a B-cache test and the floppy loader).
+- **The DROM's tests** (its strings, decoded from the code, are in its
+  monitor's command list): memory, flash ID, WART NVRAM, 53C810 (SCRATCHB
+  through configuration space 0xdc: the 810 mirrors its operating
+  registers at 80h..FFh), 82378 (configuration register 45h), "3287", 8242,
+  87312, interrupts (the RTC's periodic interrupt on **EV4 irq_h[4]**, a
+  line of its own).
+- **PCI configuration addresses** are `device << 11 | function << 8 | reg`
+  for bus 0 too (the EPIC drives IDSEL); reads return the whole longword.
+- **COMANCHE banksets** set up as the serial ROM does (the SRM sizes memory
+  from them; with none, it machine checks past the end of memory): base
+  address and configuration registers from the 21071 data sheet. COMANCHE
+  ED and EPIC DCSR report pass 2.
+- **8254:** counters 0 and 2 count in host time, on this machine only (the
+  DROM times the CPU with counter 0; on the Jensen, counting makes ARC find
+  its EISA configuration inconsistent).
+- **EV4:** a TB entry read after ITBZAP reads as zero (the console PALcode
+  tells a pass 1 21064 from later ones that way, and halts on a pass 1);
+  SL_XMIT is decoded into characters (the `srom` log subsystem), which shows
+  what the DROM prints, e.g. its `DIAGROM>` monitor.
+
+**Next (M2/M3):** check the SIO interrupt line (irq_h[1] is a guess) and
+the PIRQ routing against what the SRM programs; `show device`; the 53C810's
+operating registers and SCRIPTS, for `dka0`/`dka400`.
+
+## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the
   compressed console are a two-stage start to get through before any
   console output.

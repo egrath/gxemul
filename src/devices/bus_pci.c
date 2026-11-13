@@ -772,8 +772,87 @@ PCIINIT(piix4_isa)
 	pd->cfg_reg_write = piix_isa_cfg_reg_write;
 }
 
+/*
+ *  Symbios (NCR) 53C810 PCI SCSI I/O processor, as on the AlphaStation 200
+ *  system board. So far only its configuration space, with the operating
+ *  registers mirrored at 80h..FFh (as on the real chip) kept as written, so
+ *  that the Avanti DROM's scratch register test (SCRATCHB, 5Ch) passes. The
+ *  operating registers in I/O and memory space and the SCRIPTS processor
+ *  are still to come (doc/avanti-plan.md).
+ */
+#define	PCI_VENDOR_SYMBIOS		0x1000
+#define	PCI_PRODUCT_SYMBIOS_810		0x0001
+
+static int sym53c810_cfg_reg_write(struct pci_device *pd, int reg,
+	uint32_t value)
+{
+	switch (reg) {
+	case PCI_ID_REG:
+	case PCI_CLASS_REG:
+		return 1;
+	case PCI_COMMAND_STATUS_REG:
+		/*  The status bits are cleared by writing ones.  */
+		value = (value & 0xffff) | ((pd->cfg_mem[6] |
+		    (pd->cfg_mem[7] << 8)) & ~(value >> 16)) << 16;
+		break;
+	case PCI_MAPREG_START:
+		/*  I/O space, 256 bytes:  */
+		value = (value & ~0xff) | PCI_MAPREG_TYPE_IO;
+		break;
+	case PCI_MAPREG_START + 4:
+		/*  Memory space, 256 bytes:  */
+		value &= ~0xff;
+		break;
+	}
+
+	PCI_SET_DATA(reg, value);
+	return 1;
+}
+
+PCIINIT(sym53c810)
+{
+	PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_SYMBIOS,
+	    PCI_PRODUCT_SYMBIOS_810));
+
+	/*  SCSI storage controller, revision 2:  */
+	PCI_SET_DATA(PCI_CLASS_REG, PCI_CLASS_CODE(PCI_CLASS_MASS_STORAGE,
+	    PCI_SUBCLASS_MASS_STORAGE_SCSI, 0) + 0x02);
+
+	PCI_SET_DATA(PCI_MAPREG_START, PCI_MAPREG_TYPE_IO);
+	PCI_SET_DATA_SIZE(PCI_MAPREG_START, 0xffffff01);
+	PCI_SET_DATA(PCI_MAPREG_START + 4, 0);
+	PCI_SET_DATA_SIZE(PCI_MAPREG_START + 4, 0xffffff00);
+
+	/*  Interrupt pin A:  */
+	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x00000100);
+
+	pd->cfg_reg_write = sym53c810_cfg_reg_write;
+}
+
+/*  The SIO's configuration registers are kept as written (the PIRQ route
+    control registers, ISA clock divisor, utility bus chip selects, ...).  */
+static int i82378zb_cfg_reg_write(struct pci_device *pd, int reg,
+	uint32_t value)
+{
+	switch (reg) {
+	case PCI_ID_REG:
+	case PCI_CLASS_REG:
+		return 1;
+	case PCI_COMMAND_STATUS_REG:
+		/*  The status bits are cleared by writing ones.  */
+		value = (value & 0xffff) | ((pd->cfg_mem[6] |
+		    (pd->cfg_mem[7] << 8)) & ~(value >> 16)) << 16;
+		break;
+	}
+
+	PCI_SET_DATA(reg, value);
+	return 1;
+}
+
 PCIINIT(i82378zb)
 {
+	pd->cfg_reg_write = i82378zb_cfg_reg_write;
+
 	PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_INTEL,
 	    PCI_PRODUCT_INTEL_SIO));
 

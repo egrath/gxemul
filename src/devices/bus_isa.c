@@ -171,6 +171,10 @@ void isa_interrupt_deassert(struct interrupt *interrupt)
  *  BUS_ISA_PCKBC_NONPCSTYLE	Don't set the pc-style flag for the keyboard.
  *  BUS_ISA_NO_SECOND_PIC	Only useful for 8086 XT (pre-AT) emulation. :-)
  *  BUS_ISA_LPTBASE_3BC		Set lptbase to 0x3bc instead of 0x378.
+ *  BUS_ISA_RTC_OWN_IRQ		The RTC interrupts on <interrupt_base_path>.rtc,
+ *				a line of its own, instead of ISA IRQ 8.
+ *  BUS_ISA_PIT_COUNTS		The 8254's counters 0 and 2 count down (see
+ *				dev_8253.c).
  *
  *  (*1) For machines with a PCI bus, this flag should not be used. Instead, a
  *       PCI VGA card should be added to the PCI bus.
@@ -254,9 +258,11 @@ struct bus_isa_data *bus_isa_init(struct machine *machine,
 	}
 
 	snprintf(tmpstr, sizeof(tmpstr), "8253 irq=%s.isa.%i addr=0x%llx "
-	    "in_use=0", interrupt_base_path, 0,
-	    (long long)(isa_portbase + 0x40));
+	    "in_use=0%s", interrupt_base_path, 0,
+	    (long long)(isa_portbase + 0x40),
+	    (bus_isa_flags & BUS_ISA_PIT_COUNTS)? " name2=counting" : "");
 	device_add(machine, tmpstr);
+	bus_isa_flags &= ~BUS_ISA_PIT_COUNTS;
 
 	if (bus_isa_flags & BUS_ISA_JENSEN_IRQS) {
 		/*
@@ -284,8 +290,15 @@ struct bus_isa_data *bus_isa_init(struct machine *machine,
 		    (long long)(isa_portbase + 0x2f8));
 		device_add(machine, tmpstr);
 	} else {
-		snprintf(tmpstr, sizeof(tmpstr), "pccmos irq=%s.isa.%i addr=0x%llx",
-		    interrupt_base_path, 8, (long long)(isa_portbase + 0x70));
+		if (bus_isa_flags & BUS_ISA_RTC_OWN_IRQ) {
+			bus_isa_flags &= ~BUS_ISA_RTC_OWN_IRQ;
+			snprintf(tmpstr, sizeof(tmpstr), "pccmos irq=%s.rtc "
+			    "addr=0x%llx", interrupt_base_path,
+			    (long long)(isa_portbase + 0x70));
+		} else
+			snprintf(tmpstr, sizeof(tmpstr), "pccmos irq=%s.isa.%i "
+			    "addr=0x%llx", interrupt_base_path, 8,
+			    (long long)(isa_portbase + 0x70));
 		device_add(machine, tmpstr);
 
 		snprintf(tmpstr, sizeof(tmpstr), "ns16550 irq=%s.isa.%i addr=0x%llx "

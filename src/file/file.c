@@ -189,6 +189,11 @@ void file_load(struct machine *machine, struct memory *mem,
 	    jensen_load_rom(machine, filename, entrypointp))
 		goto ret;
 
+	/*  AlphaStation 200/400 flash and DROM image?  */
+	if (machine->machine_type == MACHINE_AVANTI &&
+	    avanti_load_rom(machine, filename, entrypointp))
+		goto ret;
+
 	/*  Is it an ELF?  */
 	if (buf[0] == 0x7f && buf[1]=='E' && buf[2]=='L' && buf[3]=='F') {
 		file_load_elf(machine, mem, filename,

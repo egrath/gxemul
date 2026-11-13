@@ -161,6 +161,7 @@ DEVINIT(pccmos)
 	case MACHINE_PREP:
 	case MACHINE_MVMEPPC:
 	case MACHINE_ALPHA:
+	case MACHINE_AVANTI:
 		break;
 	case MACHINE_JENSEN: {
 		const char *bootarg = devinit->machine->boot_string_argument;
