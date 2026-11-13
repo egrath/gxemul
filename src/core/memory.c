@@ -36,6 +36,7 @@
 #include <sys/mman.h>
 #endif
 
+#include "control.h"
 #include "cpu.h"
 #include "machine.h"
 #include "memory.h"
@@ -454,6 +455,52 @@ void memory_device_register(struct memory *mem, const char *device_name,
 
 	if (newi < mem->last_accessed_device)
 		mem->last_accessed_device ++;
+}
+
+
+/*
+ *  memory_device_dispatch():
+ *
+ *  Passes an access at a physical address straight to the device registered
+ *  there, as a bus bridge does with the cycles it forwards (e.g. an Alpha
+ *  chipset's sparse I/O space, decoded to the ISA or PCI port address of a
+ *  device registered at some base + port). Control socket watches see the
+ *  access. Where no device is registered, reads return all ones (a floating
+ *  bus) and writes are ignored, so that a probe doesn't machine check.
+ */
+int memory_device_dispatch(struct cpu *cpu, struct memory *mem,
+	uint64_t paddr, unsigned char *data, size_t len, int writeflag)
+{
+	int start = 0, end = mem->n_mmapped_devices - 1;
+
+	while (start <= end) {
+		int mid = (start + end) >> 1;
+		if (paddr >= mem->devices[mid].baseaddr &&
+		    paddr < mem->devices[mid].endaddr) {
+			uint64_t ofs = paddr - mem->devices[mid].baseaddr;
+			int res;
+
+			mem->last_accessed_device = mid;
+			res = mem->devices[mid].f(cpu, mem, ofs, data, len,
+			    writeflag, mem->devices[mid].extra);
+
+			if (control_watch_devices)
+				control_device_access(cpu,
+				    mem->devices[mid].name, ofs, data, len,
+				    writeflag);
+
+			return res;
+		}
+		if (paddr < mem->devices[mid].baseaddr)
+			end = mid - 1;
+		else
+			start = mid + 1;
+	}
+
+	if (writeflag == MEM_READ)
+		memset(data, 0xff, len);
+
+	return 1;
 }
 
 

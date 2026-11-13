@@ -464,51 +464,6 @@ DEVICE_ACCESS(jensen_inta)
 
 
 /*
- *  jensen_bus_access():
- *
- *  Directly dispatch a bus access (I/O or memory) to the registered ISA/EISA
- *  devices on the memory object. If no device handles the address, reads return
- *  0xff (floating bus) and writes are ignored, without triggering spurious EV4
- *  CPU machine checks.
- */
-static int jensen_bus_access(struct cpu *cpu, struct memory *mem,
-	uint64_t paddr, unsigned char *data, size_t len, int writeflag)
-{
-	int start = 0, end = mem->n_mmapped_devices - 1;
-
-	while (start <= end) {
-		int mid = (start + end) >> 1;
-		if (paddr >= mem->devices[mid].baseaddr &&
-		    paddr < mem->devices[mid].endaddr) {
-			uint64_t ofs = paddr - mem->devices[mid].baseaddr;
-			int res;
-
-			mem->last_accessed_device = mid;
-			res = mem->devices[mid].f(cpu, mem, ofs, data, len,
-			    writeflag, mem->devices[mid].extra);
-
-			/*  Let control socket watches see bridged accesses:  */
-			if (control_watch_devices)
-				control_device_access(cpu,
-				    mem->devices[mid].name, ofs, data, len,
-				    writeflag);
-
-			return res;
-		}
-		if (paddr < mem->devices[mid].baseaddr)
-			end = mid - 1;
-		else
-			start = mid + 1;
-	}
-
-	if (writeflag == MEM_READ)
-		memset(data, 0xff, len);
-
-	return 1;
-}
-
-
-/*
  *  jensen_combo_access():
  *
  *  Local Motherboard Combo Super I/O (VL82C106) at 0x1.C000.0000.
@@ -528,12 +483,12 @@ DEVICE_ACCESS(jensen_combo)
 
 	if (writeflag == MEM_WRITE) {
 		byte = data[0];
-		jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + port,
+		memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + port,
 		    &byte, 1, MEM_WRITE);
 		return 1;
 	}
 
-	jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + port,
+	memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + port,
 	    &byte, 1, MEM_READ);
 
 	memory_writemax64(cpu, data, len, byte);
@@ -617,7 +572,7 @@ DEVICE_ACCESS(jensen_eisa_io)
 		val >>= (busaddr & 3) * 8;
 		for (i = 0; i < access_len; i++) {
 			uint8_t b = val >> (i * 8);
-			jensen_bus_access(cpu, cpu->mem,
+			memory_device_dispatch(cpu, cpu->mem,
 			    JENSEN_ISA_PORTBASE + busaddr + i,
 			    &b, 1, MEM_WRITE);
 		}
@@ -629,7 +584,7 @@ DEVICE_ACCESS(jensen_eisa_io)
 		uint64_t val = 0;
 		for (i = 0; i < access_len; i++) {
 			uint8_t b = 0xff;
-			jensen_bus_access(cpu, cpu->mem,
+			memory_device_dispatch(cpu, cpu->mem,
 			    JENSEN_ISA_PORTBASE + busaddr + i,
 			    &b, 1, MEM_READ);
 			val |= (uint64_t)b << (i * 8);
@@ -667,7 +622,7 @@ DEVICE_ACCESS(jensen_eisa_mem)
 		val >>= (busaddr & 3) * 8;
 		for (i = 0; i < access_len; i++) {
 			uint8_t b = val >> (i * 8);
-			jensen_bus_access(cpu, cpu->mem,
+			memory_device_dispatch(cpu, cpu->mem,
 			    JENSEN_ISA_MEMBASE + busaddr + i,
 			    &b, 1, MEM_WRITE);
 		}
@@ -679,7 +634,7 @@ DEVICE_ACCESS(jensen_eisa_mem)
 		uint64_t val = 0;
 		for (i = 0; i < access_len; i++) {
 			uint8_t b = 0xff;
-			jensen_bus_access(cpu, cpu->mem,
+			memory_device_dispatch(cpu, cpu->mem,
 			    JENSEN_ISA_MEMBASE + busaddr + i,
 			    &b, 1, MEM_READ);
 			val |= (uint64_t)b << (i * 8);
@@ -1014,23 +969,23 @@ uint64_t dev_jensen_srom(struct jensen_data *d, struct cpu *cpu)
 	/* Initialize PICs: */
 	for (i = 0; i < (int)(sizeof(pic_init)/sizeof(pic_init[0])); i++) {
 		uint8_t val = pic_init[i].value;
-		jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + pic_init[i].port,
+		memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + pic_init[i].port,
 		    &val, 1, MEM_WRITE);
 	}
 
 	/* Initialize CMOS registers 0x69 = 0x9d, 0x6a = 0x07: */
 	cmos_idx = 0x69;
-	jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x70, &cmos_idx, 1,
+	memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x70, &cmos_idx, 1,
 	    MEM_WRITE);
 	cmos_val = 0x9d;
-	jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x71, &cmos_val, 1,
+	memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x71, &cmos_val, 1,
 	    MEM_WRITE);
 
 	cmos_idx = 0x6a;
-	jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x70, &cmos_idx, 1,
+	memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x70, &cmos_idx, 1,
 	    MEM_WRITE);
 	cmos_val = 0x07;
-	jensen_bus_access(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x71, &cmos_val, 1,
+	memory_device_dispatch(cpu, cpu->mem, JENSEN_ISA_PORTBASE + 0x71, &cmos_val, 1,
 	    MEM_WRITE);
 
 	/* CPU registers on SROM handoff: */

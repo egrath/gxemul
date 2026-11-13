@@ -158,6 +158,8 @@ void memory_device_register(struct memory *mem, const char *,
 	    struct memory *,uint64_t,unsigned char *,size_t,int,void *),
 	void *extra, int flags, unsigned char *dyntrans_data);
 void memory_device_remove(struct memory *mem, int i);
+int memory_device_dispatch(struct cpu *cpu, struct memory *mem,
+	uint64_t paddr, unsigned char *data, size_t len, int writeflag);
 
 void dump_mem_string(struct cpu *cpu, uint64_t addr);
 void store_string(struct cpu *cpu, uint64_t addr, const char *s);
