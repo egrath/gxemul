@@ -93,6 +93,9 @@ struct mc_data {
 	/*  The fixed year register value of the DEC access style:  */
 	int		dec_year;
 
+	/*  The PC style's year register counts from 1900 + this, if set:  */
+	int		year_base;
+
 	/*  The NVRAM (registers 14..63) is kept in this file, if any:  */
 	char		*nvram_file;
 	bool		nvram_dirty;
@@ -477,7 +480,10 @@ static void mc146818_update_time(struct mc_data *d)
 		break;
 	case MC146818_CATS:
 	case MC146818_PC_CMOS:
-		d->reg[4 * MC_YEAR] %= 100;
+		if (d->year_base)
+			d->reg[4 * MC_YEAR] -= d->year_base;
+		else
+			d->reg[4 * MC_YEAR] %= 100;
 		break;
 	case MC146818_SGI:
 		/*
@@ -922,6 +928,15 @@ void dev_mc146818_init(struct machine *machine, struct memory *mem,
 	    on the DEC 3000 (OSF/1's kn15aa_readtodr() rejects anything else
 	    as a "lost battery backup clock").  */
 	d->dec_year = machine->machine_type == MACHINE_DEC3000? 70 : 72;
+
+	/*
+	 *  On the Alpha PCs, Tru64 UNIX counts the RTC's year from 1952 (its
+	 *  readtodr() adds 52, and calls anything before 1996 a "preposterous
+	 *  time in TOY clock"); 2026 is 74.  (Linux/alpha knows this epoch,
+	 *  too.)  NT, from the ARC console, would count from 1980.
+	 */
+	if (machine->machine_type == MACHINE_AVANTI)
+		d->year_base = 52;
 
 	/*
 	 *  The Jensen's RTC (in the VL82C106 combo chip) runs from its own
