@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bus_pci.h"
 #include "cpu.h"
 #include "device.h"
 #include "devices.h"
@@ -71,6 +72,9 @@
 #define	DEC21143_TICK_SHIFT		16
 
 #define	N_REGS			32
+
+/*  The CSRs in each BAR (16 CSRs, 8 bytes apart):  */
+#define	DEC21143_BAR_SIZE	0x80
 #define	ROM_WIDTH		6
 
 struct dec21143_data {
@@ -109,6 +113,8 @@ struct dec21143_data {
 	int		cur_tx_buf_len;
 	int		tx_idling;
 	int		tx_idling_threshold;
+	int		tx_suspended;	/*  found a descriptor it doesn't own  */
+	int		rx_suspended;
 
 	/*  Internal RX state:  */
 	uint32_t	cur_rx_addr;
@@ -140,12 +146,54 @@ struct dec21143_data {
 	 *  XXX XXX XXX
 	 */
 	uint32_t	xxx_dma_to_phys_mask;
+
+	/*  On a PCI bus with real BARs and DMA translation (the Avanti):  */
+	struct pci_data	*pci;
+	struct memory	*mem;
+	uint64_t	io_addr, mem_addr;
+	int		io_mapped, mem_mapped;
 };
 
 /*  XXX This is an UGLY hack.  */
 static uint64_t dma_to_phys(const struct dec21143_data *d, uint32_t dma_addr)
 {
 	return dma_addr & d->xxx_dma_to_phys_mask;
+}
+
+
+/*
+ *  dec21143_dma():
+ *
+ *  A bus master transfer of len bytes at PCI address busaddr. On a bus with
+ *  a DMA translation (bus_pci_dma_translate()), each 8 KB page is mapped on
+ *  its own (scatter/gather); otherwise, the old mask above is used.
+ */
+static int dec21143_dma(struct cpu *cpu, struct dec21143_data *d,
+	uint32_t busaddr, unsigned char *buf, size_t len, int writeflag)
+{
+	if (d->pci == NULL)
+		return cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, busaddr),
+		    buf, len, writeflag, PHYSICAL | NO_EXCEPTIONS);
+
+	while (len > 0) {
+		size_t chunk = 0x2000 - (busaddr & 0x1fff);
+		uint64_t paddr;
+
+		if (chunk > len)
+			chunk = len;
+		if (!bus_pci_dma_translate(cpu, d->pci, busaddr, &paddr)) {
+			debugmsg(d->subsys, "dec21143", VERBOSITY_ERROR,
+			    "bus fault at 0x%08x\n", (int) busaddr);
+			return 0;
+		}
+		cpu->memory_rw(cpu, cpu->mem, paddr, buf, chunk, writeflag,
+		    PHYSICAL | NO_EXCEPTIONS);
+		busaddr += chunk;
+		buf += chunk;
+		len -= chunk;
+	}
+
+	return 1;
 }
 
 
@@ -349,7 +397,7 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 	uint32_t addr = d->cur_rx_addr, bufaddr;
 	unsigned char descr[16];
 	uint32_t rdes0, rdes1, rdes2, rdes3;
-	int bufsize, buf1_size, buf2_size, i, writeback_len = 4, to_xfer;
+	int bufsize, buf1_size, buf2_size, writeback_len = 4, to_xfer;
 
 	/*  No current packet? Then check for new ones.  */
 	while (d->cur_rx_buf == NULL) {
@@ -377,8 +425,8 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 
 	/*  fatal("{ dec21143_rx: base = 0x%08x }\n", (int)addr);  */
 
-	if (!cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, addr),
-	    descr, sizeof(uint32_t), MEM_READ, PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, addr, descr, sizeof(uint32_t),
+	    MEM_READ)) {
 		fatal("[ dec21143_rx: memory_rw failed! ]\n");
 		return 0;
 	}
@@ -388,13 +436,13 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 	/*  Only use descriptors owned by the 21143:  */
 	if (!(rdes0 & TDSTAT_OWN)) {
 		d->reg[CSR_STATUS/8] |= STATUS_RU;
+		d->rx_suspended = 1;
 		return 0;
 	}
+	d->rx_suspended = 0;
 
-	if (!cpu->memory_rw(cpu, cpu->mem,
-	    dma_to_phys(d, addr + sizeof(uint32_t)),
-	    descr + sizeof(uint32_t), sizeof(uint32_t) * 3, MEM_READ,
-	    PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, addr + sizeof(uint32_t),
+	    descr + sizeof(uint32_t), sizeof(uint32_t) * 3, MEM_READ)) {
 		fatal("[ dec21143_rx: memory_rw failed! ]\n");
 		return 0;
 	}
@@ -431,12 +479,8 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 		to_xfer = bufsize;
 
 	/*  DMA bytes from the packet into emulated physical memory:  */
-	for (i=0; i<to_xfer; i++) {
-		cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, bufaddr + i),
-		    d->cur_rx_buf + d->cur_rx_offset + i, 1, MEM_WRITE,
-		    PHYSICAL | NO_EXCEPTIONS);
-		/*  fatal(" %02x", d->cur_rx_buf[d->cur_rx_offset + i]);  */
-	}
+	dec21143_dma(cpu, d, bufaddr, d->cur_rx_buf + d->cur_rx_offset,
+	    to_xfer, MEM_WRITE);
 
 	/*  Was this the first buffer in a frame? Then mark it as such.  */
 	if (d->cur_rx_offset == 0)
@@ -471,9 +515,8 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 		store_le32(&descr[12], rdes3);
 	}
 
-	if (!cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, addr), descr,
-	    sizeof(uint32_t) * writeback_len, MEM_WRITE,
-	    PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, addr, descr,
+	    sizeof(uint32_t) * writeback_len, MEM_WRITE)) {
 		fatal("[ dec21143_rx: memory_rw failed! ]\n");
 		return 0;
 	}
@@ -604,8 +647,8 @@ static void dec21143_process_setup_packet(struct cpu *cpu,
 	uint32_t tmp;
 	int i;
 
-	if (!cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, bufaddr), cp,
-	    TULIP_SETUP_PACKET_LEN, MEM_READ, PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, bufaddr, cp, TULIP_SETUP_PACKET_LEN,
+	    MEM_READ)) {
 		fatal("[ dec21143_process_setup_packet: memory_rw failed! ]\n");
 		return;
 	}
@@ -658,10 +701,10 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 	uint32_t addr = d->cur_tx_addr, bufaddr;
 	unsigned char descr[16];
 	uint32_t tdes0, tdes1, tdes2, tdes3;
-	int bufsize, buf1_size, buf2_size, i;
+	int bufsize, buf1_size, buf2_size;
 
-	if (!cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, addr), descr,
-	    sizeof(uint32_t), MEM_READ, PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, addr, descr, sizeof(uint32_t),
+	    MEM_READ)) {
 		fatal("[ dec21143_tx: memory_rw failed! ]\n");
 		return 0;
 	}
@@ -672,6 +715,7 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 	    (int)addr, (int)tdes0);  */
 
 	/*  Only process packets owned by the 21143:  */
+	d->tx_suspended = !(tdes0 & TDSTAT_OWN);
 	if (!(tdes0 & TDSTAT_OWN)) {
 		if (d->tx_idling > d->tx_idling_threshold) {
 			d->reg[CSR_STATUS/8] |= STATUS_TU;
@@ -681,10 +725,8 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 		return 0;
 	}
 
-	if (!cpu->memory_rw(cpu, cpu->mem,
-	    dma_to_phys(d, addr + sizeof(uint32_t)),
-	    descr + sizeof(uint32_t), sizeof(uint32_t) * 3, MEM_READ,
-	    PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, addr + sizeof(uint32_t),
+	    descr + sizeof(uint32_t), sizeof(uint32_t) * 3, MEM_READ)) {
 		fatal("[ dec21143_tx: memory_rw failed! ]\n");
 		return 0;
 	}
@@ -709,10 +751,9 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 			d->cur_tx_addr += 4 * sizeof(uint32_t);
 	}
 
-	/*
-	fatal("{ TX (%x): 0x%08x 0x%08x 0x%x 0x%x: buf %i bytes at 0x%x }\n",
-	  addr, tdes0, tdes1, tdes2, tdes3, bufsize, bufaddr);
-	*/
+	debugmsg(d->subsys, "dec21143", VERBOSITY_DEBUG,
+	    "TX (0x%llx): 0x%08x 0x%08x 0x%x 0x%x: buf %i bytes at 0x%x\n",
+	    (long long)addr, tdes0, tdes1, tdes2, tdes3, bufsize, (int)bufaddr);
 
 	/*  Assume no error:  */
 	tdes0 &= ~ (TDSTAT_Tx_UF | TDSTAT_Tx_EC | TDSTAT_Tx_LC
@@ -730,9 +771,9 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 			dec21143_process_setup_packet(cpu, d, tdes1, bufaddr);
 		if (tdes1 & TDCTL_Tx_IC)
 			d->reg[CSR_STATUS/8] |= STATUS_TI;
-		/*  New descriptor values, according to the docs:  */
-		tdes0 = 0x7fffffff; tdes1 = 0xffffffff;
-		tdes2 = 0xffffffff; tdes3 = 0xffffffff;
+		/*  The chip writes back only TDES0 (7FFFFFFFh) for a setup
+		    frame; the rest of the descriptor is left alone:  */
+		tdes0 = 0x7fffffff;
 	} else {
 		/*
 		 *  Data Packet.
@@ -758,14 +799,8 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 		}
 
 		/*  "DMA" data from emulated physical memory into the buf:  */
-		for (i=0; i<bufsize; i++) {
-			cpu->memory_rw(cpu, cpu->mem,
-			    dma_to_phys(d, bufaddr + i),
-			    d->cur_tx_buf + d->cur_tx_buf_len + i, 1, MEM_READ,
-			    PHYSICAL | NO_EXCEPTIONS);
-			/*  fatal(" %02x", d->cur_tx_buf[
-			    d->cur_tx_buf_len + i]);  */
-		}
+		dec21143_dma(cpu, d, bufaddr, d->cur_tx_buf +
+		    d->cur_tx_buf_len, bufsize, MEM_READ);
 
 		d->cur_tx_buf_len += bufsize;
 
@@ -807,8 +842,8 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 	store_le32(&descr[8], tdes2);
 	store_le32(&descr[12], tdes3);
 
-	if (!cpu->memory_rw(cpu, cpu->mem, dma_to_phys(d, addr), descr,
-	    sizeof(uint32_t) * 4, MEM_WRITE, PHYSICAL | NO_EXCEPTIONS)) {
+	if (!dec21143_dma(cpu, d, addr, descr, sizeof(uint32_t) * 4,
+	    MEM_WRITE)) {
 		fatal("[ dec21143_tx: memory_rw failed! ]\n");
 		return 0;
 	}
@@ -830,11 +865,26 @@ DEVICE_TICK(dec21143)
 		while (dec21143_rx(cpu, d))
 			;
 
-	/*  Normal and Abnormal interrupt summary:  */
+	/*  The transmit and receive process states (read only):  */
+	d->reg[CSR_STATUS / 8] &= ~(STATUS_TS | STATUS_RS);
+	if (d->reg[CSR_OPMODE / 8] & OPMODE_ST)
+		d->reg[CSR_STATUS / 8] |= d->tx_suspended ?
+		    STATUS_TS_SUSPENDED : STATUS_TS_FETCH;
+	if (d->reg[CSR_OPMODE / 8] & OPMODE_SR)
+		d->reg[CSR_STATUS / 8] |= d->rx_suspended ?
+		    STATUS_RS_SUSPENDED : STATUS_RS_WAIT;
+
+	/*
+	 *  Normal and Abnormal interrupt summary: only the bits that are
+	 *  enabled in CSR7 count (21143 manual). Otherwise a poll demand
+	 *  with an empty transmit list (TU, which Tru64 leaves masked) would
+	 *  raise NIS, and Tru64's interrupt handler, which ends with poll
+	 *  demands, would be called again forever.
+	 */
 	d->reg[CSR_STATUS / 8] &= ~(STATUS_NIS | STATUS_AIS);
-	if (d->reg[CSR_STATUS / 8] & 0x00004845)
+	if (d->reg[CSR_STATUS / 8] & d->reg[CSR_INTEN / 8] & 0x00004845)
 		d->reg[CSR_STATUS / 8] |= STATUS_NIS;
-	if (d->reg[CSR_STATUS / 8] & 0x0c0037ba)
+	if (d->reg[CSR_STATUS / 8] & d->reg[CSR_INTEN / 8] & 0x0c0037ba)
 		d->reg[CSR_STATUS / 8] |= STATUS_AIS;
 
 	asserted = d->reg[CSR_STATUS / 8] & d->reg[CSR_INTEN / 8] & 0x0c01ffff;
@@ -1265,7 +1315,7 @@ DEVICE_ACCESS(dec21143)
 			idata &= ~(OPMODE_HBD | OPMODE_SCR | OPMODE_PCS
 			    | OPMODE_PS | OPMODE_SF | OPMODE_TTM | OPMODE_FD
 			    | OPMODE_IF | OPMODE_HO | OPMODE_HP | OPMODE_PR
-			    | OPMODE_PM);
+			    | OPMODE_PM | OPMODE_TR);
 			if (idata & OPMODE_PNIC_IT) {
 				idata &= ~OPMODE_PNIC_IT;
 				d->tx_idling = d->tx_idling_threshold;
@@ -1321,18 +1371,138 @@ DEVICE_ACCESS(dec21143)
 }
 
 
-DEVINIT(dec21143)
+/*
+ *  dec21143_srom_de500():
+ *
+ *  A version 3 SROM as on a DE500-BA (the 21143's SIA for 10BASE-T, and
+ *  its SYM port for 100BASE-TX), with the subsystem ID and the CRC that
+ *  drivers check.
+ */
+static void dec21143_srom_de500(struct dec21143_data *d)
+{
+	uint8_t *r = d->srom;
+	int leaf = 30, p;
+	uint32_t crc;
+
+	memset(r, 0, sizeof(d->srom));
+
+	/*  Subsystem ID and vendor (as in configuration register 2Ch):  */
+	r[0] = DEC21143_DE500_SUBSYS_ID & 0xff;
+	r[1] = DEC21143_DE500_SUBSYS_ID >> 8;
+	r[2] = 0x11; r[3] = 0x10;
+
+	r[TULIP_ROM_SROM_FORMAT_VERION] = 3;
+	r[TULIP_ROM_CHIP_COUNT] = 1;
+	memcpy(r + TULIP_ROM_IEEE_NETWORK_ADDRESS, d->nic.mac_address, 6);
+	r[TULIP_ROM_CHIPn_DEVICE_NUMBER(0)] = 0;
+	r[TULIP_ROM_CHIPn_INFO_LEAF_OFFSET(0)] = leaf;
+	r[TULIP_ROM_CHIPn_INFO_LEAF_OFFSET(0) + 1] = 0;
+
+	/*  The info leaf: connection type (autosense), and 4 media blocks.  */
+	r[leaf + 0] = 0x00; r[leaf + 1] = 0x08;
+	r[leaf + 2] = 4;
+	p = leaf + 3;
+
+	/*  SIA blocks: length, type 2, media, GP control, GP data:  */
+	r[p++] = 0x80 | 6; r[p++] = TULIP_ROM_MB_21142_SIA;
+	r[p++] = TULIP_ROM_MB_MEDIA_TP;
+	r[p++] = 0x00; r[p++] = 0x08; r[p++] = 0x00; r[p++] = 0x00;
+	r[p++] = 0x80 | 6; r[p++] = TULIP_ROM_MB_21142_SIA;
+	r[p++] = TULIP_ROM_MB_MEDIA_TP_FDX;
+	r[p++] = 0x00; r[p++] = 0x08; r[p++] = 0x00; r[p++] = 0x00;
+
+	/*  SYM blocks: length, type 4, media, GP control, GP data, command
+	    (port select, PCS, scrambler: OPMODE bits 18, 23, 24, as
+	    TULIP_ROM_MB_OPMODE() gives them; bit 15: no link indicator):  */
+	r[p++] = 0x80 | 8; r[p++] = TULIP_ROM_MB_21143_SYM;
+	r[p++] = TULIP_ROM_MB_MEDIA_100TX;
+	r[p++] = 0x00; r[p++] = 0x08; r[p++] = 0x00; r[p++] = 0x00;
+	r[p++] = 0x61; r[p++] = 0x80;
+	r[p++] = 0x80 | 8; r[p++] = TULIP_ROM_MB_21143_SYM;
+	r[p++] = TULIP_ROM_MB_MEDIA_100TX_FDX;
+	r[p++] = 0x00; r[p++] = 0x08; r[p++] = 0x00; r[p++] = 0x00;
+	r[p++] = 0x61; r[p++] = 0x80;
+
+	crc = (net_ether_crc32_le(r, TULIP_ROM_CRC32_CHECKSUM) & 0xffff) ^
+	    0xffff;
+	r[TULIP_ROM_CRC32_CHECKSUM] = crc & 0xff;
+	r[TULIP_ROM_CRC32_CHECKSUM + 1] = crc >> 8;
+}
+
+
+/*  The SROM most guests have been happy with (version 1):  */
+static void dec21143_srom_default(struct dec21143_data *d)
+{
+	int leaf;
+
+	memset(d->srom, 0, sizeof(d->srom));
+
+	/*  Version (= 1) and Chip count (= 1):  */
+	d->srom[TULIP_ROM_SROM_FORMAT_VERION] = 1;
+	d->srom[TULIP_ROM_CHIP_COUNT] = 1;
+
+	leaf = 30;
+	d->srom[TULIP_ROM_CHIPn_DEVICE_NUMBER(0)] = 0;
+	d->srom[TULIP_ROM_CHIPn_INFO_LEAF_OFFSET(0)] = leaf & 255;
+	d->srom[TULIP_ROM_CHIPn_INFO_LEAF_OFFSET(0)+1] = leaf >> 8;
+
+	d->srom[leaf+TULIP_ROM_IL_SELECT_CONN_TYPE] = 0; /*  Not used?  */
+	d->srom[leaf+TULIP_ROM_IL_MEDIA_COUNT] = 2;
+	leaf += TULIP_ROM_IL_MEDIAn_BLOCK_BASE;
+
+	d->srom[leaf] = 7;	/*  descriptor length  */
+	d->srom[leaf+1] = TULIP_ROM_MB_21142_SIA;
+	d->srom[leaf+2] = TULIP_ROM_MB_MEDIA_100TX;
+	/*  here comes 4 bytes of GPIO control/data settings  */
+	leaf += d->srom[leaf];
+
+	d->srom[leaf] = 15;	/*  descriptor length  */
+	d->srom[leaf+1] = TULIP_ROM_MB_21142_MII;
+	d->srom[leaf+2] = 0;	/*  PHY nr  */
+	d->srom[leaf+3] = 0;	/*  len of select sequence  */
+	d->srom[leaf+4] = 0;	/*  len of reset sequence  */
+	/*  5,6, 7,8, 9,10, 11,12, 13,14 = unused by GXemul  */
+	leaf += d->srom[leaf];
+
+	memcpy(d->srom + TULIP_ROM_IEEE_NETWORK_ADDRESS, d->nic.mac_address, 6);
+}
+
+
+static struct dec21143_data *dec21143_create(struct machine *machine,
+	const char *irq_path, int pci_little_endian, int de500)
 {
 	struct dec21143_data *d;
-	char name2[100];
-	int leaf;
 
 	CHECK_ALLOCATION(d = (struct dec21143_data *) malloc(sizeof(struct dec21143_data)));
 	memset(d, 0, sizeof(struct dec21143_data));
 	d->subsys = debugmsg_register_subsystem("dec21143");
 
-	INTERRUPT_CONNECT(devinit->interrupt_path, d->irq);
-	d->pci_little_endian = devinit->pci_little_endian;
+	INTERRUPT_CONNECT(irq_path, d->irq);
+	d->pci_little_endian = pci_little_endian;
+
+	net_generate_unique_mac(machine, d->nic.mac_address);
+	if (de500)
+		dec21143_srom_de500(d);
+	else
+		dec21143_srom_default(d);
+	net_add_nic(machine->emul->net, &d->nic);
+
+	dec21143_reset(machine->cpus[0], d);
+
+	machine_add_tickfunction(machine, dev_dec21143_tick, d,
+	    DEC21143_TICK_SHIFT);
+
+	return d;
+}
+
+
+DEVINIT(dec21143)
+{
+	struct dec21143_data *d;
+	char name2[100];
+
+	d = dec21143_create(devinit->machine, devinit->interrupt_path,
+	    devinit->pci_little_endian, 0);
 
 	/* XXX XXX XXX */
 	switch (devinit->machine->machine_type) {
@@ -1369,41 +1539,6 @@ DEVINIT(dec21143)
 		d->xxx_dma_to_phys_mask = 0xffffffff;
 	}
 
-	memset(d->srom, 0, sizeof(d->srom));
-
-	/*  Version (= 1) and Chip count (= 1):  */
-	d->srom[TULIP_ROM_SROM_FORMAT_VERION] = 1;
-	d->srom[TULIP_ROM_CHIP_COUNT] = 1;
-
-	leaf = 30;
-	d->srom[TULIP_ROM_CHIPn_DEVICE_NUMBER(0)] = 0;
-	d->srom[TULIP_ROM_CHIPn_INFO_LEAF_OFFSET(0)] = leaf & 255;
-	d->srom[TULIP_ROM_CHIPn_INFO_LEAF_OFFSET(0)+1] = leaf >> 8;
-
-	d->srom[leaf+TULIP_ROM_IL_SELECT_CONN_TYPE] = 0; /*  Not used?  */
-	d->srom[leaf+TULIP_ROM_IL_MEDIA_COUNT] = 2;
-	leaf += TULIP_ROM_IL_MEDIAn_BLOCK_BASE;
-
-	d->srom[leaf] = 7;	/*  descriptor length  */
-	d->srom[leaf+1] = TULIP_ROM_MB_21142_SIA;
-	d->srom[leaf+2] = TULIP_ROM_MB_MEDIA_100TX;
-	/*  here comes 4 bytes of GPIO control/data settings  */
-	leaf += d->srom[leaf];
-
-	d->srom[leaf] = 15;	/*  descriptor length  */
-	d->srom[leaf+1] = TULIP_ROM_MB_21142_MII;
-	d->srom[leaf+2] = 0;	/*  PHY nr  */
-	d->srom[leaf+3] = 0;	/*  len of select sequence  */
-	d->srom[leaf+4] = 0;	/*  len of reset sequence  */
-	/*  5,6, 7,8, 9,10, 11,12, 13,14 = unused by GXemul  */
-	leaf += d->srom[leaf];
-
-	net_generate_unique_mac(devinit->machine, d->nic.mac_address);
-	memcpy(d->srom + TULIP_ROM_IEEE_NETWORK_ADDRESS, d->nic.mac_address, 6);
-	net_add_nic(devinit->machine->emul->net, &d->nic);
-
-	dec21143_reset(devinit->machine->cpus[0], d);
-
 	snprintf(name2, sizeof(name2), "%s [%02x:%02x:%02x:%02x:%02x:%02x]",
 	    devinit->name, d->nic.mac_address[0], d->nic.mac_address[1],
 	    d->nic.mac_address[2], d->nic.mac_address[3],
@@ -1411,9 +1546,6 @@ DEVINIT(dec21143)
 
 	memory_device_register(devinit->machine->memory, name2,
 	    devinit->addr, 0x100, dev_dec21143_access, d, DM_DEFAULT, NULL);
-
-	machine_add_tickfunction(devinit->machine,
-	    dev_dec21143_tick, d, DEC21143_TICK_SHIFT);
 
 	/*
 	 *  NetBSD/cats uses memory accesses, OpenBSD/cats uses I/O registers.
@@ -1423,5 +1555,79 @@ DEVINIT(dec21143)
 	    | DEV_RAM_MIGHT_POINT_TO_DEVICES, devinit->addr, NULL);
 
 	return 1;
+}
+
+
+static void dec21143_unmap(struct dec21143_data *d, uint64_t addr)
+{
+	int i;
+
+	for (i = 0; i < d->mem->n_mmapped_devices; i++)
+		if (d->mem->devices[i].extra == d &&
+		    d->mem->devices[i].baseaddr == addr) {
+			memory_device_remove(d->mem, i);
+			return;
+		}
+}
+
+static void dec21143_map(struct dec21143_data *d, uint64_t *cur, int *mapped,
+	uint64_t addr, int enable, const char *name)
+{
+	int i;
+
+	if (*mapped && (!enable || addr != *cur)) {
+		dec21143_unmap(d, *cur);
+		*mapped = 0;
+	}
+
+	if (!enable || *mapped)
+		return;
+
+	for (i = 0; i < d->mem->n_mmapped_devices; i++)
+		if (addr < d->mem->devices[i].endaddr &&
+		    addr + DEC21143_BAR_SIZE > d->mem->devices[i].baseaddr) {
+			debugmsg(d->subsys, "dec21143", VERBOSITY_WARNING,
+			    "%s at 0x%llx is taken; not mapped\n", name,
+			    (long long) addr);
+			return;
+		}
+
+	memory_device_register(d->mem, name, addr, DEC21143_BAR_SIZE,
+	    dev_dec21143_access, d, DM_DEFAULT, NULL);
+	*cur = addr;
+	*mapped = 1;
+}
+
+
+/*
+ *  dev_dec21143_set_bars():
+ *
+ *  Where the CSRs are (the emulated addresses of the I/O and memory BARs,
+ *  and whether they are enabled).
+ */
+void dev_dec21143_set_bars(struct dec21143_data *d, uint64_t io_addr,
+	int io_enable, uint64_t mem_addr, int mem_enable)
+{
+	dec21143_map(d, &d->io_addr, &d->io_mapped, io_addr, io_enable,
+	    "dec21143_io");
+	dec21143_map(d, &d->mem_addr, &d->mem_mapped, mem_addr, mem_enable,
+	    "dec21143_mem");
+}
+
+
+/*
+ *  dev_dec21143_pci_init():
+ *
+ *  A DE500-BA (21143) on PCI bus pci, whose bridge translates its DMA, and
+ *  whose BARs the firmware sets (dev_dec21143_set_bars()).
+ */
+struct dec21143_data *dev_dec21143_pci_init(struct machine *machine,
+	struct memory *mem, struct pci_data *pci, const char *irq_path)
+{
+	struct dec21143_data *d = dec21143_create(machine, irq_path, 1, 1);
+
+	d->pci = pci;
+	d->mem = mem;
+	return d;
 }
 

@@ -170,6 +170,15 @@ void dev_jensen_set_rom(struct jensen_data *d, const unsigned char *image,
 	size_t len);
 uint64_t dev_jensen_srom(struct jensen_data *d, struct cpu *cpu);
 
+/*  dev_dec21143.c (also devinit "dec21143"):  */
+struct dec21143_data;
+struct pci_data;
+#define	DEC21143_DE500_SUBSYS_ID	0x500b	/*  DE500-BA, vendor 1011  */
+struct dec21143_data *dev_dec21143_pci_init(struct machine *machine,
+	struct memory *mem, struct pci_data *pci, const char *irq_path);
+void dev_dec21143_set_bars(struct dec21143_data *d, uint64_t io_addr,
+	int io_enable, uint64_t mem_addr, int mem_enable);
+
 /*  dev_sym53c810.c:  */
 struct sym53c810_data;
 struct pci_data;

@@ -70,6 +70,11 @@ static int str_contains_ci(const char *haystack, const char *needle)
 struct pccmos_data {
 	unsigned char	select;
 	unsigned char	ram[256];
+
+	/*  The last register kept in the RTC itself (0x0d, or 0x3f when
+	    the CMOS bytes up to there are battery-backed in the NVRAM
+	    file, see the init function):  */
+	int		rtc_last;
 };
 
 
@@ -84,8 +89,8 @@ DEVICE_ACCESS(pccmos)
 		b = idata = memory_readmax64(cpu, data, len);
 
 	/*
-	 *  Accesses to CMOS register 0 .. 0xd are rerouted to the
-	 *  RTC; all other access are treated as CMOS RAM read/writes.
+	 *  Accesses to CMOS register 0 .. 0xd (or rtc_last) are rerouted to
+	 *  the RTC; all other access are treated as CMOS RAM read/writes.
 	 */
 
 	if ((relative_addr & 1) == 0) {
@@ -93,7 +98,7 @@ DEVICE_ACCESS(pccmos)
 			unsigned char reg;
 			d->select = idata;
 			reg = idata & 0x7f;
-			if (reg <= 0x0d) {
+			if (reg <= d->rtc_last) {
 				r = cpu->memory_rw(cpu, cpu->mem,
 				    PCCMOS_MC146818_FAKE_ADDR, &reg, 1,
 				    MEM_WRITE, PHYSICAL);
@@ -102,7 +107,7 @@ DEVICE_ACCESS(pccmos)
 			odata = d->select;
 	} else {
 		int reg = d->select & 0x7f;
-		if (reg <= 0x0d) {
+		if (reg <= d->rtc_last) {
 			if (writeflag == MEM_WRITE) {
 				r = cpu->memory_rw(cpu, cpu->mem,
 				    PCCMOS_MC146818_FAKE_ADDR + 1, &b, 1,
@@ -138,6 +143,7 @@ DEVINIT(pccmos)
 
 	CHECK_ALLOCATION(d = (struct pccmos_data *) malloc(sizeof(struct pccmos_data)));
 	memset(d, 0, sizeof(struct pccmos_data));
+	d->rtc_last = 0x0d;
 
 	switch (devinit->machine->machine_type) {
 	case MACHINE_CATS:
@@ -161,7 +167,18 @@ DEVINIT(pccmos)
 	case MACHINE_PREP:
 	case MACHINE_MVMEPPC:
 	case MACHINE_ALPHA:
+		break;
 	case MACHINE_AVANTI:
+		/*
+		 *  The RTC's own 50 bytes (0x0e..0x3f) are what the battery
+		 *  keeps, in the machine's NVRAM file (dev_mc146818.c). The
+		 *  consoles keep settings there: the DROM starts ARC if 0x3f
+		 *  is 1, and SRM's "console serial" leaves 0x31 in 0x3e, which
+		 *  makes it skip its x86 BIOS emulator at power-up (whose
+		 *  45 KB would otherwise leave too little console heap for a
+		 *  network card's buffers).
+		 */
+		d->rtc_last = 0x3f;
 		break;
 	case MACHINE_JENSEN: {
 		const char *bootarg = devinit->machine->boot_string_argument;

@@ -142,12 +142,31 @@ struct pci_data *dev_apecs_pci(struct apecs_data *d)
 /*
  *  A bus cycle of 1..4 bytes at bus address busaddr (in the space at
  *  base), with the data on the byte lanes of busaddr & 3 in val.
+ *
+ *  Below isa_limit, the SIO passes the cycle on to ISA as byte cycles
+ *  (the 8-bit ISA devices see one access per byte); above it, an aligned
+ *  word or longword reaches the PCI device as one access (the 21143's
+ *  CSRs are longwords).
  */
 static uint64_t apecs_bus_cycle(struct cpu *cpu, uint64_t base,
-	uint64_t busaddr, int n, uint64_t val, int writeflag)
+	uint64_t busaddr, int n, uint64_t val, int writeflag,
+	uint64_t isa_limit)
 {
 	int i, lane = busaddr & 3;
 	uint64_t result = 0;
+
+	if (busaddr >= isa_limit && (n == 2 || n == 4) &&
+	    (busaddr & (n - 1)) == 0) {
+		unsigned char buf[4];
+
+		for (i = 0; i < n; i++)
+			buf[i] = val >> ((lane + i) * 8);
+		memory_device_dispatch(cpu, cpu->mem, base + busaddr, buf, n,
+		    writeflag);
+		for (i = 0; i < n; i++)
+			result |= (uint64_t) buf[i] << ((lane + i) * 8);
+		return result;
+	}
 
 	for (i = 0; i < n; i++) {
 		uint8_t b = val >> ((lane + i) * 8);
@@ -166,7 +185,7 @@ static uint64_t apecs_bus_cycle(struct cpu *cpu, uint64_t base,
  */
 static int apecs_sparse(struct cpu *cpu, struct apecs_data *d, uint64_t base,
 	uint64_t busaddr, uint64_t relative_addr, unsigned char *data,
-	size_t len, int writeflag)
+	size_t len, int writeflag, uint64_t isa_limit)
 {
 	int n = ((relative_addr >> 3) & 3) + 1;
 	uint64_t val = 0;
@@ -174,7 +193,8 @@ static int apecs_sparse(struct cpu *cpu, struct apecs_data *d, uint64_t base,
 	if (writeflag == MEM_WRITE)
 		val = memory_readmax64(cpu, data, len);
 
-	val = apecs_bus_cycle(cpu, base, busaddr, n, val, writeflag);
+	val = apecs_bus_cycle(cpu, base, busaddr, n, val, writeflag,
+	    isa_limit);
 
 	if (writeflag == MEM_READ)
 		memory_writemax64(cpu, data, len, val);
@@ -188,7 +208,7 @@ DEVICE_ACCESS(apecs_sparse_io)
 	struct apecs_data *d = (struct apecs_data *) extra;
 
 	return apecs_sparse(cpu, d, d->io_base, (relative_addr >> 5) &
-	    0xffffff, relative_addr, data, len, writeflag);
+	    0xffffff, relative_addr, data, len, writeflag, 0x1000);
 }
 
 
@@ -199,7 +219,7 @@ DEVICE_ACCESS(apecs_sparse_mem)
 	    (d->epic[EPIC_HAXR1] & 0xf8000000);
 
 	return apecs_sparse(cpu, d, d->mem_base, busaddr, relative_addr,
-	    data, len, writeflag);
+	    data, len, writeflag, 0x100000);
 }
 
 

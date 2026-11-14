@@ -1396,6 +1396,51 @@ PCIINIT(rtl8139c)
 #define PCI_VENDOR_DEC          0x1011 /* Digital Equipment */
 #define PCI_PRODUCT_DEC_21142   0x0019 /* DECchip 21142/21143 10/100 Ethernet */
 
+/*  With BARs as the firmware sets them (the AlphaStation 200's DE500-BA):  */
+static int dec21143_cfg_reg_write(struct pci_device *pd, int reg,
+	uint32_t value)
+{
+	uint32_t cmd, io, mem;
+
+	switch (reg) {
+	case PCI_ID_REG:
+	case PCI_CLASS_REG:
+	case PCI_SUBSYS_ID_REG:
+		return 1;
+	case PCI_COMMAND_STATUS_REG:
+		/*  The status bits are cleared by writing ones.  */
+		value = (value & 0xffff) | ((pd->cfg_mem[6] |
+		    (pd->cfg_mem[7] << 8)) & ~(value >> 16)) << 16;
+		break;
+	case PCI_MAPREG_START:
+		/*  CBIO: I/O space, 128 bytes:  */
+		value = (value & ~0x7f) | PCI_MAPREG_TYPE_IO;
+		break;
+	case PCI_MAPREG_START + 4:
+		/*  CBMA: memory space, 128 bytes:  */
+		value &= ~0x7f;
+		break;
+	case PCI_INTERRUPT_REG:
+		/*  Only the interrupt line is writable:  */
+		value = (pci_cfg32(pd, reg) & ~0xff) | (value & 0xff);
+		break;
+	}
+
+	PCI_SET_DATA(reg, value);
+
+	cmd = pci_cfg32(pd, PCI_COMMAND_STATUS_REG);
+	io = pci_cfg32(pd, PCI_MAPREG_START) & ~0x7f;
+	mem = pci_cfg32(pd, PCI_MAPREG_START + 4) & ~0x7f;
+	if (pd->extra != NULL)
+		dev_dec21143_set_bars((struct dec21143_data *) pd->extra,
+		    pd->pcibus->pci_actual_io_offset + io,
+		    (cmd & PCI_COMMAND_IO_ENABLE) && io != 0,
+		    pd->pcibus->pci_actual_mem_offset + mem,
+		    (cmd & PCI_COMMAND_MEM_ENABLE) && mem != 0);
+
+	return 1;
+}
+
 PCIINIT(dec21143)
 {
 	uint64_t port, memaddr;
@@ -1412,6 +1457,29 @@ PCIINIT(dec21143)
 	    PCI_SUBCLASS_NETWORK_ETHERNET, 0x00) + 0x41);
 
 	PCI_SET_DATA(PCI_BHLC_REG, PCI_BHLC_CODE(0,0,0, 0x40,0));
+
+	if (machine->machine_type == MACHINE_AVANTI) {
+		/*
+		 *  A DE500-BA in the first slot (device 11), whose pin A is
+		 *  the SIO's PIRQ0 (Linux's and NetBSD's tables for the
+		 *  AlphaStation 200; see dev_avanti.c).
+		 */
+		PCI_SET_DATA(PCI_COMMAND_STATUS_REG, 0x02800000);
+		PCI_SET_DATA(PCI_BHLC_REG, 0);
+		PCI_SET_DATA(PCI_MAPREG_START, PCI_MAPREG_TYPE_IO);
+		PCI_SET_DATA_SIZE(PCI_MAPREG_START, 0xffffff81);
+		PCI_SET_DATA(PCI_MAPREG_START + 4, 0);
+		PCI_SET_DATA_SIZE(PCI_MAPREG_START + 4, 0xffffff80);
+		PCI_SET_DATA(PCI_SUBSYS_ID_REG,
+		    (DEC21143_DE500_SUBSYS_ID << 16) | PCI_VENDOR_DEC);
+		PCI_SET_DATA(PCI_INTERRUPT_REG, 0x28140100);
+		snprintf(irqstr, sizeof(irqstr), "%s.pirq.0",
+		    pd->pcibus->irq_path_pci);
+		pd->extra = dev_dec21143_pci_init(machine, mem, pd->pcibus,
+		    irqstr);
+		pd->cfg_reg_write = dec21143_cfg_reg_write;
+		return;
+	}
 
 	switch (machine->machine_type) {
 	case MACHINE_CATS:

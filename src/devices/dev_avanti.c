@@ -125,6 +125,7 @@
 /*  PCI devices:  */
 #define	AVANTI_PCI_DEV_SCSI	6
 #define	AVANTI_PCI_DEV_SIO	7
+#define	AVANTI_PCI_DEV_SLOT0	11	/*  slots: devices 11..13  */
 
 #define	SIO_PIRQ_ROUTE		0x60	/*  4 bytes: bit 7 off, <3:0> IRQ  */
 #define	SIO_PIRQ_DISABLE	0x80
@@ -510,6 +511,11 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	    AVANTI_PCI_DEV_SCSI, 0, "sym53c810");
 	bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
 	    AVANTI_PCI_DEV_SIO, 0, "i82378zb");
+
+	/*  With a network, a DE500-BA (21143) in the first PCI slot:  */
+	if (machine->emul->net != NULL)
+		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
+		    AVANTI_PCI_DEV_SLOT0, 0, "dec21143");
 
 	/*  Behind the SIO: 8259s, 8254, RTC, keyboard, serial ports, LPT,
 	    and the DMA controllers with the floppy (IRQ 6, channel 2).  */

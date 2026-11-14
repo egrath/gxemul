@@ -322,9 +322,48 @@ NetBSD or Linux kernel) was skipped: Tru64 came first.
   and a CD-ROM at ID 4, the serial console on telnet), DEC's drive models
   (now with the RRD45), and no PROM emulation checkbox for it.
 
-**Next:** network (the 21040, or a DE500 in a slot), graphics for CDE (TGA
-or an S3 card), V5.1A, the ARC console with NT, the 400's 233 MHz EV45
-model.
+**Network (2026-11-14):** with networking enabled, a DE500-BA (21143,
+`dev_dec21143.c`) is in the first PCI slot (device 11, pin A on PIRQ0).
+SRM shows it as `ewa0`, Tru64 V5.1B as `tu0` ("DEC TULIP (10/100)"); after
+a `doconfig` (the installed kernel was sized without it), `rcmgr`
+NETDEV_0/IFCONFIG_0 and `/etc/routes`, it comes up at boot: ping, DNS
+through the simulated gateway (`domain` and `nameserver 10.0.0.254` in
+`/etc/resolv.conf`, `hosts=local,bind`), TCP.
+
+- **The 21143 on a real PCI bus:** BARs as the firmware programs them
+  (128 bytes each), DMA through the EPIC's windows, a version 3 SROM as on
+  a DE500-BA (SRM V7.0 misreads version 4; extended media block lengths
+  don't count the length byte) with subsystem ID 1011:500B.
+- **21143 fixes for every machine:** a setup frame's descriptor gets only
+  TDES0 = 7FFFFFFFh written back (the other words were overwritten with
+  ones, wrecking Tru64's ring); CSR5 shows the transmit and receive
+  process states (TS, RS); NIS/AIS summarize only the interrupts enabled
+  in CSR7 (Tru64 leaves TU masked and ends its interrupt handler with
+  poll demands, which set TU again: an interrupt storm otherwise); the
+  transmit threshold bits are accepted.
+- **APECS sparse space:** aligned word and longword cycles to PCI devices
+  are one access (the 21143's CSRs are longwords); below 1000h (I/O) and
+  1 MB (memory) they are still byte cycles, for the ISA devices behind the
+  SIO.
+- **CMOS:** bytes 0Eh..3Fh are the RTC's battery-backed RAM, kept in the
+  NVRAM file (they were lost at every start). SRM keeps `quick_start` in
+  3Eh (31h = ON), the DROM the console choice in 3Fh.
+- **SRM's console heap:** with `quick_start OFF`, SRM runs its x86 BIOS
+  emulator at power-up (to find VGA option ROMs), which keeps about 45 KB
+  of the small initial heap (about 170 KB); the `ew` driver then can't
+  allocate its receive buffers and SRM halts in `rx_ewa0` ("insufficient
+  dynamic memory for a request of 1536 bytes") and restarts, forever. Not
+  understood: a real machine has the same heap and an on-board 21040. A
+  new CMOS here has `quick_start` ON, which avoids it (nothing is lost:
+  there is no VGA); `set quick_start off` brings the loop back.
+- **gxemul's NAT** (not the card): its TCP is stop-and-wait, and long
+  downloads stall near the end (1.6-2 MB of 2 MB, on the DEC 3000's LANCE
+  too); short connections work.
+
+**Next:** the on-board 21040 (SRM's driver knows it; the 21143 model would
+need its serial address ROM and SIA-only media), why the console heap is
+short, graphics for CDE (TGA or an S3 card), V5.1A, the ARC console with
+NT, the 400's 233 MHz EV45 model.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the
