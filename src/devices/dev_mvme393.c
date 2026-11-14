@@ -445,8 +445,12 @@ DEVICE_ACCESS(mvme393_ram)
 					if (d->vram_dest < byte_base || d->vram_dest >= byte_base + sizeof(d->vram))
 						d->vram_dest = byte_base;
 					for (i = 0; i < count; i++) {
-						if (d->vram_dest < sizeof(d->vram))
-							d->vram[d->vram_dest++] = d->dpr[pkt_addr + 14 + i];
+						if (d->vram_dest < sizeof(d->vram)) {
+							d->vram[d->vram_dest] = d->dpr[pkt_addr + 14 + i];
+							if (d->fb != NULL && d->fb->framebuffer != NULL && d->vram_dest < d->fb->framebuffer_size)
+								d->fb->framebuffer[d->vram_dest] = d->dpr[pkt_addr + 14 + i];
+							d->vram_dest++;
+						}
 					}
 					d->vram_dirty = 1;
 					if (chunk_flag == 0)
@@ -532,7 +536,6 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 	(void)cpu;
 
 	if (d->fb != NULL && d->fb->framebuffer != NULL && d->vram_dirty) {
-		memcpy(d->fb->framebuffer, d->vram, 1024 * 768);
 		d->fb->update_x1 = 0;
 		d->fb->update_y1 = 0;
 		d->fb->update_x2 = 1023;
@@ -571,9 +574,9 @@ void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187)
 		dev_mvme187_set_vme_iack(mvme187, dev_mvme393_iack, d);
 	}
 
-	/* Initialize 1024x768 8bpp color framebuffer */
-	d->fb = dev_fb_init(machine, machine->memory, 0x2ff000000ULL,
-		VFB_GENERIC, 1024, 768, 1024, 768, 8, "MVME393 1024x768");
+	/* Initialize 1024x768 (1 MB buffer) 8bpp color framebuffer at 0xfd000000 */
+	d->fb = dev_fb_init(machine, machine->memory, 0xfd000000ULL,
+		VFB_GENERIC, 1024, 768, 1024, 1024, 8, "MVME393 1024x768");
 
 	machine_add_tickfunction(machine, dev_mvme393_tick, d, 14);
 }
