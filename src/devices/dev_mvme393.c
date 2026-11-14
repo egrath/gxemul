@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "console.h"
 #include "cpu.h"
 #include "device.h"
 #include "devices.h"
@@ -532,15 +533,30 @@ static int dev_mvme393_iack(void *extra, int level)
 static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 {
 	struct mvme393_data *d = (struct mvme393_data *) extra;
+	int dx, dy, buttons, fb_nr;
 
 	(void)cpu;
 
-	if (d->fb != NULL && d->fb->framebuffer != NULL && d->vram_dirty) {
-		d->fb->update_x1 = 0;
-		d->fb->update_y1 = 0;
-		d->fb->update_x2 = 1023;
-		d->fb->update_y2 = 767;
-		d->vram_dirty = 0;
+	if (d->fb != NULL && d->fb->framebuffer != NULL) {
+		console_getmouse(&dx, &dy, &buttons, &fb_nr);
+		if (dx != 0 || dy != 0 || buttons != 0) {
+			uint8_t *in = d->fb->framebuffer + 0xfe000;
+			int32_t cur_dx = ((int32_t)in[0]<<24) | ((int32_t)in[1]<<16) | ((int32_t)in[2]<<8) | in[3];
+			int32_t cur_dy = ((int32_t)in[4]<<24) | ((int32_t)in[5]<<16) | ((int32_t)in[6]<<8) | in[7];
+			cur_dx += dx;
+			cur_dy += dy;
+			in[0] = (cur_dx >> 24) & 0xff; in[1] = (cur_dx >> 16) & 0xff; in[2] = (cur_dx >> 8) & 0xff; in[3] = cur_dx & 0xff;
+			in[4] = (cur_dy >> 24) & 0xff; in[5] = (cur_dy >> 16) & 0xff; in[6] = (cur_dy >> 8) & 0xff; in[7] = cur_dy & 0xff;
+			in[8] = (buttons >> 24) & 0xff; in[9] = (buttons >> 16) & 0xff; in[10] = (buttons >> 8) & 0xff; in[11] = buttons & 0xff;
+			in[12] = 1;
+		}
+		if (d->vram_dirty) {
+			d->fb->update_x1 = 0;
+			d->fb->update_y1 = 0;
+			d->fb->update_x2 = 1023;
+			d->fb->update_y2 = 767;
+			d->vram_dirty = 0;
+		}
 	}
 }
 
@@ -577,6 +593,23 @@ void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187)
 	/* Initialize 1024x768 (1 MB buffer) 8bpp color framebuffer at 0xfd000000 */
 	d->fb = dev_fb_init(machine, machine->memory, 0xfd000000ULL,
 		VFB_GENERIC, 1024, 768, 1024, 1024, 8, "MVME393 1024x768");
+
+	if (d->fb != NULL) {
+		int i;
+		for (i = 0; i < 256; i++) {
+			int r = ((i >> 5) & 7) * 255 / 7;
+			int g = ((i >> 2) & 7) * 255 / 7;
+			int b = (i & 3) * 255 / 3;
+			d->fb->rgb_palette[i * 3 + 0] = r;
+			d->fb->rgb_palette[i * 3 + 1] = g;
+			d->fb->rgb_palette[i * 3 + 2] = b;
+		}
+		d->fb->rgb_palette[0] = 0; d->fb->rgb_palette[1] = 0; d->fb->rgb_palette[2] = 0;
+		d->fb->rgb_palette[3] = 255; d->fb->rgb_palette[4] = 255; d->fb->rgb_palette[5] = 255;
+		d->fb->rgb_palette[255 * 3 + 0] = 255;
+		d->fb->rgb_palette[255 * 3 + 1] = 255;
+		d->fb->rgb_palette[255 * 3 + 2] = 255;
+	}
 
 	machine_add_tickfunction(machine, dev_mvme393_tick, d, 14);
 }
