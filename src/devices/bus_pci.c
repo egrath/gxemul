@@ -192,6 +192,58 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 
 
 /*
+ *  bus_pci_cfg_read32():
+ *
+ *  A configuration register of another device, as the hardware sees it
+ *  (e.g. a bridge's interrupt routing registers); 0xffffffff if there is
+ *  no such device.
+ */
+uint32_t bus_pci_cfg_read32(struct pci_data *pci_data, int bus, int device,
+	int function, int reg)
+{
+	struct pci_device *dev;
+
+	for (dev = pci_data->first_device; dev != NULL; dev = dev->next)
+		if (dev->bus == bus && dev->device == device &&
+		    dev->function == function)
+			break;
+
+	if (dev == NULL)
+		return 0xffffffff;
+
+	reg &= (PCI_CFG_MEM_SIZE - 4);
+	return dev->cfg_mem[reg] | (dev->cfg_mem[reg + 1] << 8) |
+	    (dev->cfg_mem[reg + 2] << 16) | ((uint32_t) dev->cfg_mem[reg + 3] << 24);
+}
+
+
+/*
+ *  bus_pci_dma_translate(), bus_pci_set_dma_translate():
+ *
+ *  Bus master cycles: the host bridge maps PCI memory addresses to physical
+ *  memory. Without a translation function, they are the same.
+ */
+int bus_pci_dma_translate(struct cpu *cpu, struct pci_data *pci_data,
+	uint32_t busaddr, uint64_t *paddrp)
+{
+	if (pci_data->dma_translate == NULL) {
+		*paddrp = busaddr;
+		return 1;
+	}
+
+	return pci_data->dma_translate(cpu, pci_data->dma_translate_extra,
+	    busaddr, paddrp);
+}
+
+void bus_pci_set_dma_translate(struct pci_data *pci_data,
+	bus_pci_dma_translate_fn f, void *extra)
+{
+	pci_data->dma_translate = f;
+	pci_data->dma_translate_extra = extra;
+}
+
+
+/*
  *  bus_pci_setaddr():
  *
  *  Sets the address in preparation for a PCI register transfer.
@@ -774,18 +826,25 @@ PCIINIT(piix4_isa)
 
 /*
  *  Symbios (NCR) 53C810 PCI SCSI I/O processor, as on the AlphaStation 200
- *  system board. So far only its configuration space, with the operating
- *  registers mirrored at 80h..FFh (as on the real chip) kept as written, so
- *  that the Avanti DROM's scratch register test (SCRATCHB, 5Ch) passes. The
- *  operating registers in I/O and memory space and the SCRIPTS processor
- *  are still to come (doc/avanti-plan.md).
+ *  system board (src/devices/dev_sym53c810.c). The operating registers are
+ *  mirrored at 80h..FFh in configuration space (as on the real chip); here
+ *  they are kept as written, which is enough for the Avanti DROM's scratch
+ *  register test (SCRATCHB, DCh).
  */
 #define	PCI_VENDOR_SYMBIOS		0x1000
 #define	PCI_PRODUCT_SYMBIOS_810		0x0001
 
+static uint32_t pci_cfg32(struct pci_device *pd, int reg)
+{
+	return pd->cfg_mem[reg] | (pd->cfg_mem[reg + 1] << 8) |
+	    (pd->cfg_mem[reg + 2] << 16) | ((uint32_t) pd->cfg_mem[reg + 3] << 24);
+}
+
 static int sym53c810_cfg_reg_write(struct pci_device *pd, int reg,
 	uint32_t value)
 {
+	uint32_t cmd, io, mem;
+
 	switch (reg) {
 	case PCI_ID_REG:
 	case PCI_CLASS_REG:
@@ -806,11 +865,24 @@ static int sym53c810_cfg_reg_write(struct pci_device *pd, int reg,
 	}
 
 	PCI_SET_DATA(reg, value);
+
+	cmd = pci_cfg32(pd, PCI_COMMAND_STATUS_REG);
+	io = pci_cfg32(pd, PCI_MAPREG_START) & ~0xff;
+	mem = pci_cfg32(pd, PCI_MAPREG_START + 4) & ~0xff;
+	if (pd->extra != NULL)
+		dev_sym53c810_set_bars((struct sym53c810_data *) pd->extra,
+		    pd->pcibus->pci_actual_io_offset + io,
+		    (cmd & PCI_COMMAND_IO_ENABLE) && io != 0,
+		    pd->pcibus->pci_actual_mem_offset + mem,
+		    (cmd & PCI_COMMAND_MEM_ENABLE) && mem != 0, mem);
+
 	return 1;
 }
 
 PCIINIT(sym53c810)
 {
+	char irqstr[300];
+
 	PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_SYMBIOS,
 	    PCI_PRODUCT_SYMBIOS_810));
 
@@ -826,6 +898,18 @@ PCIINIT(sym53c810)
 	/*  Interrupt pin A:  */
 	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x00000100);
 
+	switch (machine->machine_type) {
+	case MACHINE_AVANTI:
+		/*  Through the SIO's PIRQ3 (see dev_avanti.c).  */
+		snprintf(irqstr, sizeof(irqstr), "%s.pirq.3",
+		    pd->pcibus->irq_path_pci);
+		break;
+	default:fatal("sym53c810 for this machine has not been "
+		    "implemented yet\n");
+		exit(1);
+	}
+
+	pd->extra = dev_sym53c810_init(machine, mem, pd->pcibus, irqstr);
 	pd->cfg_reg_write = sym53c810_cfg_reg_write;
 }
 
@@ -858,6 +942,16 @@ PCIINIT(i82378zb)
 
 	PCI_SET_DATA(PCI_CLASS_REG, PCI_CLASS_CODE(PCI_CLASS_BRIDGE,
 	    PCI_SUBCLASS_BRIDGE_ISA, 0) + 0x43);
+
+	/*
+	 *  The real 82378ZB predates PCI class codes: its class code reads
+	 *  as 000000h. The AlphaStation 200's console reads the revision ID
+	 *  with a byte read (which returns the whole longword) and compares
+	 *  it with 88h; with a class code there, it leaves its direct mapped
+	 *  DMA window at PCI address 0 instead of 1 GB, and Tru64 panics.
+	 */
+	if (machine->machine_type == MACHINE_AVANTI)
+		PCI_SET_DATA(PCI_CLASS_REG, 0x43);
 
 	PCI_SET_DATA(PCI_BHLC_REG,
 	    PCI_BHLC_CODE(0,0, 1 /* multi-function */, 0x40,0));

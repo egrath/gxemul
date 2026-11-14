@@ -170,6 +170,14 @@ void dev_jensen_set_rom(struct jensen_data *d, const unsigned char *image,
 	size_t len);
 uint64_t dev_jensen_srom(struct jensen_data *d, struct cpu *cpu);
 
+/*  dev_sym53c810.c:  */
+struct sym53c810_data;
+struct pci_data;
+struct sym53c810_data *dev_sym53c810_init(struct machine *machine,
+	struct memory *mem, struct pci_data *pci, const char *irq_path);
+void dev_sym53c810_set_bars(struct sym53c810_data *d, uint64_t io_addr,
+	int io_enable, uint64_t mem_addr, int mem_enable, uint32_t mem_busaddr);
+
 /*  dev_apecs.c:  */
 struct apecs_data;
 struct pci_data;

@@ -54,6 +54,10 @@
  *  console image chosen by CMOS byte 0x3f (1: ARC) from the flash to
  *  10.0000 (the header just below) and starts it in PALmode. See
  *  doc/avanti-plan.md.
+ *
+ *  PCI interrupts go to the SIO's PIRQ0..3 inputs, which its PIRQ route
+ *  control registers (configuration space 60h..63h) send to ISA IRQs; the
+ *  on-board 53C810 is on PIRQ3 (as in NetBSD's pci_2100_a50.c).
  */
 
 #include <stdio.h>
@@ -97,9 +101,22 @@
 #define	AVANTI_IO_BASE		0x10000000000ULL
 #define	AVANTI_MEM_BASE		0x20000000000ULL
 
-/*  EV4 interrupt lines: the SIO's 8259s (verify), and the RTC's own (the
-    DROM's interrupt test: "EV4 IRQ4 Line Was Not Set").  */
-#define	AVANTI_IRQ_SIO		1
+/*
+ *  EV4 interrupt lines, as the OSF PALcode (UNIX V1.46) dispatches them:
+ *
+ *	irq_h[0]	EPIC (PCI) errors
+ *	irq_h[2]	the SIO's 8259s: the PALcode reads ISA ports 26h/27h
+ *			(an EB64+ interrupt register; nothing answers here,
+ *			so bit 10 reads as set, "ISA"), then the interrupt
+ *			acknowledge at 1.B000.0000: vector 800h + 10h * IRQ
+ *	irq_h[3]	NMI (port 61h)
+ *	irq_h[4]	the RTC (also the DROM's interrupt test: "EV4 IRQ4
+ *			Line Was Not Set")
+ *	irq_h[5]	halt
+ *
+ *  irq_h[1] isn't looked at.
+ */
+#define	AVANTI_IRQ_SIO		2
 #define	AVANTI_IRQ_RTC		4
 
 /*  The DROM runs here (its PAL base); it copies the console to 10.0000.  */
@@ -108,6 +125,9 @@
 /*  PCI devices:  */
 #define	AVANTI_PCI_DEV_SCSI	6
 #define	AVANTI_PCI_DEV_SIO	7
+
+#define	SIO_PIRQ_ROUTE		0x60	/*  4 bytes: bit 7 off, <3:0> IRQ  */
+#define	SIO_PIRQ_DISABLE	0x80
 
 /*  Intel 28F020 commands:  */
 #define	F28_READ		0x00
@@ -145,6 +165,13 @@ struct avanti_data {
 	int			have_drom;
 
 	struct isadma_data	*dma;
+
+	/*  PCI interrupts, through the SIO:  */
+	char			*isa_irq_path;
+	struct interrupt	isa_irq[16];
+	int			isa_irq_connected[16];
+	int			isa_irq_count[16];
+	int			pirq_routed[4];	/*  the ISA IRQ, or -1  */
 
 	/*  Flash contents are kept in this file, if set:  */
 	char			*flash_file;
@@ -366,6 +393,56 @@ static void avanti_rtc_interrupt_deassert(struct interrupt *interrupt)
 }
 
 
+/*  PIRQ0..3, routed by the SIO to an ISA IRQ:  */
+static void avanti_pirq_set(struct avanti_data *d, int pirq, int assert)
+{
+	int irq = d->pirq_routed[pirq];
+
+	if (assert && irq < 0) {
+		uint32_t route = bus_pci_cfg_read32(dev_apecs_pci(d->apecs),
+		    0, AVANTI_PCI_DEV_SIO, 0, SIO_PIRQ_ROUTE);
+
+		route = (route >> (pirq * 8)) & 0xff;
+		if (route & SIO_PIRQ_DISABLE) {
+			debugmsg(d->subsys, "avanti", VERBOSITY_DEBUG,
+			    "PIRQ%i is not routed\n", pirq);
+			return;
+		}
+
+		irq = route & 0xf;
+		if (!d->isa_irq_connected[irq]) {
+			char tmp[400];
+			snprintf(tmp, sizeof(tmp), "%s.%i", d->isa_irq_path,
+			    irq);
+			INTERRUPT_CONNECT(tmp, d->isa_irq[irq]);
+			d->isa_irq_connected[irq] = 1;
+		}
+
+		debugmsg(d->subsys, "avanti", VERBOSITY_DEBUG,
+		    "PIRQ%i: ISA IRQ %i\n", pirq, irq);
+		d->pirq_routed[pirq] = irq;
+		if (d->isa_irq_count[irq]++ == 0)
+			INTERRUPT_ASSERT(d->isa_irq[irq]);
+	} else if (!assert && irq >= 0) {
+		d->pirq_routed[pirq] = -1;
+		if (--d->isa_irq_count[irq] == 0)
+			INTERRUPT_DEASSERT(d->isa_irq[irq]);
+	}
+}
+
+static void avanti_pirq_assert(struct interrupt *interrupt)
+{
+	avanti_pirq_set((struct avanti_data *) interrupt->extra,
+	    interrupt->line, 1);
+}
+
+static void avanti_pirq_deassert(struct interrupt *interrupt)
+{
+	avanti_pirq_set((struct avanti_data *) interrupt->extra,
+	    interrupt->line, 0);
+}
+
+
 /*
  *  dev_avanti_init():
  */
@@ -375,6 +452,7 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	struct avanti_data *d;
 	struct interrupt templ;
 	char sio_irq_path[300], fdc_irq_path[310], tmp[310];
+	int i;
 
 	CHECK_ALLOCATION(d = (struct avanti_data *) malloc(sizeof(*d)));
 	memset(d, 0, sizeof(*d));
@@ -411,7 +489,19 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	memory_device_register(mem, "avanti_rombus", AVANTI_ROMBUS_BASE,
 	    AVANTI_ROMBUS_SIZE, dev_avanti_rombus_access, d, DM_DEFAULT, NULL);
 
+	/*  PCI interrupts:  */
+	for (i = 0; i < 4; i++) {
+		snprintf(tmp, sizeof(tmp), "%s.pirq.%i", sio_irq_path, i);
+		templ.line = i;
+		templ.name = tmp;
+		templ.interrupt_assert = avanti_pirq_assert;
+		templ.interrupt_deassert = avanti_pirq_deassert;
+		interrupt_handler_register(&templ);
+		d->pirq_routed[i] = -1;
+	}
+
 	snprintf(tmp, sizeof(tmp), "%s.isa", sio_irq_path);
+	CHECK_ALLOCATION(d->isa_irq_path = strdup(tmp));
 	d->apecs = dev_apecs_init(machine, mem, AVANTI_IO_BASE,
 	    AVANTI_MEM_BASE, sio_irq_path, tmp);
 	dev_apecs_set_memory(d->apecs, ram_size);
@@ -426,6 +516,20 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	bus_isa_init(machine, sio_irq_path, BUS_ISA_LPTBASE_3BC |
 	    BUS_ISA_RTC_OWN_IRQ | BUS_ISA_PIT_COUNTS, AVANTI_IO_BASE,
 	    AVANTI_MEM_BASE);
+
+	/*
+	 *  The PALcode acknowledges ISA interrupts with an interrupt
+	 *  acknowledge cycle (dev_apecs.c), so requests that arrive while
+	 *  the same IRQ is in service must survive the EOI, as on a real
+	 *  8259 (Tru64's floppy driver starts the next command before the
+	 *  EOI of the last one); the cascade input is a level.
+	 */
+	if (machine->isa_pic_data.pic1 != NULL &&
+	    machine->isa_pic_data.pic2 != NULL) {
+		machine->isa_pic_data.pic1->latch_in_service = 1;
+		machine->isa_pic_data.pic2->latch_in_service = 1;
+		machine->isa_pic_data.pic1->elcr |= 0x04;
+	}
 
 	d->dma = dev_isadma_init(machine, mem, AVANTI_IO_BASE);
 	snprintf(fdc_irq_path, sizeof(fdc_irq_path), "%s.isa.6",

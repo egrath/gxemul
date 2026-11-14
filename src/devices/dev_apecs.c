@@ -50,10 +50,13 @@
  *  Cycles on PCI (and through the SIO, ISA) go to the emulated devices
  *  registered at io_base + port and mem_base + address.
  *
- *  Not yet: the DMA windows and the scatter-gather TLB (devices don't do
- *  DMA yet), and the meaning of most CSR bits; COMANCHE and EPIC CSRs are
- *  kept as written, with their error bits (which are cleared by writing
- *  ones) never set. Both chips say they are pass 2. The memory banksets are
+ *  Bus master cycles from PCI go through the EPIC's two DMA windows, direct
+ *  mapped or through a scatter/gather map in memory (apecs_dma(); the
+ *  EPIC's TLB isn't emulated: map entries are read each time).
+ *
+ *  Not yet: the meaning of most CSR bits; COMANCHE and EPIC CSRs are kept
+ *  as written, with their error bits (which are cleared by writing ones)
+ *  never set. Both chips say they are pass 2. The memory banksets are
  *  set up as the serial ROM would (dev_apecs_set_memory()).
  */
 
@@ -102,6 +105,9 @@
 #define	EPIC_DCSR		0x00
 #define	EPIC_PEAR		0x01
 #define	EPIC_SEAR		0x02
+#define	EPIC_TBASE(n)		(0x06 + (n))	/*  translated base  */
+#define	EPIC_PCI_BASE(n)	(0x08 + (n))
+#define	EPIC_PCI_MASK(n)	(0x0a + (n))
 #define	EPIC_HAXR0		0x0c
 #define	EPIC_HAXR1		0x0d
 #define	EPIC_HAXR2		0x0e
@@ -109,6 +115,9 @@
 /*  EPIC_DCSR: bits <15:6> are errors, cleared by writing ones.  */
 #define	EPIC_DCSR_ERRORS	0x0000ffc0
 #define	EPIC_DCSR_PASS2		0x80000000
+
+#define	EPIC_PCI_BASE_WENB	0x00080000	/*  window enable  */
+#define	EPIC_PCI_BASE_SGEN	0x00040000	/*  scatter/gather  */
 
 
 struct apecs_data {
@@ -333,6 +342,70 @@ DEVICE_ACCESS(apecs_epic)
 
 
 /*
+ *  apecs_dma():
+ *
+ *  A PCI bus master's memory address, through the DMA windows. A window
+ *  of 2^n bytes (the mask register has ones in <n-1:20>) matches the PCI
+ *  address in bits <31:n>. Direct mapped, the physical address is the
+ *  translated base<32:n> and the PCI address<n-1:0>; scatter/gather, the
+ *  translated base<32:10+n-13> and the PCI address <n-1:13> address a
+ *  quadword map entry: valid in bit 0, the page number (8 KB pages) in
+ *  <20:1>.
+ */
+static int apecs_dma(struct cpu *cpu, void *extra, uint32_t busaddr,
+	uint64_t *paddrp)
+{
+	struct apecs_data *d = (struct apecs_data *) extra;
+	int w;
+
+	for (w = 0; w < 2; w++) {
+		uint32_t base = d->epic[EPIC_PCI_BASE(w)];
+		uint32_t offset_mask = (d->epic[EPIC_PCI_MASK(w)] & 0xfff00000)
+		    | 0x000fffff;
+		uint64_t tbase = (uint64_t) (d->epic[EPIC_TBASE(w)] &
+		    0xfffffe00) << 1;
+		uint64_t entry_addr;
+		unsigned char entry[8];
+		uint64_t pte;
+		int i;
+
+		if (!(base & EPIC_PCI_BASE_WENB) ||
+		    (busaddr & ~offset_mask) != (base & ~offset_mask &
+		    0xfff00000))
+			continue;
+
+		if (!(base & EPIC_PCI_BASE_SGEN)) {
+			*paddrp = (tbase & ~(uint64_t) offset_mask) |
+			    (busaddr & offset_mask);
+			return 1;
+		}
+
+		entry_addr = (tbase & ~(uint64_t) (offset_mask >> 10)) |
+		    (((busaddr & offset_mask) >> 13) << 3);
+		cpu->memory_rw(cpu, cpu->mem, entry_addr, entry, sizeof(entry),
+		    MEM_READ, PHYSICAL | NO_EXCEPTIONS);
+		for (pte = 0, i = 7; i >= 0; i--)
+			pte = (pte << 8) | entry[i];
+
+		if (!(pte & 1)) {
+			debugmsg(d->subsys, "apecs", VERBOSITY_WARNING,
+			    "DMA to 0x%08x: invalid scatter/gather map entry "
+			    "at 0x%llx\n", (int) busaddr,
+			    (long long) entry_addr);
+			return 0;
+		}
+
+		*paddrp = (((pte >> 1) & 0xfffff) << 13) | (busaddr & 0x1fff);
+		return 1;
+	}
+
+	debugmsg(d->subsys, "apecs", VERBOSITY_WARNING,
+	    "DMA to 0x%08x: in no window\n", (int) busaddr);
+	return 0;
+}
+
+
+/*
  *  dev_apecs_set_memory():
  *
  *  Sets up the memory banksets for ram_size bytes, as the serial ROM does:
@@ -384,6 +457,7 @@ struct apecs_data *dev_apecs_init(struct machine *machine, struct memory *mem,
 
 	d->pci = bus_pci_init(machine, pci_irq_path, io_base, mem_base,
 	    0x10000, 0x1000000, pci_irq_path, 0, 0, isa_irq_path);
+	bus_pci_set_dma_translate(d->pci, apecs_dma, d);
 
 	memory_device_register(mem, "apecs_comanche", APECS_COMANCHE_BASE,
 	    APECS_COMANCHE_SIZE, dev_apecs_comanche_access, d, DM_DEFAULT,

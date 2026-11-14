@@ -231,7 +231,7 @@ it decompresses the console.
 
 ---
 
-## 6. Status (2026-11-13)
+## 6. Status (2026-11-14)
 
 **M1 done, M2 mostly:** the real DROM V1.7 runs all its power-up tests
 and starts SRM V7.0-9 from the flash, which comes up to `>>>` on COM1;
@@ -271,9 +271,39 @@ What it took (`dev_avanti.c`, `dev_apecs.c`):
   SL_XMIT is decoded into characters (the `srom` log subsystem), which shows
   what the DROM prints, e.g. its `DIAGROM>` monitor.
 
-**Next (M2/M3):** check the SIO interrupt line (irq_h[1] is a guess) and
-the PIRQ routing against what the SRM programs; `show device`; the 53C810's
-operating registers and SCRIPTS, for `dka0`/`dka400`.
+**M3 done, M4 started (2026-11-14):** the 53C810 works (`dev_sym53c810.c`):
+SRM's `show device` lists `dka0` and `dka400` with their names, `boot dka0`
+boots, and Tru64 V5.1's `genvmunix` comes up to the single-user prompt with
+`scsi0 at psiop0`, `ace0`/`ace1`, `lp0`, `fdi0`/`fd0` (console on `ace0`).
+
+- **53C810:** the operating registers in both BARs (the BARs as programmed;
+  Tru64 uses the memory BAR), the SCRIPTS processor (block moves, I/O,
+  register moves, transfer control, memory moves, LOAD/STORE), and a SCSI
+  bus with the disk images as targets: SDTR is accepted as asked, WDTR
+  answered with 8 bits, only LUN 0 exists, nothing ever disconnects, so
+  WAIT RESELECT waits for SIGP. SCRIPTS (SRM's and Tru64's) and data go
+  through the DMA windows; Tru64's 810 SCRIPTS load and save registers with
+  memory moves to the chip's own memory BAR.
+- **DMA windows** in the EPIC: direct mapped and scatter/gather.
+- **The SIO's class code reads 0** (the real 82378ZB predates class codes).
+  SRM reads the revision ID with a byte read (configuration reads return
+  the whole longword) and compares it with 88h; with the class code there,
+  it left window 2 at PCI 0 instead of 1 GB at 1 GB, and Tru64, which
+  reserves [base, 2 × base) for it, panicked in `rmget`.
+- **Interrupts:** the OSF PALcode (UNIX V1.46) dispatches irq_h[0] (EPIC
+  errors), **irq_h[2] (the SIO: it reads ISA port 26h, an EB64+ register
+  that floats here, then the interrupt acknowledge, vector 800h + 10h *
+  IRQ)**, irq_h[3] (NMI), irq_h[4] (RTC), irq_h[5] (halt), and ignores
+  irq_h[1]. PCI interrupts go through the SIO's PIRQ route registers; the
+  810 is on PIRQ3 (SRM routes it to IRQ 11, `control_irq11 scsi`).
+- **8259s** latch requests that arrive while in service (as on the
+  Jensen): Tru64's floppy driver starts a seek before the EOI of the last
+  interrupt.
+- SCSI is the default drive bus; INQUIRY says SCSI-2 (response data format
+  2), or SRM shows no vendor and product.
+
+**Next (M4/M5):** the TOY clock ("preposterous time"), multi-user boot,
+a Tru64 5.1B install from CD; the machine in the presets and config UI.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

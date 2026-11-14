@@ -951,6 +951,11 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 			memcpy(xferp->data_in+32, "2000", 4);
 		}
 
+		/*  The AlphaStation 200's console shows the vendor and
+		    product only with the SCSI-2 response data format:  */
+		if (machine->machine_type == MACHINE_AVANTI)
+			xferp->data_in[3] = 0x02;
+
 		/*  Some data is different for CD-ROM drives:  */
 		if (d->is_a_cdrom) {
 			xferp->data_in[0] = 0x05;  /*  0x05 = CD-ROM  */

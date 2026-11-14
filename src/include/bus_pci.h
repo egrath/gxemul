@@ -35,10 +35,16 @@
 
 #include "thirdparty/pcireg.h"
 
+struct cpu;
 struct machine;
 struct memory;
 
 struct pci_device;
+
+/*  Translates a bus master's PCI memory address to a physical address
+    (through the host bridge's DMA windows); returns 0 if there is none.  */
+typedef int (*bus_pci_dma_translate_fn)(struct cpu *cpu, void *extra,
+	uint32_t busaddr, uint64_t *paddrp);
 
 
 #ifndef BUS_PCI_C
@@ -85,6 +91,10 @@ struct pci_data {
 	int		last_was_write_ffffffff;
 
 	struct pci_device *first_device;
+
+	/*  Bus master cycles: PCI address to physical address.  */
+	bus_pci_dma_translate_fn dma_translate;
+	void		*dma_translate_extra;
 };
 
 #define	PCI_CFG_MEM_SIZE	0x100
@@ -149,6 +159,12 @@ void bus_pci_setaddr(struct cpu *cpu, struct pci_data *pci_data,
 	int bus, int device, int function, int reg);
 void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 	uint64_t *data, int len, int writeflag);
+uint32_t bus_pci_cfg_read32(struct pci_data *pci_data, int bus, int device,
+	int function, int reg);
+int bus_pci_dma_translate(struct cpu *cpu, struct pci_data *pci_data,
+	uint32_t busaddr, uint64_t *paddrp);
+void bus_pci_set_dma_translate(struct pci_data *pci_data,
+	bus_pci_dma_translate_fn f, void *extra);
 
 /*  Initialization:  */
 struct pci_data *bus_pci_init(struct machine *machine, const char *irq_path,

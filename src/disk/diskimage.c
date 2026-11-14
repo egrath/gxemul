@@ -744,7 +744,8 @@ int diskimage_default_type(int machine_type)
 	    machine_type == MACHINE_LUNA88K ||
 	    machine_type == MACHINE_MVME88K ||
 	    machine_type == MACHINE_DEC3000 ||
-	    machine_type == MACHINE_JENSEN)
+	    machine_type == MACHINE_JENSEN ||
+	    machine_type == MACHINE_AVANTI)
 		return DISKIMAGE_SCSI;
 
 	return DISKIMAGE_IDE;
