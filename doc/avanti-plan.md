@@ -302,8 +302,29 @@ boots, and Tru64 V5.1's `genvmunix` comes up to the single-user prompt with
 - SCSI is the default drive bus; INQUIRY says SCSI-2 (response data format
   2), or SRM shows no vendor and product.
 
-**Next (M4/M5):** the TOY clock ("preposterous time"), multi-user boot,
-a Tru64 5.1B install from CD; the machine in the presets and config UI.
+**M5 done (2026-11-14): Tru64 UNIX V5.1B installs from CD and runs
+multi-user.** With the 5.1B OS CD as `dka400` and a blank RZ29B-sized
+image (8380080 sectors) as `dka0`: `boot dka400`, U.S. English, all
+software (115 subsets), mandatory kernel options, default layout on
+AdvFS. The subsets load in about 35 minutes; the installer reboots through
+SRM on its own (`boot dka0 -flags A`), configures the subsets, builds a
+kernel for the machine (`cpu "DEC2100_A50"`), reboots again and comes up
+to `login:`. `hwmgr` sees dsk0 (RZ29B), cdrom0 (RRD45) and floppy0. M4 (a
+NetBSD or Linux kernel) was skipped: Tru64 came first.
+
+- **The TOY clock:** Tru64's readtodr() for these machines wants register
+  A's divider at 32 kHz, register B binary and 24-hour (SRM sets it so),
+  and counts the year register from 1952 (it adds 52); anything before
+  1996 is a "preposterous time in TOY clock". The Avanti's RTC holds the
+  year minus 1952 (2026 is 74). (NT, from the ARC console, would count
+  from 1980.)
+- **The preset** "avanti", "200" (256 MB, `avanti.rom`, a disk at ID 0
+  and a CD-ROM at ID 4, the serial console on telnet), DEC's drive models
+  (now with the RRD45), and no PROM emulation checkbox for it.
+
+**Next:** network (the 21040, or a DE500 in a slot), graphics for CDE (TGA
+or an S3 card), V5.1A, the ARC console with NT, the 400's 233 MHz EV45
+model.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

@@ -1980,8 +1980,10 @@ static void page_firmware(void)
 	int lw[2] = { CH(16), -1 };
 
 	/*  A machine with a known system ROM runs either that, or PROM
-	    emulation (and then boots a kernel itself):  */
-	if (machine_config_rom_address(c->type) != 0) {
+	    emulation (and then boots a kernel itself); the AlphaStation
+	    200 has no PROM emulation:  */
+	if (machine_config_rom_address(c->type) != 0 &&
+	    machine_config_machine_type(c->type) != MACHINE_AVANTI) {
 		row(1, full);
 		check("PROM emulation (gxemul provides the firmware, and boots "
 		    "a kernel itself)", &c->prom_emulation);

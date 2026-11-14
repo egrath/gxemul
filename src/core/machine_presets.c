@@ -142,6 +142,24 @@ static const struct machine_preset presets[] = {
 		"  \"serial\": { \"telnet\": true, \"vt100\": true } }"
 	},
 	{
+		"avanti", "200",
+		"AlphaStation 200 4/166 (Avanti), Digital's first PCI Alpha "
+		"workstation: a 166 MHz 21064 on the APECS chipset, with a "
+		"53C810 SCSI controller and ISA. Runs the genuine DROM and SRM "
+		"V7.0 console (the flash and the DROM given as one file, see "
+		"doc/avanti-plan.md), on the serial console. Installs and runs "
+		"Tru64 UNIX V5.1 and V5.1B.",
+		"{ \"gxemul\": 1, \"name\": \"AlphaStation 200\","
+		"  \"machine\": { \"type\": \"avanti\", \"model\": \"200\","
+		"                 \"memory_mb\": 256 },"
+		"  \"boot\": { \"prom_emulation\": false, \"rom\": \"avanti.rom\","
+		"             \"nvram\": \"nvram.bin\" },"
+		"  \"drives\": [ { \"file\": \"disk.img\", \"kind\": \"disk\","
+		"                  \"id\": 0 },"
+		"                { \"file\": \"\", \"kind\": \"cdrom\", \"id\": 4 } ],"
+		"  \"serial\": { \"telnet\": true, \"vt100\": true } }"
+	},
+	{
 		"testalpha", "",
 		"gxemul's simple Alpha machine, for running a program of your "
 		"own (add it under Firmware, Files to load).",
@@ -189,6 +207,7 @@ static const struct mc_drive_model dec_drives[] = {
 	{ MC_DRIVE_DISK, "RZ74",  "DEC", "RZ74     (C) DEC", "", 6976375 },
 	{ MC_DRIVE_CDROM, "RRD40", "DEC", "RRD40   (C) DEC ", "", 0 },
 	{ MC_DRIVE_CDROM, "RRD42", "DEC", "RRD42   (C) DEC ", "4.5d", 0 },
+	{ MC_DRIVE_CDROM, "RRD45", "DEC", "RRD45   (C) DEC ", "0436", 0 },
 };
 
 
@@ -203,7 +222,8 @@ int machine_drive_models(const char *type,
 {
 	int t = machine_config_machine_type(type);
 	*listp = dec_drives;
-	if (t == MACHINE_PMAX || t == MACHINE_DEC3000 || t == MACHINE_JENSEN)
+	if (t == MACHINE_PMAX || t == MACHINE_DEC3000 || t == MACHINE_JENSEN ||
+	    t == MACHINE_AVANTI)
 		return (int) (sizeof(dec_drives) / sizeof(dec_drives[0]));
 	return 0;
 }
