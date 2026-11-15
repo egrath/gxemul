@@ -5826,4 +5826,16 @@ Changelog for GXemul:
 
 ==============  RELEASE 1.0.26  ==============
 
+20261115	MVME393 Graphics Controller:
+		- Route graphics display window keyboard input directly to
+		  the MVME393 input staging structure (0xfe000) for X11/Xcfb,
+		  preventing window keystrokes from leaking onto the serial/telnet
+		  console.
+		- Forward mouse motion deltas prior to window grab and auto-grab
+		  on initial button press for seamless input interaction.
+		- Initialize framebuffer input state to trigger immediate mouse
+		  cursor rendering on X server startup.
+
+==============  RELEASE 1.0.27  ==============
+
 

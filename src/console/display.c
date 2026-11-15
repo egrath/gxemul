@@ -343,6 +343,12 @@ void display_flush(struct fb_window *win)
  */
 void display_key(struct machine *m, int key, int mods)
 {
+	if (m != NULL && m->display_key_handler != NULL) {
+		if (key == DISPLAY_KEY_DELETE)
+			m->display_key_handler(m, 127);
+		return;
+	}
+
 	static const char *f5_f12[] = { "15", "17", "18", "19",
 	    "20", "21", "23", "24" };
 	const char *n = NULL;
@@ -405,6 +411,11 @@ void display_key(struct machine *m, int key, int mods)
  */
 void display_char(struct machine *m, int ch, int mods)
 {
+	if (m != NULL && m->display_key_handler != NULL) {
+		m->display_key_handler(m, ch);
+		return;
+	}
+
 	char seq[24];
 
 	if (mods == 0 || !console_keys_with_modifiers(m->main_console_handle)) {
