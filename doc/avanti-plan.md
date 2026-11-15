@@ -406,8 +406,10 @@ Controller"; Tru64: "tu0: DECchip 21040: Revision: 2.4 ... DEC TULIP
 byte 3Fh becomes 1, and at the next power-up the DROM starts ARC 4.58
 instead: "ARC Multiboot Alpha AXP Version 4.58" on the TGA at 640x480,
 21064 rev 3 at 166.66 MHz, 256 MB, "8 Plane Frame Buffer video card:
-ZLXp-E1". (ARC's "Switch to OpenVMS or Digital UNIX console" should go
-back; not tried yet.) What it took:
+ZLXp-E1". ARC's Setup menu, "Switch to OpenVMS or Digital UNIX
+console", "Switch to Digital UNIX" goes back: it writes 3 to CMOS 3Fh,
+and at the next power-up (a restart of gxemul) the DROM starts SRM again
+(checked 2026-11-15). What it took:
 
 - **PCI BARs:** ARC writes all ones to all six BARs, then reads the ID
   register, then the BARs. A BAR now reads as its size until it is
