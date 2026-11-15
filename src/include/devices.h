@@ -183,6 +183,16 @@ void dev_mvme187_bbram_access(struct mvme187_data *d);
 void dev_mvme187_brdid_defaults(struct machine *machine, uint8_t *nvram);
 void dev_mvme187_set_scc(struct mvme187_data *d, int (*f)(void *, int),
 	void (*reset)(void *), void *extra);
+void dev_mvme187_set_vme_a16(struct mvme187_data *d,
+	int (*vme_a16_access)(struct cpu *, struct memory *, uint64_t, unsigned char *, size_t, int, void *),
+	void *extra);
+void dev_mvme187_set_vme_iack(struct mvme187_data *d,
+	int (*vme_iack)(void *extra, int level),
+	void *extra);
+void dev_mvme187_vme_irq(struct mvme187_data *d, int irq_line, int assert);
+
+/*  dev_mvme393.c:  */
+void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187);
 
 struct dec_ioasic_data *dev_dec_ioasic_init(struct cpu *cpu, struct memory *mem, uint64_t baseaddr, int rackmount_flag, struct interrupt* irq);
 

@@ -110,6 +110,9 @@ MACHINE_SETUP(mvme88k)
 		    "mk48txx addr=0x%x", 0xfffc0000);
 		device_add(machine, tmpstr);
 
+		/*  MVME393 Graphics Controller:  */
+		dev_mvme393_init(machine, machine->md.mvme187);
+
 		break;
 
 	case MACHINE_MVME88K_188:

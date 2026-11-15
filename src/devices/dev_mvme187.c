@@ -136,6 +136,14 @@ struct mvme187_data {
 	void		(*scc_reset)(void *);
 	void		*scc;
 
+	/*  VMEbus card hooks:  */
+	int		(*vme_a16_access)(struct cpu *cpu, struct memory *mem,
+			    uint64_t relative_addr, unsigned char *data,
+			    size_t len, int writeflag, void *extra);
+	void		*vme_a16_extra;
+	int		(*vme_iack)(void *extra, int level);
+	void		*vme_iack_extra;
+
 	/*  A local reset (GCSR RST, or SYSRESET) is done at the next tick:  */
 	bool		reset_pending;
 
@@ -645,8 +653,11 @@ static int iack(struct mvme187_data *d, int level)
 			if (!(pending & (1U << bit)) ||
 			    vme_source_level(d, bit) != level)
 				continue;
-			if (bit < 7)
+			if (bit < 7) {
+				if (d->vme_iack != NULL)
+					return d->vme_iack(d->vme_iack_extra, bit + 1);
 				return -1;	/*  VMEbus IRQs: no boards  */
+			}
 			/*  Spare and software interrupts: base 1,
 			    the others: base 0 (Table 4-4).  */
 			if (bit < 16)
@@ -1418,6 +1429,11 @@ DEVICE_ACCESS(mvme187_a16)
 	uint32_t a = relative_addr & 0xffff;
 	size_t i;
 
+	if (d->vme_a16_access != NULL) {
+		if (d->vme_a16_access(cpu, mem, relative_addr, data, len, writeflag, d->vme_a16_extra))
+			return 1;
+	}
+
 	if (!(ctl & VME2_GCSRCTL_I1EN) || (a >> 8) != group ||
 	    ((a >> 4) & 0xf) != board || (a & 0xf) + len > 0x10)
 		return 0;
@@ -1681,4 +1697,37 @@ struct mvme187_data *dev_mvme187_init(struct machine *machine)
 
 	return d;
 }
+
+
+void dev_mvme187_set_vme_a16(struct mvme187_data *d,
+	int (*vme_a16_access)(struct cpu *, struct memory *, uint64_t, unsigned char *, size_t, int, void *),
+	void *extra)
+{
+	d->vme_a16_access = vme_a16_access;
+	d->vme_a16_extra = extra;
+}
+
+
+void dev_mvme187_set_vme_iack(struct mvme187_data *d,
+	int (*vme_iack)(void *extra, int level),
+	void *extra)
+{
+	d->vme_iack = vme_iack;
+	d->vme_iack_extra = extra;
+}
+
+
+void dev_mvme187_vme_irq(struct mvme187_data *d, int irq_line, int assert)
+{
+	if (irq_line < 1 || irq_line > 7)
+		return;
+
+	if (assert)
+		d->vme_irqstat |= (1U << (irq_line - 1));
+	else
+		d->vme_irqstat &= ~(1U << (irq_line - 1));
+
+	update_irq(d);
+}
+
 
