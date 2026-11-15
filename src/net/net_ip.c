@@ -201,6 +201,24 @@ static void net_ip_icmp(struct net *net, struct nic_data *nic,
 }
 
 
+/*  The host's time in milliseconds, for TCP retransmissions:  */
+static int64_t tcp_now_ms(void)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (int64_t) tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+/*  How long the guest has to acknowledge data before it is sent again:  */
+#define	TCP_RETRANSMIT_MS	300
+
+/*  At most this many segments go to the guest per connection and call:  */
+#define	TCP_SEGMENTS_PER_ROUND	16
+
+/*  The size of the data in the segments we send to the guest:  */
+#define	TCP_SEGMENT_SIZE	1400
+
+
 /*
  *  tcp_closeconnection():
  *
@@ -212,6 +230,8 @@ static void tcp_closeconnection(struct net *net, int con_id)
 	net->tcp_connections[con_id].state = TCP_OUTSIDE_DISCONNECTED;
 	net->tcp_connections[con_id].in_use = 0;
 	net->tcp_connections[con_id].incoming_buf_len = 0;
+	free(net->tcp_connections[con_id].incoming_buf);
+	net->tcp_connections[con_id].incoming_buf = NULL;
 }
 
 
@@ -542,6 +562,26 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 		memcpy(net->tcp_connections[con_id].outside_ip_address,
 		    packet + 30, 4);
 		net->tcp_connections[con_id].outside_tcp_port = dstport;
+		net->tcp_connections[con_id].inside_wscale = -1;
+
+		/*  The guest's window scale, if its SYN has one (we always
+		    offer ours, shift 0):  */
+		for (i = 34 + 20; i < data_offset && i < len; ) {
+			int kind = packet[i];
+			if (kind == 0)
+				break;
+			if (kind == 1) {
+				i ++;
+				continue;
+			}
+			if (i + 1 >= len || packet[i + 1] < 2)
+				break;
+			if (kind == 3 && packet[i + 1] == 3 && i + 2 < len)
+				net->tcp_connections[con_id].inside_wscale =
+				    packet[i + 2] > 14? 14 : packet[i + 2];
+			i += packet[i + 1];
+		}
+		net->tcp_connections[con_id].inside_window = window;
 
 		net->tcp_connections[con_id].socket =
 		    socket(AF_INET, SOCK_STREAM, 0);
@@ -616,8 +656,29 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	}
 
 	if (fin) {
+		struct tcp_connection *c = &net->tcp_connections[con_id];
+		int32_t ofs = (int32_t) (c->outside_acknr - seqnr);
+
 		debug("[ 'fin': guestOS disconnecting TCP connection %i ]\n",
 		    con_id);
+
+		/*  The FIN can come with the last of the guest's data (or
+		    again, if we didn't take all of it the first time):  */
+		if ((c->state == TCP_OUTSIDE_CONNECTED ||
+		    c->state == TCP_OUTSIDE_DISCONNECTED2) && ofs >= 0 &&
+		    data_offset + ofs < len) {
+			res = send(c->socket, (const char *) packet +
+			    data_offset + ofs, len - data_offset - ofs, 0);
+			if (res > 0)
+				c->outside_acknr += res;
+			if (data_offset + ofs + res < len) {
+				/*  Not all of it: ack what we took; the
+				    guest sends the rest, and the FIN, again.  */
+				net_ip_tcp_connectionreply(net, nic, con_id,
+				    0, NULL, 0, 0);
+				return;
+			}
+		}
 
 		/*  Send ACK:  */
 		net_ip_tcp_connectionreply(net, nic, con_id, 0, NULL, 0, 0);
@@ -628,17 +689,31 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	}
 
 	if (ack) {
-debug("ACK %i bytes, inside_acknr=%u outside_seqnr=%u\n",
- net->tcp_connections[con_id].incoming_buf_len,
- net->tcp_connections[con_id].inside_acknr,
- net->tcp_connections[con_id].outside_seqnr);
-		net->tcp_connections[con_id].inside_acknr = acknr;
-		if (net->tcp_connections[con_id].inside_acknr ==
-		    net->tcp_connections[con_id].outside_seqnr &&
-		    net->tcp_connections[con_id].incoming_buf_len != 0) {
-debug("  all acked\n");
-			net->tcp_connections[con_id].incoming_buf_len = 0;
+		struct tcp_connection *c = &net->tcp_connections[con_id];
+		int32_t adv = (int32_t) (acknr - c->incoming_buf_seqnr);
+
+		c->inside_window = c->inside_wscale > 0?
+		    (uint32_t) window << c->inside_wscale : (uint32_t) window;
+
+		if (adv > 0 && adv <= c->incoming_buf_len) {
+			/*  New data acknowledged: drop it from the buffer.  */
+			memmove(c->incoming_buf, c->incoming_buf + adv,
+			    c->incoming_buf_len - adv);
+			c->incoming_buf_len -= adv;
+			c->incoming_buf_seqnr = acknr;
+			c->last_progress_ms = tcp_now_ms();
+			c->dupacks = 0;
+			if ((int32_t) (c->outside_seqnr - acknr) < 0)
+				c->outside_seqnr = acknr;
+		} else if (adv == 0 && data_offset >= len && !syn && !fin &&
+		    c->incoming_buf_len != 0 &&
+		    c->outside_seqnr != c->incoming_buf_seqnr) {
+			/*  A duplicate: after three, a segment was lost; go
+			    back to it (net_tcp_rx_avail() sends again):  */
+			if (++ c->dupacks == 3)
+				c->outside_seqnr = c->incoming_buf_seqnr;
 		}
+		c->inside_acknr = acknr;
 	}
 
 	net->tcp_connections[con_id].inside_seqnr = seqnr;
@@ -1562,7 +1637,6 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 	int con_id;
 
 	for (con_id=0; con_id<MAX_TCP_CONNECTIONS; con_id++) {
-		unsigned char buf[66000];
 		ssize_t res, res2;
 		fd_set rfds, efds;
 		struct timeval tv;
@@ -1583,6 +1657,20 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 		if (net->tcp_connections[con_id].incoming_buf == NULL)
 			CHECK_ALLOCATION(net->tcp_connections[con_id].
 			    incoming_buf = (unsigned char *) malloc(TCP_INCOMING_BUF_LEN));
+
+		/*  Our FIN (at outside_seqnr) can be lost, as data can:
+		    send it again until the guest acknowledges it.  */
+		if (net->tcp_connections[con_id].state ==
+		    TCP_OUTSIDE_DISCONNECTED) {
+			struct tcp_connection *c = &net->tcp_connections[con_id];
+			int64_t now = tcp_now_ms();
+			if ((int32_t) (c->inside_acknr - c->outside_seqnr) < 1 &&
+			    now - c->last_progress_ms > TCP_RETRANSMIT_MS) {
+				c->last_progress_ms = now;
+				net_ip_tcp_connectionreply(net, nic, con_id, 0,
+				    NULL, 0, 0);
+			}
+		}
 
 		if (net->tcp_connections[con_id].state >=
 		    TCP_OUTSIDE_DISCONNECTED)
@@ -1634,95 +1722,95 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 			debug("CHANGING TO TCP_OUTSIDE_CONNECTED\n");
 			net_ip_tcp_connectionreply(net, nic, con_id, 1,
 			    NULL, 0, 0);
-		}
-
-		if (net->tcp_connections[con_id].state ==
-		    TCP_OUTSIDE_CONNECTED && res < 1) {
-			continue;
-		}
-
-		/*
-		 *  Does this connection have unacknowledged data?  Then, if
-		 *  enough number of rounds have passed, try to resend it using
-		 *  the old value of seqnr.
-		 */
-		if (net->tcp_connections[con_id].incoming_buf_len != 0) {
-			net->tcp_connections[con_id].incoming_buf_rounds ++;
-			if (net->tcp_connections[con_id].incoming_buf_rounds >
-			    10000) {
-				debug("  at seqnr %u but backing back to %u,"
-				    " resending %i bytes\n",
-				    net->tcp_connections[con_id].outside_seqnr,
-				    net->tcp_connections[con_id].
-				    incoming_buf_seqnr,
-				    net->tcp_connections[con_id].
-				    incoming_buf_len);
-
-				net->tcp_connections[con_id].
-				    incoming_buf_rounds = 0;
-				net->tcp_connections[con_id].outside_seqnr =
-				    net->tcp_connections[con_id].
-				    incoming_buf_seqnr;
-
-				net_ip_tcp_connectionreply(net, nic, con_id,
-				    0, net->tcp_connections[con_id].
-				    incoming_buf,
-				    net->tcp_connections[con_id].
-				    incoming_buf_len, 0);
-			}
-			continue;
-		}
-
-		/*  Don't receive unless the guest OS is ready!  */
-		if (((int32_t)net->tcp_connections[con_id].outside_seqnr -
-		    (int32_t)net->tcp_connections[con_id].inside_acknr) > 0) {
-/*			fatal("YOYO 1! outside_seqnr - inside_acknr = %i\n",
-			    net->tcp_connections[con_id].outside_seqnr -
-			    net->tcp_connections[con_id].inside_acknr);  */
-			continue;
-		}
-
-		/*  Is there incoming data available on the socket?  */
-		FD_ZERO(&rfds);		/*  read  */
-		FD_SET(net->tcp_connections[con_id].socket, &rfds);
-		tv.tv_sec = tv.tv_usec = 0;
-		res2 = select(net->tcp_connections[con_id].socket+1, &rfds,
-		    NULL, NULL, &tv);
-
-		/*  No more incoming TCP data on this connection?  */
-		if (res2 < 1)
-			continue;
-
-		res = recv(net->tcp_connections[con_id].socket, (char *) buf,
-		    1400, 0);
-		if (res > 0) {
-			/*  debug("\n -{- %lli -}-\n", (long long)res);  */
-			net->tcp_connections[con_id].incoming_buf_len = res;
-			net->tcp_connections[con_id].incoming_buf_rounds = 0;
-			net->tcp_connections[con_id].incoming_buf_seqnr = 
+			net->tcp_connections[con_id].incoming_buf_len = 0;
+			net->tcp_connections[con_id].incoming_buf_seqnr =
 			    net->tcp_connections[con_id].outside_seqnr;
-			debug("  putting %i bytes (seqnr %u) in the incoming "
-			    "buf\n", res, net->tcp_connections[con_id].
-			    incoming_buf_seqnr);
-			memcpy(net->tcp_connections[con_id].incoming_buf,
-			    buf, res);
+			net->tcp_connections[con_id].last_progress_ms =
+			    tcp_now_ms();
+		}
 
-			net_ip_tcp_connectionreply(net, nic, con_id, 0,
-			    buf, res, 0);
-		} else if (res == 0) {
-			net->tcp_connections[con_id].state =
-			    TCP_OUTSIDE_DISCONNECTED;
-			debug("CHANGING TO TCP_OUTSIDE_DISCONNECTED, read"
-			    " res=0\n");
-			net_ip_tcp_connectionreply(net, nic, con_id, 0,
-			    NULL, 0, 0);
-		} else {
-			net->tcp_connections[con_id].state =
-			    TCP_OUTSIDE_DISCONNECTED;
-			fatal("CHANGING TO TCP_OUTSIDE_DISCONNECTED, "
-			    "read res<=0, error %i\n", socket_error());
-			net_ip_tcp_connectionreply(net, nic, con_id, 0,
-			    NULL, 0, 0);
+		{
+			struct tcp_connection *c = &net->tcp_connections[con_id];
+			int64_t now = tcp_now_ms();
+			int n_sent = 0;
+
+			/*  Fill the buffer from the socket:  */
+			if (!c->outside_eof &&
+			    c->incoming_buf_len < TCP_INCOMING_BUF_LEN) {
+				FD_ZERO(&rfds);		/*  read  */
+				FD_SET(sock, &rfds);
+				tv.tv_sec = tv.tv_usec = 0;
+				res2 = select(sock + 1, &rfds, NULL, NULL,
+				    &tv);
+				if (res2 > 0) {
+					res = recv(sock, (char *)
+					    c->incoming_buf +
+					    c->incoming_buf_len,
+					    TCP_INCOMING_BUF_LEN -
+					    c->incoming_buf_len, 0);
+					if (res > 0)
+						c->incoming_buf_len += res;
+					else {
+						if (res < 0)
+							debug("[ TCP: read "
+							    "error %i ]\n",
+							    socket_error());
+						c->outside_eof = 1;
+					}
+				}
+			}
+
+			/*  Nothing acknowledged for a while? Then send
+			    again from the first unacknowledged byte:  */
+			if (c->outside_seqnr != c->incoming_buf_seqnr &&
+			    c->incoming_buf_len != 0 &&
+			    now - c->last_progress_ms > TCP_RETRANSMIT_MS) {
+				debug("[ TCP: resending from %u (was at "
+				    "%u) ]\n", c->incoming_buf_seqnr,
+				    c->outside_seqnr);
+				c->outside_seqnr = c->incoming_buf_seqnr;
+				c->last_progress_ms = now;
+			}
+
+			/*  Send what the guest's window allows (with a
+			    closed window, one segment at a time, as a
+			    probe, after each timeout):  */
+			while (n_sent < TCP_SEGMENTS_PER_ROUND) {
+				uint32_t off = c->outside_seqnr -
+				    c->incoming_buf_seqnr;
+				uint32_t seg = TCP_SEGMENT_SIZE;
+
+				if (off >= (uint32_t) c->incoming_buf_len)
+					break;
+				if (seg > c->incoming_buf_len - off)
+					seg = c->incoming_buf_len - off;
+				if (off + seg > c->inside_window) {
+					if (off != 0)
+						break;
+					if (c->inside_window > 0 &&
+					    c->inside_window < seg)
+						seg = c->inside_window;
+				}
+				if (off == 0)
+					c->last_progress_ms = now;
+				net_ip_tcp_connectionreply(net, nic, con_id,
+				    0, c->incoming_buf + off, seg, 0);
+				n_sent ++;
+				received_packets_this_tick ++;
+			}
+
+			/*  The outside has closed, and the guest has all of
+			    it: send a FIN.  */
+			if (c->outside_eof && c->incoming_buf_len == 0) {
+				c->state = TCP_OUTSIDE_DISCONNECTED;
+				c->last_progress_ms = now;
+				debug("CHANGING TO TCP_OUTSIDE_DISCONNECTED\n");
+				net_ip_tcp_connectionreply(net, nic, con_id, 0,
+				    NULL, 0, 0);
+			}
+
+			if (n_sent == 0 && !c->outside_eof)
+				continue;
 		}
 
 		net->timestamp ++;

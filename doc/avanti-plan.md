@@ -355,9 +355,9 @@ through the simulated gateway (`domain` and `nameserver 10.0.0.254` in
   receive buffers didn't fit ("insufficient dynamic memory for a request
   of 1536 bytes" in `rx_ewa0`, and a restart, forever), nor did booting
   with both cards. The SROM emulation now leaves the memory size there.
-- **gxemul's NAT** (not the card): its TCP is stop-and-wait, and long
-  downloads stall near the end (1.6-2 MB of 2 MB, on the DEC 3000's LANCE
-  too); short connections work.
+- **gxemul's NAT** (not the card): its TCP was stop-and-wait, and long
+  downloads stalled near the end (1.6-2 MB of 2 MB, on the DEC 3000's
+  LANCE too). Fixed 2026-11-15, see "The NAT's TCP" below.
 
 **Graphics (2026-11-14): CDE runs.** With the display on, a ZLXp-E1 (a
 21030 "TGA" with 2 MB, 8 planes, and a Bt485: `dev_tga.c`) is in the
@@ -493,6 +493,21 @@ invalid / Defaulting to 1mS per tick" at every start: it keeps TIMER_TPS
 in CMOS byte 4Fh, which our RTC (50 battery-backed bytes, 0Eh..3Fh)
 didn't keep. The Avanti's RTC now has 128 bytes; 40h..7Fh go in the NVRAM
 file after the clock, as a "GXRTC128" block (older files still load).
+
+**The NAT's TCP (2026-11-15).** Data from the outside went to the guest
+one 1400-byte segment at a time, the next only after the guest's ACK
+(which a guest delays), and a lost segment waited 10000 polling rounds:
+Tru64 V5.1A got 7 KB/s, and a long download eventually reset. Now
+`net_ip.c` keeps up to 64 KB from the outside socket and sends what the
+guest's window allows (with its window scale, from its SYN); the guest's
+ACKs drop data from the buffer, three duplicates or 300 ms of host time
+without progress send again from the first unacknowledged byte, and the
+FIN goes after the last byte is acknowledged, again until it is. The
+other way, the data in the guest's FIN segment (the last of an upload)
+was dropped; it is now sent on. Tru64 V5.1A on the 400 (DE500): 200 MB
+from the host in 13 s, every byte right, 40 MB to it in 4 s, and an HTTP
+GET from the Internet. OSF/1 V3.0 on the DEC 3000 (LANCE): 20 MB in 16 s
+with telnet, all there.
 
 **Next:** the TGA's DMA modes if something uses them; Windows NT, when a
 version that supports the Avanti turns up.

@@ -108,11 +108,22 @@ struct tcp_connection {
 	int		inside_tcp_port;
 	uint32_t	inside_timestamp;
 
-	/*  TODO:  tx and rx buffers?  */
+	/*
+	 *  Data from the outside on its way to the guest: incoming_buf_len
+	 *  bytes from sequence number incoming_buf_seqnr (the first that
+	 *  the guest hasn't acknowledged), of which those before
+	 *  outside_seqnr have been sent. As much as the guest's window
+	 *  (inside_window) allows is in flight; what isn't acknowledged
+	 *  in time is sent again.
+	 */
 	unsigned char	*incoming_buf;
-	int		incoming_buf_rounds;
 	int		incoming_buf_len;
 	uint32_t	incoming_buf_seqnr;
+	uint32_t	inside_window;
+	int		inside_wscale;		/*  -1: no window scaling  */
+	int		outside_eof;		/*  the outside has closed  */
+	int		dupacks;
+	int64_t		last_progress_ms;
 
 	uint32_t	inside_seqnr;
 	uint32_t	inside_acknr;
@@ -282,7 +293,7 @@ struct remote_net {
 #define	TCP_OUTSIDE_DISCONNECTED	3
 #define	TCP_OUTSIDE_DISCONNECTED2	4
 
-#define	TCP_INCOMING_BUF_LEN	2000
+#define	TCP_INCOMING_BUF_LEN	65536
 
 #define	NET_ADDR_IPV4		1
 #define	NET_ADDR_IPV6		2
