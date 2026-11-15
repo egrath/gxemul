@@ -430,14 +430,14 @@ DEVICE_ACCESS(mvme393_ram)
 			chunk_flag = READ_DPR16(d, pkt_addr + 12);
 
 			if (op == 6) { /* TMS34010 code / data download */
-				uint16_t i;
+				uint16_t idx;
 				if (target >= 0xff800000) {
 					uint32_t word_base = (target - 0xff800000) >> 4;
 					if (d->tms_dest < word_base || d->tms_dest >= word_base + 0x80000)
 						d->tms_dest = word_base;
-					for (i = 0; i < (count + 1) / 2; i++) {
+					for (idx = 0; idx < (count + 1) / 2; idx++) {
 						if (d->tms_dest < 0x80000)
-							d->tms_ram[d->tms_dest++] = READ_DPR16(d, pkt_addr + 14 + i * 2);
+							d->tms_ram[d->tms_dest++] = READ_DPR16(d, pkt_addr + 14 + idx * 2);
 					}
 					if (chunk_flag == 0)
 						d->tms_dest = 0;
@@ -445,11 +445,11 @@ DEVICE_ACCESS(mvme393_ram)
 					uint32_t byte_base = target >> 3;
 					if (d->vram_dest < byte_base || d->vram_dest >= byte_base + sizeof(d->vram))
 						d->vram_dest = byte_base;
-					for (i = 0; i < count; i++) {
+					for (idx = 0; idx < count; idx++) {
 						if (d->vram_dest < sizeof(d->vram)) {
-							d->vram[d->vram_dest] = d->dpr[pkt_addr + 14 + i];
+							d->vram[d->vram_dest] = d->dpr[pkt_addr + 14 + idx];
 							if (d->fb != NULL && d->fb->framebuffer != NULL && d->vram_dest < d->fb->framebuffer_size)
-								d->fb->framebuffer[d->vram_dest] = d->dpr[pkt_addr + 14 + i];
+								d->fb->framebuffer[d->vram_dest] = d->dpr[pkt_addr + 14 + idx];
 							d->vram_dest++;
 						}
 					}
@@ -458,12 +458,12 @@ DEVICE_ACCESS(mvme393_ram)
 						d->vram_dest = 0;
 				}
 			} else if (op == 5) { /* 68010 code download */
-				uint16_t i;
+				uint16_t idx;
 				if (d->m_68k_dest < target || d->m_68k_dest >= target + 0x40000)
 					d->m_68k_dest = target;
-				for (i = 0; i < count; i++) {
+				for (idx = 0; idx < count; idx++) {
 					if (d->m_68k_dest < sizeof(d->dpr))
-						d->dpr[d->m_68k_dest++] = d->dpr[pkt_addr + 14 + i];
+						d->dpr[d->m_68k_dest++] = d->dpr[pkt_addr + 14 + idx];
 				}
 				if (chunk_flag == 0)
 					d->m_68k_dest = 0;
@@ -548,7 +548,7 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 			in[0] = (cur_dx >> 24) & 0xff; in[1] = (cur_dx >> 16) & 0xff; in[2] = (cur_dx >> 8) & 0xff; in[3] = cur_dx & 0xff;
 			in[4] = (cur_dy >> 24) & 0xff; in[5] = (cur_dy >> 16) & 0xff; in[6] = (cur_dy >> 8) & 0xff; in[7] = cur_dy & 0xff;
 			in[8] = (buttons >> 24) & 0xff; in[9] = (buttons >> 16) & 0xff; in[10] = (buttons >> 8) & 0xff; in[11] = buttons & 0xff;
-			in[12] = 1;
+			in[12] = 0; in[13] = 0; in[14] = 0; in[15] = 1;
 		}
 		if (d->vram_dirty) {
 			d->fb->update_x1 = 0;
