@@ -528,6 +528,14 @@ DEVICE_ACCESS(fb)
 	 *  or a few bytes that are read/written at a time.
 	 */
 	if (writeflag == MEM_WRITE) {
+		if (relative_addr >= 0xff000 && relative_addr < 0xff400) {
+			size_t col = (relative_addr - 0xff000) >> 2;
+			if (col < 256 && len >= 4) {
+				d->rgb_palette[col * 3 + 0] = data[1];
+				d->rgb_palette[col * 3 + 1] = data[2];
+				d->rgb_palette[col * 3 + 2] = data[3];
+			}
+		}
 		if (len > 8)
 			memcpy(d->framebuffer + relative_addr, data, len);
 		else {

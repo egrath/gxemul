@@ -5802,4 +5802,28 @@ Changelog for GXemul:
 
 ==============  RELEASE 1.0.25  ==============
 
+20261114	Motorola MVME187 RISC Single Board Computer (m88k):
+		- 187Bug 2.2 ROM executes to the prompt and passes all 119
+		  self-tests.
+		- Motorola UNIX System V/88 Release 4 boots to multi-user
+		  userland.
+		- Motorola 88100 CPU / 88200 CMMU dyntrans enhancements,
+		  delay slot RTE handling, XMEM atomic exchange, and accurate
+		  exception and interrupt dispatch.
+		- VMEchip2 (VMEbus interface, timers, ticks, watchdog,
+		  interrupt handling and vector generation).
+		- PCCchip2 (Peripheral Channel Controller).
+		- MEMC040 memory controller with DRAM parity.
+		- Cirrus Logic CL-CD2401 multi-protocol serial controller
+		  with DMA and baud rate timing.
+		- Intel 82596CA 32-bit Ethernet controller.
+		- NCR 53C710 SCSI controller with SCRIPTS processor,
+		  FIFOs, and loopback modes.
+		- Motorola MVME393 VMEbus color graphics controller emulation:
+		  packet queue download protocol (TMS34010 and 68010 firmware),
+		  1024x768 framebuffer VME direct mapping, 3-3-2 color cube
+		  palette, and dual-port RAM input queue forwarding.
+
+==============  RELEASE 1.0.26  ==============
+
 
