@@ -316,8 +316,8 @@ NetBSD or Linux kernel) was skipped: Tru64 came first.
   A's divider at 32 kHz, register B binary and 24-hour (SRM sets it so),
   and counts the year register from 1952 (it adds 52); anything before
   1996 is a "preposterous time in TOY clock". The Avanti's RTC holds the
-  year minus 1952 (2026 is 74). (NT, from the ARC console, would count
-  from 1980.)
+  year minus 1952 (2026 is 74). The ARC console counts from 1980; see
+  below.
 - **The preset** "avanti", "200" (256 MB, `avanti.rom`, a disk at ID 0
   and a CD-ROM at ID 4, the serial console on telnet), DEC's drive models
   (now with the RRD45), and no PROM emulation checkbox for it.
@@ -402,7 +402,48 @@ reversed, again, test pattern). SRM: "DECchip 21040 Network
 Controller"; Tru64: "tu0: DECchip 21040: Revision: 2.4 ... DEC TULIP
 (10Mbps)", ping, DNS, a 300 KB TCP download intact.
 
-**Next:** V5.1A, the ARC console with NT, the 400's 233 MHz EV45 model
+**The ARC console (2026-11-14).** With `set os_type NT` in SRM, CMOS
+byte 3Fh becomes 1, and at the next power-up the DROM starts ARC 4.58
+instead: "ARC Multiboot Alpha AXP Version 4.58" on the TGA at 640x480,
+21064 rev 3 at 166.66 MHz, 256 MB, "8 Plane Frame Buffer video card:
+ZLXp-E1". (ARC's "Switch to OpenVMS or Digital UNIX console" should go
+back; not tried yet.) What it took:
+
+- **PCI BARs:** ARC writes all ones to all six BARs, then reads the ID
+  register, then the BARs. A BAR now reads as its size until it is
+  written again (this used to end at the next read of anything), and on
+  this machine the BARs a device doesn't declare read as 0 when sized.
+  Before, they claimed 1 MB, and ARC disabled the devices with BARs it
+  couldn't place.
+- **The TOY clock:** register B is battery-backed and starts binary; ARC
+  reads the time as binary without checking. With CMOS 3Fh = 1, the year
+  register counts from 1980 (2026 is 46), as ARC and NT expect.
+- **ARC's environment** (CONSOLEIN, SYSTEMPARTITION, LANG_ID, ...) is in
+  the WART NVRAM at 10.0000, kept in `<nvram file>.wart`. "Supplementary
+  menu, and save changes" writes it and restarts. With an empty
+  environment, ARC asks for the language at every power-up and wants
+  "Set default environment variables" and then "Set default
+  configuration" before it will boot NT.
+- **The CPU speed:** ARC's PALcode takes the cycle time the DROM passes
+  in a2 only if the serial ROM's signature is in a3 (0xdeca, 0xdecb or
+  0xdecc and up in bits 31:16, the system revision in 15:0). Without one
+  it assumes 8000 ps, and shows 125 MHz. The handoff now has 0xdeca0000
+  at 18 (the DROM passes 0..48 on in a0..).
+- **8254:** a reload value of 0 means 65536 (18.2 Hz), not "stopped".
+  ARC programs counter 0 so (on all machines).
+- **RTC periodic interrupts** are counted in host time from the device's
+  tick, so they come at their real times. timer.c's 65 Hz signal
+  delivered 1024 Hz in bursts of 16, and SRM, which counts them against
+  the cycle counter, measured 158 MHz (the HWRPB, and Tru64's `psrinfo`).
+  Now it measures 166666666 Hz, and Tru64 says 167 MHz. The catch-up of
+  up to a second's backlog stays. Checked: Tru64 V5.1B (its clock keeps
+  host time), OSF/1 V3.0 on the DEC 3000, NT 3.1 on the Jensen, and
+  Ultrix 4.5 on a 5000/200.
+
+No Windows NT for Alpha with AlphaStation 200 support is here: only NT
+3.1, which predates the machine.
+
+**Next:** V5.1A, the 400's 233 MHz EV45 model
 (its own PCI layout: three slots, no 21040), the TGA's DMA modes if
 something uses them.
 

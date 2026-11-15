@@ -67,7 +67,7 @@ struct pit8253_data {
 
 	int		mode[3];
 	int		counter[3];		/*  reload value  */
-	int		hz[3];
+	double		hz[3];
 
 	/*  Per counter: access mode (I8253_TIMER_LSB, _MSB or _16BIT), which
 	    byte comes next when written or read as 16 bits, and a latched
@@ -170,11 +170,11 @@ static void pit_load(struct pit8253_data *d, int c)
 	gettimeofday(&d->load_time[c], NULL);
 	d->zeros_shown[c] = 0;
 
-	if (d->counter[c] != 0)
-		d->hz[c] = (int) (I8253_TIMER_FREQ / (float) d->counter[c] + 0.5);
-	else
-		d->hz[c] = 0;
-	debug("[ 8253: counter %i set to %i (%i Hz) ]\n", c, d->counter[c],
+	/*  A reload value of 0 means 65536 (18.2 Hz for counter 0, which the
+	    Alpha ARC firmware times the CPU with).  */
+	d->hz[c] = I8253_TIMER_FREQ / (double) (d->counter[c] == 0?
+	    65536 : d->counter[c]);
+	debug("[ 8253: counter %i set to %i (%.3f Hz) ]\n", c, d->counter[c],
 	    d->hz[c]);
 
 	switch (c) {

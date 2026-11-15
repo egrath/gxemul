@@ -88,7 +88,6 @@ struct pci_data {
 
 	/*  Current register access:  */
 	int		cur_bus, cur_device, cur_func, cur_reg;
-	int		last_was_write_ffffffff;
 
 	struct pci_device *first_device;
 
@@ -116,6 +115,10 @@ struct pci_device {
 
 	/*  Used when setting up the configuration registers:  */
 	int			cur_mapreg_offset;
+
+	/*  BARs (bit n: the one at 0x10 + 4 * n) that were written with all
+	    ones, and read as their size until written again:  */
+	int			bars_sizing;
 
 	/*  Function to handle device-specific cfg register writes:  */
 	int			(*cfg_reg_write)(struct pci_device *pd,

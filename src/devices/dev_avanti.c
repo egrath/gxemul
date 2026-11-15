@@ -628,6 +628,10 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
  *		it is 192 KB, too small for a network card's buffers
  *		("insufficient dynamic memory") or for booting with both a
  *		network and a graphics card.
+ *	0x18	(a3) the SROM signature 0xdeca in bits 31:16, and the
+ *		system revision in 15:0. The ARC console's PALcode takes
+ *		the cycle time (a2) only with a signature; otherwise it
+ *		assumes 8000 ps, and shows 125 MHz.
  *	0x70	the CPU speed code: 2 or 8 makes the DROM time the CPU
  *		against the 8254 and pick the speed (2 = 166 MHz, ...),
  *		and store the cycle time in ps at 0x10, MHz at 0x68 and
@@ -640,6 +644,7 @@ uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu)
 {
 	unsigned char speed_code[8] = { 2, 0, 0, 0, 0, 0, 0, 0 };
 	unsigned char memsize[8];
+	unsigned char signature[8] = { 0, 0, 0xca, 0xde, 0, 0, 0, 0 };
 	int i;
 
 	for (i = 0; i < 8; i++)
@@ -653,6 +658,8 @@ uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu)
 	cpu->memory_rw(cpu, cpu->mem, 0x70, speed_code, sizeof(speed_code),
 	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
 	cpu->memory_rw(cpu, cpu->mem, 0x08, memsize, sizeof(memsize),
+	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
+	cpu->memory_rw(cpu, cpu->mem, 0x18, signature, sizeof(signature),
 	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
 
 	/*  Nothing is connected to the serial ROM port: its receive line

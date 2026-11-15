@@ -124,10 +124,15 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 		return;
 	}
 
-	/*  Return normal config data, or length data?  */
-	if (pci_data->last_was_write_ffffffff &&
-	    pci_data->cur_reg >= PCI_MAPREG_START &&
-	    pci_data->cur_reg <= PCI_MAPREG_END - 4)
+	/*
+	 *  Return normal config data, or length data? A BAR that was written
+	 *  with all ones reads as its size until it is written again (ARC
+	 *  sizes all of a device's BARs first, and then reads them back).
+	 */
+	if (pci_data->cur_reg >= PCI_MAPREG_START &&
+	    pci_data->cur_reg <= PCI_MAPREG_END - 4 &&
+	    dev->bars_sizing & (1 << ((pci_data->cur_reg -
+	    PCI_MAPREG_START) / 4)))
 		cfg_base = dev->cfg_mem_size;
 	else
 		cfg_base = dev->cfg_mem;
@@ -148,11 +153,15 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 		debugmsg(pci_subsys, "pci", VERBOSITY_DEBUG,
 		    "write to PCI DATA: data = 0x%08llx\n",
 		    (long long)idata);
-		if (idata == 0xffffffffULL &&
-		    pci_data->cur_reg >= PCI_MAPREG_START &&
+		if (pci_data->cur_reg >= PCI_MAPREG_START &&
 		    pci_data->cur_reg <= PCI_MAPREG_END - 4) {
-			pci_data->last_was_write_ffffffff = 1;
-			return;
+			int bar = 1 << ((pci_data->cur_reg -
+			    PCI_MAPREG_START) / 4);
+			if (idata == 0xffffffffULL) {
+				dev->bars_sizing |= bar;
+				return;
+			}
+			dev->bars_sizing &= ~bar;
 		}
 
 		if (dev->cfg_reg_write == NULL ||
@@ -181,8 +190,6 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 
 	/*  Register read:  */
 	*data = x;
-
-	pci_data->last_was_write_ffffffff = 0;
 
 	debugmsg(pci_subsys, "pci", VERBOSITY_DEBUG,
 	    "read from PCI DATA, bus %i, device %i, function %i (%s) register 0x%02x: (len=%i) 0x%08lx\n",
@@ -317,8 +324,12 @@ void bus_pci_add(struct machine *machine, struct pci_data *pci_data,
 	 */
 	PCI_SET_DATA(PCI_COMMAND_STATUS_REG,
 	    PCI_COMMAND_IO_ENABLE | PCI_COMMAND_MEM_ENABLE);
+	/*  (On the AlphaStation 200, whose devices declare their BARs, the
+	    others are not there, and read as 0 when sized: ARC sizes all
+	    six, and gives up on a device with BARs it can't place.)  */
 	for (ofs = PCI_MAPREG_START; ofs < PCI_MAPREG_END; ofs += 4)
-		PCI_SET_DATA_SIZE(ofs, 0x00100000 - 1);
+		PCI_SET_DATA_SIZE(ofs, machine->machine_type == MACHINE_AVANTI?
+		    0 : 0x00100000 - 1);
 
 	if (init == NULL) {
 		fatal("No init function for PCI device \"%s\"?\n", name);

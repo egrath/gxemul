@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <time.h>
 
 #include "cpu.h"
@@ -47,7 +48,6 @@
 #include "machine.h"
 #include "memory.h"
 #include "misc.h"
-#include "timer.h"
 
 #include "thirdparty/mc146818reg.h"
 
@@ -77,9 +77,10 @@ struct mc_data {
 	int		interrupt_hz;
 	int		old_interrupt_hz;
 	struct interrupt irq;
-	struct timer	*timer;
-	volatile int	pending_timer_interrupts;
-	volatile int	pf_tick;	/*  a period has passed  */
+	double		periodic_start;	/*  host time the rate was set  */
+	int64_t		periodic_count;	/*  periods counted since then  */
+	int		pending_timer_interrupts;
+	int		pf_tick;	/*  a period has passed  */
 
 	int		previous_second;
 	int		n_seconds_elapsed;
@@ -95,6 +96,7 @@ struct mc_data {
 
 	/*  The PC style's year register counts from 1900 + this, if set:  */
 	int		year_base;
+	int		year_base_arc;	/*  instead, if CMOS byte 3Fh is 1  */
 
 	/*  The NVRAM (registers 14..63) is kept in this file, if any:  */
 	char		*nvram_file;
@@ -131,28 +133,53 @@ struct mc_data {
 
 
 /*
- *  timer_tick():
+ *  periodic_catch_up():
  *
- *  Called d->interrupt_hz times per (real-world) second.
+ *  Counts the periods (of d->interrupt_hz) that have passed in host time
+ *  since the rate was set. This is called from the tick function, many
+ *  times per period, so that the periods come at their real times: the
+ *  host timers (timer.c) run at 65 Hz and delivered 1024 Hz periods in
+ *  bursts of 16, and the Avanti's SRM, which counts 1024 Hz interrupts
+ *  against the cycle counter, measured 158 MHz instead of 166.
+ *
+ *  Periods that the guest hasn't taken yet are counted, so that its
+ *  clock keeps up with the host's when it falls behind for a while, but
+ *  only while periodic interrupts are enabled (a real chip has none to
+ *  catch up on from before), and at most a second's worth. A larger
+ *  backlog came in a burst that moved the guest's clock ahead by many
+ *  seconds at once: the DEC 3000's console enables periodic interrupts
+ *  and never takes them, and OSF/1 V3.0's 4 second SCSI selection
+ *  watchdog then expired during autoconfig, before the 53C94's 262 ms
+ *  selection timeout.
  */
-static void timer_tick(struct timer *timer, void *extra)
+static double host_seconds(void)
 {
-	struct mc_data *d = (struct mc_data *) extra;
+	struct timeval tv;
 
-	/*
-	 *  Ticks that the guest hasn't taken yet are counted, so that its
-	 *  clock keeps up with the host's when it falls behind for a while,
-	 *  but only while periodic interrupts are enabled (a real chip has
-	 *  none to catch up on from before), and at most a second's worth.
-	 *  A larger backlog came in a burst that moved the guest's clock
-	 *  ahead by many seconds at once: the DEC 3000's console enables
-	 *  periodic interrupts and never takes them, and OSF/1 V3.0's 4
-	 *  second SCSI selection watchdog then expired during autoconfig,
-	 *  before the 53C94's 262 ms selection timeout.
-	 */
-	if (d->reg[MC_REGB * 4] & MC_REGB_PIE &&
-	    d->pending_timer_interrupts < d->interrupt_hz)
-		d->pending_timer_interrupts ++;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec + tv.tv_usec * 0.000001;
+}
+
+static void periodic_catch_up(struct mc_data *d)
+{
+	int64_t due, n;
+
+	if (d->interrupt_hz <= 0)
+		return;
+
+	due = (int64_t) ((host_seconds() - d->periodic_start) *
+	    d->interrupt_hz);
+	n = due - d->periodic_count;
+	if (n <= 0)
+		return;
+	d->periodic_count = due;
+
+	if (d->reg[MC_REGB * 4] & MC_REGB_PIE) {
+		if (n > d->interrupt_hz - d->pending_timer_interrupts)
+			n = d->interrupt_hz - d->pending_timer_interrupts;
+		if (n > 0)
+			d->pending_timer_interrupts += n;
+	}
 	d->pf_tick = 1;
 }
 
@@ -323,8 +350,11 @@ void dev_mc146818_save_nvram(void)
 DEVICE_TICK(mc146818)
 {
 	struct mc_data *d = (struct mc_data *) extra;
-	int pti = d->pending_timer_interrupts;
+	int pti;
 	time_t now = time(NULL);
+
+	periodic_catch_up(d);
+	pti = d->pending_timer_interrupts;
 
 	/*
 	 *  Once a second (unless SET stops the updates), the time is
@@ -480,7 +510,9 @@ static void mc146818_update_time(struct mc_data *d)
 		break;
 	case MC146818_CATS:
 	case MC146818_PC_CMOS:
-		if (d->year_base)
+		if (d->year_base_arc && d->reg[4 * 0x3f] == 1)
+			d->reg[4 * MC_YEAR] -= d->year_base_arc;
+		else if (d->year_base)
 			d->reg[4 * MC_YEAR] -= d->year_base;
 		else
 			d->reg[4 * MC_YEAR] %= 100;
@@ -733,12 +765,8 @@ DEVICE_ACCESS(mc146818)
 			if (d->interrupt_hz != d->old_interrupt_hz) {
 				d->old_interrupt_hz = d->interrupt_hz;
 
-				if (d->timer == NULL)
-					d->timer = timer_add(d->interrupt_hz,
-					    timer_tick, d);
-				else
-					timer_update_frequency(d->timer,
-					    d->interrupt_hz);
+				d->periodic_start = host_seconds();
+				d->periodic_count = 0;
 			}
 
 			d->reg[MC_REGA * 4] =
@@ -933,10 +961,18 @@ void dev_mc146818_init(struct machine *machine, struct memory *mem,
 	 *  On the Alpha PCs, Tru64 UNIX counts the RTC's year from 1952 (its
 	 *  readtodr() adds 52, and calls anything before 1996 a "preposterous
 	 *  time in TOY clock"); 2026 is 74.  (Linux/alpha knows this epoch,
-	 *  too.)  NT, from the ARC console, would count from 1980.
+	 *  too.)  The ARC console (and NT) count from 1980: with CMOS byte
+	 *  3Fh = 1, the DROM starts ARC, and 2026 is 46.
+	 *
+	 *  Register B is battery backed, and the consoles keep it in binary
+	 *  mode (ARC reads the time as binary, without looking).
 	 */
-	if (machine->machine_type == MACHINE_AVANTI)
+	if (machine->machine_type == MACHINE_AVANTI) {
 		d->year_base = 52;
+		d->year_base_arc = 80;
+		d->reg[MC_REGB * 4] |= MC_REGB_BINARY;
+		d->use_bcd = 0;
+	}
 
 	/*
 	 *  The Jensen's RTC (in the VL82C106 combo chip) runs from its own
