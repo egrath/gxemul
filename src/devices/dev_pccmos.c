@@ -71,8 +71,8 @@ struct pccmos_data {
 	unsigned char	select;
 	unsigned char	ram[256];
 
-	/*  The last register kept in the RTC itself (0x0d, or 0x3f when
-	    the CMOS bytes up to there are battery-backed in the NVRAM
+	/*  The last register kept in the RTC itself (0x0d, or 0x3f or 0x7f
+	    when the CMOS bytes up to there are battery-backed in the NVRAM
 	    file, see the init function):  */
 	int		rtc_last;
 };
@@ -174,8 +174,9 @@ DEVINIT(pccmos)
 		 *  keeps, in the machine's NVRAM file (dev_mc146818.c). The
 		 *  consoles keep settings there: the DROM starts ARC if 0x3f
 		 *  is 1, and SRM keeps quick_start in 0x3e (0x31 = on).
+		 *  The RTC has 128 bytes: SRM keeps TIMER_TPS in 0x4f.
 		 */
-		d->rtc_last = 0x3f;
+		d->rtc_last = 0x7f;
 		break;
 	case MACHINE_JENSEN: {
 		const char *bootarg = devinit->machine->boot_string_argument;

@@ -486,6 +486,12 @@ NAT gateway, also after a reboot with the address in rc.config.
   step with the host. The 250 and the 200 4/233 come up in SRM with their
   names and speeds.
 
+**TIMER_TPS (2026-11-15).** SRM's "TIMER_TPS environment variable
+invalid / Defaulting to 1mS per tick" at every start: it keeps TIMER_TPS
+in CMOS byte 4Fh, which our RTC (50 battery-backed bytes, 0Eh..3Fh)
+didn't keep. The Avanti's RTC now has 128 bytes; 40h..7Fh go in the NVRAM
+file after the clock, as a "GXRTC128" block (older files still load).
+
 **Next:** the TGA's DMA modes if something uses them; Windows NT, when a
 version that supports the Avanti turns up.
 

@@ -62,6 +62,10 @@
 
 /*  256 on DECstation, SGI uses reg at 72*4 as the Century  */
 #define	N_REGISTERS	1024
+/*  The second 64 bytes of a 128-byte RTC (a DS12887 style part):  */
+#define	EXT_START	0x40
+#define	EXT_LEN		64
+
 struct mc_data {
 	int		access_style;
 	bool		fixed_32khz;	/*  timebase is always 32.768 kHz  */
@@ -98,11 +102,13 @@ struct mc_data {
 	int		year_base;
 	int		year_base_arc;	/*  instead, if CMOS byte 3Fh is 1  */
 
-	/*  The NVRAM (registers 14..63) is kept in this file, if any:  */
+	/*  The NVRAM (registers 14..63, and 64..127 with ext_bank) is kept
+	    in this file, if any:  */
 	char		*nvram_file;
 	bool		nvram_dirty;
 	bool		nvram_have_saved;
-	unsigned char	nvram_saved[MC_NVRAM_SIZE];
+	bool		ext_bank;
+	unsigned char	nvram_saved[MC_NVRAM_SIZE + EXT_LEN];
 	time_t		nvram_changed;
 
 	/*
@@ -229,10 +235,26 @@ static void mc146818_set_guest_time(struct mc_data *d)
  *  keeps it: "GXCLOCK1", the guest's and the host's time then (64-bit
  *  little-endian) and the day of the week.  The clock runs on while
  *  gxemul isn't running.  (Older versions read only the 50 bytes.)
+ *
+ *  With a 128-byte RTC (ext_bank), registers 64..127 follow, after
+ *  "GXRTC128": the AlphaStation 200's SRM console keeps TIMER_TPS in
+ *  4Fh, for one.
  */
+
+static int nvram_len(struct mc_data *d)
+{
+	return MC_NVRAM_SIZE + (d->ext_bank? EXT_LEN : 0);
+}
+
+static int nvram_reg(int i)
+{
+	return i < MC_NVRAM_SIZE? MC_NVRAM_START + i :
+	    EXT_START + i - MC_NVRAM_SIZE;
+}
 
 #define	CLOCK_MAGIC	"GXCLOCK1"
 #define	CLOCK_LEN	(8 + 8 + 8 + 1)
+#define	EXT_MAGIC	"GXRTC128"
 
 static void put_le64(unsigned char *p, uint64_t x)
 {
@@ -260,8 +282,8 @@ static bool nvram_has_changed(struct mc_data *d)
 		return true;
 	if (!d->nvram_have_saved)
 		return d->nvram_dirty;
-	for (i = 0; i < MC_NVRAM_SIZE; i++)
-		if ((unsigned char) d->reg[4 * (MC_NVRAM_START + i)] !=
+	for (i = 0; i < nvram_len(d); i++)
+		if ((unsigned char) d->reg[4 * nvram_reg(i)] !=
 		    d->nvram_saved[i])
 			return true;
 	return false;
@@ -269,13 +291,15 @@ static bool nvram_has_changed(struct mc_data *d)
 
 static void nvram_write(struct mc_data *d)
 {
-	unsigned char buf[MC_NVRAM_SIZE + CLOCK_LEN];
+	unsigned char buf[MC_NVRAM_SIZE + CLOCK_LEN + 8 + EXT_LEN];
+	unsigned char saved[MC_NVRAM_SIZE + EXT_LEN];
 	size_t len = MC_NVRAM_SIZE;
 	FILE *f;
 	int i;
 
-	for (i = 0; i < MC_NVRAM_SIZE; i++)
-		buf[i] = d->reg[4 * (MC_NVRAM_START + i)];
+	for (i = 0; i < nvram_len(d); i++)
+		saved[i] = d->reg[4 * nvram_reg(i)];
+	memcpy(buf, saved, MC_NVRAM_SIZE);
 	if (d->guest_time_set) {
 		memcpy(buf + len, CLOCK_MAGIC, 8);
 		put_le64(buf + len + 8, (uint64_t) d->guest_base);
@@ -283,13 +307,18 @@ static void nvram_write(struct mc_data *d)
 		buf[len + 24] = d->guest_dow;
 		len += CLOCK_LEN;
 	}
+	if (d->ext_bank) {
+		memcpy(buf + len, EXT_MAGIC, 8);
+		memcpy(buf + len + 8, saved + MC_NVRAM_SIZE, EXT_LEN);
+		len += 8 + EXT_LEN;
+	}
 	f = fopen(d->nvram_file, "wb");
 	if (f == NULL || fwrite(buf, 1, len, f) != len) {
 		fprintf(stderr, "[ mc146818: could not write the NVRAM to "
 		    "%s ]\n", d->nvram_file);
 		d->nvram_file = NULL;
 	} else {
-		memcpy(d->nvram_saved, buf, MC_NVRAM_SIZE);
+		memcpy(d->nvram_saved, saved, nvram_len(d));
 		d->nvram_have_saved = true;
 		d->clock_saved = d->guest_time_set;
 	}
@@ -300,9 +329,9 @@ static void nvram_write(struct mc_data *d)
 
 static void nvram_read(struct mc_data *d)
 {
-	unsigned char buf[MC_NVRAM_SIZE + CLOCK_LEN];
+	unsigned char buf[MC_NVRAM_SIZE + CLOCK_LEN + 8 + EXT_LEN + 1];
 	FILE *f = fopen(d->nvram_file, "rb");
-	size_t len;
+	size_t len, pos;
 	int i;
 
 	if (f == NULL)
@@ -311,19 +340,32 @@ static void nvram_read(struct mc_data *d)
 	if (len >= MC_NVRAM_SIZE) {
 		for (i = 0; i < MC_NVRAM_SIZE; i++)
 			d->reg[4 * (MC_NVRAM_START + i)] = buf[i];
-		memcpy(d->nvram_saved, buf, MC_NVRAM_SIZE);
 		d->nvram_have_saved = true;
 		d->dec_year_done = 1;
-		if (len == sizeof(buf) &&
-		    memcmp(buf + MC_NVRAM_SIZE, CLOCK_MAGIC, 8) == 0) {
-			d->guest_base = (time_t) get_le64(buf + MC_NVRAM_SIZE + 8);
-			d->host_base = (time_t) get_le64(buf + MC_NVRAM_SIZE + 16);
-			d->guest_dow = buf[MC_NVRAM_SIZE + 24];
-			if (d->guest_dow < 1 || d->guest_dow > 7)
-				d->guest_dow = 1;
-			d->guest_time_set = 1;
-			d->clock_saved = true;
+		for (pos = MC_NVRAM_SIZE; pos + 8 <= len; ) {
+			unsigned char *p = buf + pos;
+			if (memcmp(p, CLOCK_MAGIC, 8) == 0 &&
+			    pos + CLOCK_LEN <= len) {
+				d->guest_base = (time_t) get_le64(p + 8);
+				d->host_base = (time_t) get_le64(p + 16);
+				d->guest_dow = p[24];
+				if (d->guest_dow < 1 || d->guest_dow > 7)
+					d->guest_dow = 1;
+				d->guest_time_set = 1;
+				d->clock_saved = true;
+				pos += CLOCK_LEN;
+			} else if (memcmp(p, EXT_MAGIC, 8) == 0 &&
+			    pos + 8 + EXT_LEN <= len) {
+				if (d->ext_bank)
+					for (i = 0; i < EXT_LEN; i++)
+						d->reg[4 * (EXT_START + i)] =
+						    p[8 + i];
+				pos += 8 + EXT_LEN;
+			} else
+				break;
 		}
+		for (i = 0; i < nvram_len(d); i++)
+			d->nvram_saved[i] = d->reg[4 * nvram_reg(i)];
 	} else
 		fprintf(stderr, "[ mc146818: %s is too short to be an NVRAM; "
 		    "ignored ]\n", d->nvram_file);
@@ -711,7 +753,8 @@ DEVICE_ACCESS(mc146818)
 		/*  WRITE:  */
 		if (relative_addr % 4 == 0 &&
 		    relative_addr >= MC_NVRAM_START * 4 && relative_addr <
-		    (MC_NVRAM_START + MC_NVRAM_SIZE) * 4 &&
+		    (d->ext_bank? EXT_START + EXT_LEN : MC_NVRAM_START +
+		    MC_NVRAM_SIZE) * 4 &&
 		    d->reg[relative_addr] != data[0]) {
 			d->nvram_dirty = true;
 			d->nvram_changed = time(NULL);
@@ -972,6 +1015,8 @@ void dev_mc146818_init(struct machine *machine, struct memory *mem,
 		d->year_base_arc = 80;
 		d->reg[MC_REGB * 4] |= MC_REGB_BINARY;
 		d->use_bcd = 0;
+		/*  128 bytes; SRM keeps TIMER_TPS in 4Fh:  */
+		d->ext_bank = true;
 	}
 
 	/*
