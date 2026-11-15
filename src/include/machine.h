@@ -147,6 +147,7 @@ struct machine {
 
 	int	main_console_handle;
 	bool	vt100_7bit;
+	void	(*display_key_handler)(struct machine *m, int ch);
 
 	/*  Tick functions (e.g. hardware devices):  */
 	struct tick_functions tick_functions;

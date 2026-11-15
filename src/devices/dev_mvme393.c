@@ -65,6 +65,57 @@ struct mvme393_data {
 
 static struct mvme393_data *s_mvme393 = NULL;
 
+#define MVME393_KBD_QUEUE_SIZE 128
+
+struct mvme393_kbd_event {
+	uint32_t key;
+	uint32_t down;
+};
+
+static struct mvme393_kbd_event s_kbd_queue[MVME393_KBD_QUEUE_SIZE];
+static int s_kbd_head = 0, s_kbd_tail = 0;
+
+static void dev_mvme393_enqueue_key(uint32_t key, uint32_t down)
+{
+	int next = (s_kbd_head + 1) % MVME393_KBD_QUEUE_SIZE;
+	if (next != s_kbd_tail) {
+		s_kbd_queue[s_kbd_head].key = key;
+		s_kbd_queue[s_kbd_head].down = down;
+		s_kbd_head = next;
+	}
+}
+
+static void dev_mvme393_display_key(struct machine *m, int ch)
+{
+	(void)m;
+
+	if (ch >= 1 && ch <= 26 && ch != '\t' && ch != '\n' && ch != '\r') {
+		/* Control characters (Ctrl+A .. Ctrl+Z) */
+		dev_mvme393_enqueue_key(17, 1);            /* XK_Control_L press */
+		dev_mvme393_enqueue_key('a' + ch - 1, 1);  /* key press */
+		dev_mvme393_enqueue_key('a' + ch - 1, 0);  /* key release */
+		dev_mvme393_enqueue_key(17, 0);            /* XK_Control_L release */
+	} else if (ch == '\r' || ch == '\n') {
+		dev_mvme393_enqueue_key(13, 1);            /* XK_Return press */
+		dev_mvme393_enqueue_key(13, 0);            /* XK_Return release */
+	} else if (ch == '\b') {
+		dev_mvme393_enqueue_key(8, 1);             /* XK_BackSpace press */
+		dev_mvme393_enqueue_key(8, 0);             /* XK_BackSpace release */
+	} else if (ch == '\t') {
+		dev_mvme393_enqueue_key(10, 1);            /* XK_Tab press */
+		dev_mvme393_enqueue_key(10, 0);            /* XK_Tab release */
+	} else if (ch == 27) {
+		dev_mvme393_enqueue_key(27, 1);            /* XK_Escape press */
+		dev_mvme393_enqueue_key(27, 0);            /* XK_Escape release */
+	} else if (ch == 127) {
+		dev_mvme393_enqueue_key(127, 1);           /* XK_Delete press */
+		dev_mvme393_enqueue_key(127, 0);           /* XK_Delete release */
+	} else if (ch >= 32 && ch < 127) {
+		dev_mvme393_enqueue_key((uint32_t)ch, 1);  /* ASCII key press */
+		dev_mvme393_enqueue_key((uint32_t)ch, 0);  /* ASCII key release */
+	}
+}
+
 static void send_response(struct mvme393_data *d, uint16_t op, uint16_t status)
 {
 	WRITE_DPR16(d, 0x40008, 0x0005); /* Response opcode = 5 */
@@ -90,6 +141,7 @@ static void dev_mvme393_reset(struct mvme393_data *d)
 	d->m_68k_dest = 0;
 	d->vram_dest = 0;
 	d->vram_dirty = 1;
+	s_kbd_head = s_kbd_tail = 0;
 
 	memset(d->dpr, 0, sizeof(d->dpr));
 	memset(d->vram, 0, sizeof(d->vram));
@@ -538,9 +590,10 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 	(void)cpu;
 
 	if (d->fb != NULL && d->fb->framebuffer != NULL) {
+		uint8_t *in = d->fb->framebuffer + 0xfe000;
+
 		console_getmouse(&dx, &dy, &buttons, &fb_nr);
 		if (dx != 0 || dy != 0 || buttons != 0) {
-			uint8_t *in = d->fb->framebuffer + 0xfe000;
 			int32_t cur_dx = ((int32_t)in[0]<<24) | ((int32_t)in[1]<<16) | ((int32_t)in[2]<<8) | in[3];
 			int32_t cur_dy = ((int32_t)in[4]<<24) | ((int32_t)in[5]<<16) | ((int32_t)in[6]<<8) | in[7];
 			cur_dx += dx;
@@ -550,6 +603,29 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 			in[8] = (buttons >> 24) & 0xff; in[9] = (buttons >> 16) & 0xff; in[10] = (buttons >> 8) & 0xff; in[11] = buttons & 0xff;
 			in[12] = 0; in[13] = 0; in[14] = 0; in[15] = 1;
 		}
+
+		/* Deliver queued keyboard events if previous event was consumed */
+		if (s_kbd_head != s_kbd_tail) {
+			uint32_t kbd_pending = ((uint32_t)in[0x18]<<24) | ((uint32_t)in[0x19]<<16) |
+			                       ((uint32_t)in[0x1a]<<8)  | in[0x1b];
+			if (kbd_pending == 0) {
+				struct mvme393_kbd_event ev = s_kbd_queue[s_kbd_tail];
+				s_kbd_tail = (s_kbd_tail + 1) % MVME393_KBD_QUEUE_SIZE;
+
+				in[0x10] = (ev.key >> 24) & 0xff;
+				in[0x11] = (ev.key >> 16) & 0xff;
+				in[0x12] = (ev.key >> 8) & 0xff;
+				in[0x13] = ev.key & 0xff;
+
+				in[0x14] = (ev.down >> 24) & 0xff;
+				in[0x15] = (ev.down >> 16) & 0xff;
+				in[0x16] = (ev.down >> 8) & 0xff;
+				in[0x17] = ev.down & 0xff;
+
+				in[0x18] = 0; in[0x19] = 0; in[0x1a] = 0; in[0x1b] = 1;
+			}
+		}
+
 		if (d->vram_dirty) {
 			d->fb->update_x1 = 0;
 			d->fb->update_y1 = 0;
@@ -609,7 +685,15 @@ void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187)
 		d->fb->rgb_palette[255 * 3 + 0] = 255;
 		d->fb->rgb_palette[255 * 3 + 1] = 255;
 		d->fb->rgb_palette[255 * 3 + 2] = 255;
+
+		/* Initial event pending to display mouse cursor immediately */
+		if (d->fb->framebuffer != NULL) {
+			uint8_t *in = d->fb->framebuffer + 0xfe000;
+			in[15] = 1;
+		}
 	}
+
+	machine->display_key_handler = dev_mvme393_display_key;
 
 	machine_add_tickfunction(machine, dev_mvme393_tick, d, 14);
 }

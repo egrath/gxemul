@@ -1279,7 +1279,9 @@ static void text_input(struct machine *m, const char *text)
 		}
 
 		if (c >= 0) {
-			if (last_keydown_scancode != SDL_SCANCODE_UNKNOWN) {
+			if (m != NULL && m->display_key_handler != NULL) {
+				m->display_key_handler(m, c);
+			} else if (last_keydown_scancode != SDL_SCANCODE_UNKNOWN) {
 				if (!last_keydown_repeat ||
 				    held_scancode != last_keydown_scancode ||
 				    held_machine != m) {
@@ -1408,7 +1410,8 @@ static void key_down(struct fb_window *win, const SDL_KeyboardEvent *kev)
 		}
 		last_keydown_scancode = SDL_SCANCODE_UNKNOWN;
 		last_keydown_repeat = false;
-		console_key_hold(m->main_console_handle);
+		if (m == NULL || m->display_key_handler == NULL)
+			console_key_hold(m->main_console_handle);
 		if (dkey >= 0)
 			display_key(m, dkey, mods);
 		else
@@ -1478,7 +1481,12 @@ static void handle_event(const SDL_Event *ev)
 		if (win == NULL)
 			break;
 		if (grabbed != win) {
-			menu_mouse_event(win, ev);
+			if (!menu_mouse_event(win, ev)) {
+				if (ev->motion.xrel != 0 || ev->motion.yrel != 0)
+					console_mouse_coordinate_update(
+					    ev->motion.xrel * win->scaledown,
+					    ev->motion.yrel * win->scaledown, win->fb_number);
+			}
 			break;
 		}
 		if (ev->motion.xrel != 0 || ev->motion.yrel != 0)
@@ -1493,10 +1501,12 @@ static void handle_event(const SDL_Event *ev)
 		win = fb_window_of(ev->button.windowID);
 		if (win == NULL)
 			break;
-		if (grabbed == win)
+		if (grabbed == win) {
 			console_mouse_button(ev->button.button, 1);
-		else
-			menu_mouse_event(win, ev);
+		} else if (!menu_mouse_event(win, ev)) {
+			grab(win);
+			console_mouse_button(ev->button.button, 1);
+		}
 		break;
 
 	/*  A click in the screen grabs the mouse:  */
