@@ -170,6 +170,11 @@ void dev_jensen_set_rom(struct jensen_data *d, const unsigned char *image,
 	size_t len);
 uint64_t dev_jensen_srom(struct jensen_data *d, struct cpu *cpu);
 
+/*  dev_8253.c:  */
+struct pit8253_data;
+int dev_8253_counter2_out(struct pit8253_data *d);
+void dev_8253_counter2_gate(struct pit8253_data *d, int gate);
+
 /*  dev_dec21143.c (also devinit "dec21143"):  */
 struct dec21143_data;
 struct pci_data;

@@ -1210,13 +1210,18 @@ DEVICE_ACCESS(pckbc)
 		/*  PC-style:  */
 		if (relative_addr == 1) {
 			/*  Port 0x61: System Control Port B (NMI status/control, refresh toggle)  */
+			struct pit8253_data *pit =
+			    cpu->machine->isa_pic_data.pit;
+			int out2;
 			if (writeflag == MEM_WRITE) {
 				d->port61 = idata & 0x0f;
+				dev_8253_counter2_gate(pit, idata & 0x01);
 				return 1;
 			}
 			d->refresh_toggle ^= 0x10;
 			odata = (d->port61 & 0x0f) | (d->refresh_toggle & 0x10);
-			if (d->port61 & 0x01)
+			out2 = pit != NULL? dev_8253_counter2_out(pit) : -1;
+			if (out2 < 0? (d->port61 & 0x01) : out2)
 				odata |= 0x20;
 			memory_writemax64(cpu, data, len, odata);
 			return 1;

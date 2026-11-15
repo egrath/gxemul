@@ -51,6 +51,9 @@ struct isa_pic_data {
 
 	int			*pending_timer_interrupts;
 	int			last_int;
+
+	/*  The 8254, for port 61h (counter 2's gate and output):  */
+	struct pit8253_data	*pit;
 };
 
 struct breakpoints {

@@ -509,6 +509,18 @@ from the host in 13 s, every byte right, 40 MB to it in 4 s, and an HTTP
 GET from the Internet. OSF/1 V3.0 on the DEC 3000 (LANCE): 20 MB in 16 s
 with telnet, all there.
 
+**Windows NT 4.0 (2026-11-15).** From the NT Server 4.0 CD (the
+multi-architecture one, NTSRV40A), under ARC 4.58: `arcinst` from the CD
+("Run a program", `scsi(0)cdrom(4)fdisk(0)\alpha\arcinst`) makes a 10 MB
+FAT system partition; "Install Windows NT from CD-ROM" then starts setup.
+It hung at first, in a firmware routine that times the CPU with the 8254's
+counter 2 (mode 3, gated through port 61h) and waits for edges of its
+output in port 61h bit 5, which was always 1. Counter 2's output and gate
+now follow its count (dev_8253.c, from dev_pckbc.c's port 61h). Text-mode
+setup finds "Digital AlphaStation 200/400 Family", the ZLXp-E (TGA) and
+the C810 (symc810), partitions and copies in under two minutes, restarts
+through ARC, and the graphical setup runs on NT's TGA driver.
+
 **Next:** the TGA's DMA modes if something uses them; Windows NT, when a
 version that supports the Avanti turns up.
 

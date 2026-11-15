@@ -34,8 +34,8 @@
  *  otherwise, and for counter 1 (DMA refresh), a counter reads back the
  *  value loaded (see pit_count()).  Each counter has its own access mode
  *  (LSB, MSB or both) and byte order, and the counter latch and 8254
- *  read-back commands latch counts.  Counter 2 makes no tone, and its
- *  output isn't emulated.
+ *  read-back commands latch counts.  Counter 2 makes no tone; its output
+ *  and gate (port 61h, dev_pckbc.c) follow its count when counting.
  */
 
 #include <stdio.h>
@@ -45,6 +45,7 @@
 
 #include "cpu.h"
 #include "device.h"
+#include "devices.h"
 #include "emul.h"
 #include "interrupt.h"
 #include "machine.h"
@@ -77,6 +78,7 @@ struct pit8253_data {
 	int		read_msb_next[3];
 	int		latched[3];
 	int		latch_value[3];
+	int		gate2;		/*  counter 2's gate (port 61h bit 0)  */
 
 	/*  Counting (see pit_count()): when the counter was loaded, and how
 	    many times it had reached zero when it was last read.  */
@@ -161,6 +163,62 @@ static int pit_count(struct pit8253_data *d, int c)
 	default:
 		return (n - t) & 0xffff;
 	}
+}
+
+
+/*
+ *  Counter 2's output, as port 61h bit 5 shows it, or -1 if the counters
+ *  don't count (port 61h then makes it up). In mode 3 (square wave) it is
+ *  high for the first half of each period (the Alpha ARC firmware's
+ *  KeStallExecution calibration counts its edges against the cycle
+ *  counter); in mode 2 it is low for one clock per period; in mode 0 it
+ *  goes high at terminal count. With the gate low, it stays high.
+ */
+int dev_8253_counter2_out(struct pit8253_data *d)
+{
+	uint64_t n, t;
+	struct timeval now;
+
+	if (d == NULL || !d->counting)
+		return -1;
+	n = d->counter[2] & 0xffff;
+	if (!d->gate2)
+		return 1;
+	if (n == 0)
+		n = 65536;
+
+	gettimeofday(&now, NULL);
+	t = (uint64_t) ((now.tv_sec - d->load_time[2].tv_sec) * 1e6 +
+	    (now.tv_usec - d->load_time[2].tv_usec)) * I8253_TIMER_FREQ /
+	    1000000;
+
+	switch (d->mode[2] & 6) {
+	case I8253_TIMER_SQWAVE & 6:
+		n &= ~1;
+		if (n == 0)
+			n = 65536;
+		return (t % n) < n / 2;
+	case I8253_TIMER_RATEGEN & 6:
+		return (t % n) != n - 1;
+	case I8253_TIMER_INTTC & 6:
+		return t >= n;
+	default:
+		return 1;
+	}
+}
+
+
+/*  Counter 2's gate: a rising edge starts the count again from the value
+    loaded.  */
+void dev_8253_counter2_gate(struct pit8253_data *d, int gate)
+{
+	if (d == NULL)
+		return;
+	if (gate && !d->gate2) {
+		gettimeofday(&d->load_time[2], NULL);
+		d->zeros_shown[2] = 0;
+	}
+	d->gate2 = gate;
 }
 
 
@@ -337,6 +395,7 @@ DEVINIT(8253)
 
 	devinit->machine->isa_pic_data.pending_timer_interrupts =
 	    &d->pending_interrupts_timer0;
+	devinit->machine->isa_pic_data.pit = d;
 
 	memory_device_register(devinit->machine->memory, devinit->name,
 	    devinit->addr, DEV_8253_LENGTH, dev_8253_access, (void *)d,
