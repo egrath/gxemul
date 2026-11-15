@@ -443,7 +443,18 @@ back; not tried yet.) What it took:
 No Windows NT for Alpha with AlphaStation 200 support is here: only NT
 3.1, which predates the machine.
 
-**Next:** V5.1A, the 400's 233 MHz EV45 model
+### Tru64 V5.1A (2026-11-14)
+
+Installed with no emulator changes, from the V5.1A OS CD (Rev. 1885) to
+an RZ29B over the serial console: `boot dka400`, all software, mandatory
+kernel options, AdvFS root and /usr (/var in /usr). The 100 subsets load
+in about 50 minutes. Unlike V5.1B, the installer builds the kernel
+(`cpu "DEC2100_A50"`) in its first reboot by itself, with no manual
+`boot dka0 -flags A`, and comes up to `login:`. `psrinfo` says 167 MHz
+EV4, the clock keeps host time, and tu0 (the on-board 21040) pings the
+NAT gateway, also after a reboot with the address in rc.config.
+
+**Next:** the 400's 233 MHz EV45 model
 (its own PCI layout: three slots, no 21040), the TGA's DMA modes if
 something uses them.
 
