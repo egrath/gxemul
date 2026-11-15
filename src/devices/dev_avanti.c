@@ -512,6 +512,11 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
 	    AVANTI_PCI_DEV_SIO, 0, "i82378zb");
 
+	/*  With the display on, a ZLXp-E1 (TGA) in the second PCI slot:  */
+	if (machine->display_md.in_use)
+		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
+		    AVANTI_PCI_DEV_SLOT0 + 1, 0, "dec21030");
+
 	/*  With a network, a DE500-BA (21143) in the first PCI slot:  */
 	if (machine->emul->net != NULL)
 		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
@@ -614,6 +619,11 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
  *  parameters in memory at 0..0x70, which the DROM passes on to the
  *  console in a0..t11, t12 and at (0x00..0x48, 0x58, 0x60):
  *
+ *	0x08	the memory size in bytes. SRM sizes its heap from it: with
+ *		25 MB or more, its heap reaches up to 2 MB (928 KB); with 0,
+ *		it is 192 KB, too small for a network card's buffers
+ *		("insufficient dynamic memory") or for booting with both a
+ *		network and a graphics card.
  *	0x70	the CPU speed code: 2 or 8 makes the DROM time the CPU
  *		against the 8254 and pick the speed (2 = 166 MHz, ...),
  *		and store the cycle time in ps at 0x10, MHz at 0x68 and
@@ -625,6 +635,11 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
 uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu)
 {
 	unsigned char speed_code[8] = { 2, 0, 0, 0, 0, 0, 0, 0 };
+	unsigned char memsize[8];
+	int i;
+
+	for (i = 0; i < 8; i++)
+		memsize[i] = d->ram_size >> (8 * i);
 
 	cpu->memory_rw(cpu, cpu->mem, AVANTI_DROM_ADDR,
 	    d->drom + AVANTI_ROM_HEADER_SIZE,
@@ -632,6 +647,8 @@ uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu)
 	    PHYSICAL | NO_EXCEPTIONS);
 
 	cpu->memory_rw(cpu, cpu->mem, 0x70, speed_code, sizeof(speed_code),
+	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
+	cpu->memory_rw(cpu, cpu->mem, 0x08, memsize, sizeof(memsize),
 	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
 
 	/*  Nothing is connected to the serial ROM port: its receive line

@@ -179,6 +179,12 @@ struct dec21143_data *dev_dec21143_pci_init(struct machine *machine,
 void dev_dec21143_set_bars(struct dec21143_data *d, uint64_t io_addr,
 	int io_enable, uint64_t mem_addr, int mem_enable);
 
+/*  dev_tga.c:  */
+struct tga_data;
+struct tga_data *dev_tga_init(struct machine *machine, struct memory *mem,
+	const char *irq_path);
+void dev_tga_set_bar(struct tga_data *d, uint64_t addr, int enable);
+
 /*  dev_sym53c810.c:  */
 struct sym53c810_data;
 struct pci_data;

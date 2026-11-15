@@ -1034,17 +1034,6 @@ void dev_mc146818_init(struct machine *machine, struct memory *mem,
 	    dev_len * addrdiv, dev_mc146818_access,
 	    d, DM_DEFAULT, NULL);
 
-	/*
-	 *  A new AlphaStation 200 CMOS has SRM's quick_start on (0x31 in
-	 *  byte 3Eh): SRM then skips its x86 BIOS emulator at power-up. That
-	 *  emulator only runs VGA option ROMs (no VGA here), and its 45 KB of
-	 *  console heap leave too little for a network card's receive buffers
-	 *  (SRM V7.0 halts in rx_ewa0 with "insufficient dynamic memory").
-	 *  An NVRAM file, if there is one, replaces this.
-	 */
-	if (machine->machine_type == MACHINE_AVANTI)
-		d->reg[4 * 0x3e] = 0x31;
-
 	if (machine->nvram_filename != NULL && n_nvrams < MAX_NVRAMS) {
 		d->nvram_file = machine->nvram_filename;
 		nvram_read(d);

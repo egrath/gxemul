@@ -100,6 +100,7 @@ struct pckbc_data {
 
 	int		scanning_enabled[2];
 	int		translation_table;
+	int		type_ticks, type_ticks_left;	/*  typing pace  */
 	int		state[2];
 	int		cmdbyte;
 	int		output_byte;
@@ -620,6 +621,21 @@ static const struct pckbc_special_key pckbc_special_keys[] = {
 
 
 /*
+ *  pckbc_scancode_set():
+ *
+ *  The scancode set that the computer sees: the keyboard's, or, when a
+ *  PC-style controller translates (KC8_TRANS in its command byte), set 1.
+ *  (Tru64 UNIX turns translation off and uses set 3.)
+ */
+static int pckbc_scancode_set(struct pckbc_data *d)
+{
+	if (d->type != PCKBC_8242 && d->cmdbyte & KC8_TRANS)
+		return 1;
+	return d->translation_table;
+}
+
+
+/*
  *  pckbc_type_special_key():
  *
  *  Presses and releases a key of pckbc_special_keys[] in the current
@@ -630,7 +646,7 @@ static void pckbc_type_special_key(struct pckbc_data *d,
 {
 	int p = 0;
 
-	switch (d->translation_table) {
+	switch (pckbc_scancode_set(d)) {
 	case 1:	if (k->extended)
 			pckbc_add_code(d, 0xe0, p);
 		pckbc_add_code(d, k->set1, p);
@@ -661,7 +677,7 @@ static void pckbc_type_special_key(struct pckbc_data *d,
  */
 static void pckbc_type_char(struct pckbc_data *d, int ch)
 {
-	switch (d->translation_table) {
+	switch (pckbc_scancode_set(d)) {
 	case 1:	ascii_to_pc_scancodes_type1(ch, d);
 		break;
 	case 2:	ascii_to_pc_scancodes_type2(ch, d);
@@ -690,7 +706,7 @@ static void pckbc_modifiers(struct pckbc_data *d, int mods, int release)
 		{ 0x12, 0x11, 0x19 } };		/*  set 3  */
 	static const int bits[3] = { DISPLAY_MOD_SHIFT, DISPLAY_MOD_CTRL,
 	    DISPLAY_MOD_ALT };
-	int set = d->translation_table, i;
+	int set = pckbc_scancode_set(d), i;
 
 	if (set < 1 || set > 3)
 		return;
@@ -803,6 +819,27 @@ static void pckbc_type_escape(struct pckbc_data *d, int introducer)
 }
 
 
+/*
+ *  pckbc_drop_interrupt():
+ *
+ *  Reading the output buffer drops the interrupt line; the next byte
+ *  raises it again (pckbc_reassert_interrupts()), which is a new edge for
+ *  the 8259. (Tru64 UNIX reads one byte per interrupt, so a line that
+ *  stayed up for the next byte would never interrupt again.)
+ */
+static void pckbc_drop_interrupt(struct pckbc_data *d, int port_nr)
+{
+	if (!d->currently_asserted[port_nr])
+		return;
+
+	if (port_nr == 0)
+		INTERRUPT_DEASSERT(d->irq_keyboard);
+	else
+		INTERRUPT_DEASSERT(d->irq_mouse);
+	d->currently_asserted[port_nr] = 0;
+}
+
+
 void pckbc_reassert_interrupts(struct pckbc_data *d)
 {
 	int ints_enabled = 1;
@@ -852,15 +889,23 @@ DEVICE_TICK(pckbc)
 	struct pckbc_data *d = (struct pckbc_data *) extra;
 	int ch;
 
-	// Keyboard input:
-	if (d->in_use) {
-		while (console_charavail(d->console_handle)) {
-			ch = console_readchar(d->console_handle);
-			if (ch == 27 || ch == 0x9b || ch == 0x8f)
-				pckbc_type_escape(d, ch);
-			else if (ch >= 0)
-				pckbc_type_char(d, ch);
-		}
+	/*
+	 *  Keyboard input, one key at a time, as a fast typist would: the
+	 *  next once the last one's bytes have been read, and some time has
+	 *  passed. (A whole pasted line at once could overflow the guest's
+	 *  input queue; Tru64's lost a Shift release that way.)
+	 */
+	if (d->type_ticks_left > 0)
+		d->type_ticks_left --;
+	if (d->in_use && d->type_ticks_left == 0 &&
+	    d->head[0] == d->tail[0] &&
+	    console_charavail(d->console_handle)) {
+		ch = console_readchar(d->console_handle);
+		if (ch == 27 || ch == 0x9b || ch == 0x8f)
+			pckbc_type_escape(d, ch);
+		else if (ch >= 0)
+			pckbc_type_char(d, ch);
+		d->type_ticks_left = d->type_ticks;
 	}
 
 	// Mouse input:
@@ -945,13 +990,6 @@ static void dev_pckbc_command(struct pckbc_data *d, int port_nr)
 		default:fatal("[ pckbc: (port %i) translation table "
 			    "0x%02x is NOT YET IMPLEMENTED ]\n",
 			    port_nr, cmd);
-		}
-
-		// Hack for OpenBSD/cats and NetBSD/cats:
-		if (d->type != PCKBC_8242) {
-			debugmsg(d->subsys, "pckbc", VERBOSITY_DEBUG,
-			    "forcing translation table 1 (non-8242 hack)\n");
-			d->translation_table = 1;
 		}
 
 		pckbc_add_code(d, KBR_ACK, port_nr);
@@ -1216,9 +1254,11 @@ DEVICE_ACCESS(pckbc)
 			default:if (d->head[0] != d->tail[0]) {
 					odata = pckbc_get_code(d, 0);
 					d->last_scancode = odata;
+					pckbc_drop_interrupt(d, 0);
 				} else if (d->head[1] != d->tail[1]) {
 					/*  A byte from the mouse:  */
 					odata = pckbc_get_code(d, 1);
+					pckbc_drop_interrupt(d, 1);
 				} else {
 					odata = d->last_scancode;
 					d->last_scancode |= 0x80;
@@ -1519,6 +1559,11 @@ int dev_pckbc_init(struct machine *machine, struct memory *mem,
 
 	memory_device_register(mem, "pckbc", baseaddr,
 	    len, dev_pckbc_access, d, DM_DEFAULT, NULL);
+	/*  About 30 keys a second:  */
+	d->type_ticks = machine->emulated_hz / (30 << PCKBC_TICKSHIFT);
+	if (d->type_ticks < 1)
+		d->type_ticks = 1;
+
 	machine_add_tickfunction(machine, dev_pckbc_tick, d,
 	    PCKBC_TICKSHIFT);
 

@@ -1540,10 +1540,65 @@ PCIINIT(dec21143)
 
 #define PCI_PRODUCT_DEC_21030  0x0004          /*  DECchip 21030 ("TGA")  */
 
+/*  The AlphaStation 200's TGA (dev_tga.c): its 128 MB BAR as the firmware
+    sets it; there is no option ROM.  */
+static int tga_cfg_reg_write(struct pci_device *pd, int reg, uint32_t value)
+{
+	uint32_t cmd, bar;
+
+	switch (reg) {
+	case PCI_ID_REG:
+	case PCI_CLASS_REG:
+	case PCI_MAPREG_ROM:
+		return 1;
+	case PCI_COMMAND_STATUS_REG:
+		/*  The status bits are cleared by writing ones:  */
+		value = (value & 0xffff) | ((pd->cfg_mem[6] |
+		    (pd->cfg_mem[7] << 8)) & ~(value >> 16)) << 16;
+		break;
+	case PCI_MAPREG_START:
+		/*  Memory, prefetchable, 128 MB:  */
+		value = (value & 0xf8000000) | 8;
+		break;
+	case PCI_INTERRUPT_REG:
+		value = (pci_cfg32(pd, reg) & ~0xff) | (value & 0xff);
+		break;
+	}
+
+	PCI_SET_DATA(reg, value);
+
+	cmd = pci_cfg32(pd, PCI_COMMAND_STATUS_REG);
+	bar = pci_cfg32(pd, PCI_MAPREG_START) & 0xf8000000;
+	if (pd->extra != NULL)
+		dev_tga_set_bar((struct tga_data *) pd->extra,
+		    pd->pcibus->pci_actual_mem_offset + bar,
+		    (cmd & PCI_COMMAND_MEM_ENABLE) && bar != 0);
+
+	return 1;
+}
+
 PCIINIT(dec21030)
 {
 	uint64_t base = 0;
 	char tmpstr[2000];
+
+	if (machine->machine_type == MACHINE_AVANTI) {
+		/*  A ZLXp-E1 in the second slot (device 12), whose pin A is
+		    the SIO's PIRQ1 (see dev_avanti.c):  */
+		PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_DEC,
+		    PCI_PRODUCT_DEC_21030));
+		PCI_SET_DATA(PCI_COMMAND_STATUS_REG, 0x028000a0);
+		PCI_SET_DATA(PCI_CLASS_REG, 0x03800002);	/*  step B  */
+		PCI_SET_DATA(PCI_BHLC_REG, 0);
+		PCI_SET_DATA(PCI_MAPREG_START, 8);
+		PCI_SET_DATA_SIZE(PCI_MAPREG_START, 0xf8000008);
+		PCI_SET_DATA(PCI_INTERRUPT_REG, 0x00000100);
+		snprintf(tmpstr, sizeof(tmpstr), "%s.pirq.1",
+		    pd->pcibus->irq_path_pci);
+		pd->extra = dev_tga_init(machine, mem, tmpstr);
+		pd->cfg_reg_write = tga_cfg_reg_write;
+		return;
+	}
 
 	PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_DEC,
 	    PCI_PRODUCT_DEC_21030));

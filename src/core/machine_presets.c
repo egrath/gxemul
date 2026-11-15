@@ -147,9 +147,9 @@ static const struct machine_preset presets[] = {
 		"workstation: a 166 MHz 21064 on the APECS chipset, with a "
 		"53C810 SCSI controller and ISA. Runs the genuine DROM and SRM "
 		"V7.0 console (the flash and the DROM given as one file, see "
-		"doc/avanti-plan.md), on the serial console, with a DE500-BA "
-		"(21143) Ethernet card. Installs and runs Tru64 UNIX V5.1 and "
-		"V5.1B.",
+		"doc/avanti-plan.md), on the serial console, with a ZLXp-E1 "
+		"(TGA) for X and CDE, and a DE500-BA (21143) Ethernet card. "
+		"Installs and runs Tru64 UNIX V5.1 and V5.1B with CDE.",
 		"{ \"gxemul\": 1, \"name\": \"AlphaStation 200\","
 		"  \"machine\": { \"type\": \"avanti\", \"model\": \"200\","
 		"                 \"memory_mb\": 256 },"
@@ -158,6 +158,7 @@ static const struct machine_preset presets[] = {
 		"  \"drives\": [ { \"file\": \"disk.img\", \"kind\": \"disk\","
 		"                  \"id\": 0 },"
 		"                { \"file\": \"\", \"kind\": \"cdrom\", \"id\": 4 } ],"
+		"  \"display\": { \"enabled\": true },"
 		"  \"serial\": { \"telnet\": true, \"vt100\": true } }"
 	},
 	{

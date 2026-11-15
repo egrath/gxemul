@@ -348,22 +348,50 @@ through the simulated gateway (`domain` and `nameserver 10.0.0.254` in
 - **CMOS:** bytes 0Eh..3Fh are the RTC's battery-backed RAM, kept in the
   NVRAM file (they were lost at every start). SRM keeps `quick_start` in
   3Eh (31h = ON), the DROM the console choice in 3Fh.
-- **SRM's console heap:** with `quick_start OFF`, SRM runs its x86 BIOS
-  emulator at power-up (to find VGA option ROMs), which keeps about 45 KB
-  of the small initial heap (about 170 KB); the `ew` driver then can't
-  allocate its receive buffers and SRM halts in `rx_ewa0` ("insufficient
-  dynamic memory for a request of 1536 bytes") and restarts, forever. Not
-  understood: a real machine has the same heap and an on-board 21040. A
-  new CMOS here has `quick_start` ON, which avoids it (nothing is lost:
-  there is no VGA); `set quick_start off` brings the loop back.
+- **SRM's console heap** is sized from the memory size that the serial
+  ROM leaves at physical 8 (and passes on through the DROM): with 25 MB or
+  more, the heap reaches up to 2 MB (928 KB here); with 0 (as the SROM
+  emulation left it at first), it is 192 KB, and the `ew` driver's
+  receive buffers didn't fit ("insufficient dynamic memory for a request
+  of 1536 bytes" in `rx_ewa0`, and a restart, forever), nor did booting
+  with both cards. The SROM emulation now leaves the memory size there.
 - **gxemul's NAT** (not the card): its TCP is stop-and-wait, and long
   downloads stall near the end (1.6-2 MB of 2 MB, on the DEC 3000's LANCE
   too); short connections work.
 
+**Graphics (2026-11-14): CDE runs.** With the display on, a ZLXp-E1 (a
+21030 "TGA" with 2 MB, 8 planes, and a Bt485: `dev_tga.c`) is in the
+second slot (device 12, PIRQ1). SRM lists "Digital ZLXp Graphics
+Controller" (and sets up the video and the Bt485 itself; its graphics
+console would run the card's x86 option ROM, which we don't have, so the
+console stays serial). Tru64 V5.1B attaches `tga0` ("depth 8, map size 4MB,
+1280x1024, ZLXp-E"); after a `doconfig`, dtlogin comes up on it, and a
+CDE session works with the keyboard and mouse (8242).
+
+- **The 21030** (from DEC's reference manual, EC-N0683-72): the 128 MB BAR
+  of 4 MB core spaces (alternate ROM space, registers every 512 bytes,
+  the frame buffer), simple, opaque/transparent/block stipple,
+  opaque/transparent/block fill, opaque/transparent line (with the slope
+  registers' Bresenham setup and continuation) and copy mode (and the
+  copy-64 registers), the plane mask, raster operations, the one-shot and
+  persistent pixel mask, video timing and base, the 21030's own cursor,
+  end-of-frame and timer interrupts, and the Bt485 behind EPSR/EPDR
+  (palette, cursor colors, 32/64 pixel cursor). Not there: the DMA and 3D
+  modes (logged when used; CDE hasn't), the "odd" 4 pixels (SRM's
+  1284-pixel timing shows them).
+- **8242 keyboard:** Tru64 uses scancode set 3 with translation off; the
+  PC-style controller sent set 1 whenever any set was chosen. Now the
+  translate bit in its command byte decides. Reading the output buffer
+  drops the interrupt, and the next byte raises it again (Tru64 reads one
+  byte per interrupt: a line that stayed up never interrupted again, and
+  keys "stuck"). Typed text goes in at about 30 keys a second (a burst
+  overflowed Tru64's queue and lost a Shift release). Windows NT on the
+  Jensen still types correctly.
+
 **Next:** the on-board 21040 (SRM's driver knows it; the 21143 model would
-need its serial address ROM and SIA-only media), why the console heap is
-short, graphics for CDE (TGA or an S3 card), V5.1A, the ARC console with
-NT, the 400's 233 MHz EV45 model.
+need its serial address ROM and SIA-only media), V5.1A, the ARC console
+with NT, the 400's 233 MHz EV45 model, the TGA's DMA modes if something
+uses them.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

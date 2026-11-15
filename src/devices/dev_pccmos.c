@@ -173,10 +173,7 @@ DEVINIT(pccmos)
 		 *  The RTC's own 50 bytes (0x0e..0x3f) are what the battery
 		 *  keeps, in the machine's NVRAM file (dev_mc146818.c). The
 		 *  consoles keep settings there: the DROM starts ARC if 0x3f
-		 *  is 1, and SRM's "console serial" leaves 0x31 in 0x3e, which
-		 *  makes it skip its x86 BIOS emulator at power-up (whose
-		 *  45 KB would otherwise leave too little console heap for a
-		 *  network card's buffers).
+		 *  is 1, and SRM keeps quick_start in 0x3e (0x31 = on).
 		 */
 		d->rtc_last = 0x3f;
 		break;
