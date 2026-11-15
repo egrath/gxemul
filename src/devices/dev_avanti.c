@@ -125,7 +125,11 @@
 /*  PCI devices:  */
 #define	AVANTI_PCI_DEV_SCSI	6
 #define	AVANTI_PCI_DEV_SIO	7
-#define	AVANTI_PCI_DEV_SLOT0	11	/*  slots: devices 11..13  */
+/*  On the AlphaStation 200's riser card (EK-PCDSA-TI, table 2-7), with
+    their PIRQs (table 6-3):  */
+#define	AVANTI_PCI_DEV_ETHER	11	/*  the 21040, PIRQ0  */
+#define	AVANTI_PCI_DEV_SLOT1	12	/*  INTA: PIRQ1  */
+#define	AVANTI_PCI_DEV_SLOT2	13	/*  INTA: PIRQ2  */
 
 #define	SIO_PIRQ_ROUTE		0x60	/*  4 bytes: bit 7 off, <3:0> IRQ  */
 #define	SIO_PIRQ_DISABLE	0x80
@@ -512,15 +516,15 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
 	    AVANTI_PCI_DEV_SIO, 0, "i82378zb");
 
-	/*  With the display on, a ZLXp-E1 (TGA) in the second PCI slot:  */
+	/*  With the display on, a ZLXp-E1 (TGA) in PCI slot 1:  */
 	if (machine->display_md.in_use)
 		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
-		    AVANTI_PCI_DEV_SLOT0 + 1, 0, "dec21030");
+		    AVANTI_PCI_DEV_SLOT1, 0, "dec21030");
 
-	/*  With a network, a DE500-BA (21143) in the first PCI slot:  */
-	if (machine->emul->net != NULL)
-		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
-		    AVANTI_PCI_DEV_SLOT0, 0, "dec21143");
+	/*  The 21040 Ethernet on the riser card (unconnected without a
+	    network, as without a cable):  */
+	bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
+	    AVANTI_PCI_DEV_ETHER, 0, "dec21040");
 
 	/*  Behind the SIO: 8259s, 8254, RTC, keyboard, serial ports, LPT,
 	    and the DMA controllers with the floppy (IRQ 6, channel 2).  */

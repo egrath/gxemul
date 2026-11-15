@@ -322,9 +322,9 @@ NetBSD or Linux kernel) was skipped: Tru64 came first.
   and a CD-ROM at ID 4, the serial console on telnet), DEC's drive models
   (now with the RRD45), and no PROM emulation checkbox for it.
 
-**Network (2026-11-14):** with networking enabled, a DE500-BA (21143,
-`dev_dec21143.c`) is in the first PCI slot (device 11, pin A on PIRQ0).
-SRM shows it as `ewa0`, Tru64 V5.1B as `tu0` ("DEC TULIP (10/100)"); after
+**Network (2026-11-14):** first with a DE500-BA (21143, `dev_dec21143.c`)
+at device 11; now the on-board 21040 is there (see below). SRM shows it as
+`ewa0`, Tru64 V5.1B as `tu0`; after
 a `doconfig` (the installed kernel was sized without it), `rcmgr`
 NETDEV_0/IFCONFIG_0 and `/etc/routes`, it comes up at boot: ping, DNS
 through the simulated gateway (`domain` and `nameserver 10.0.0.254` in
@@ -388,10 +388,23 @@ CDE session works with the keyboard and mouse (8242).
   overflowed Tru64's queue and lost a Shift release). Windows NT on the
   Jensen still types correctly.
 
-**Next:** the on-board 21040 (SRM's driver knows it; the 21143 model would
-need its serial address ROM and SIA-only media), V5.1A, the ARC console
-with NT, the 400's 233 MHz EV45 model, the TGA's DMA modes if something
-uses them.
+**The on-board 21040 (2026-11-14).** DEC's "AlphaStation 200/400 Series
+Technical Information" (EK-PCDSA-TI, on NetBSD's dec-docs) gives the
+riser card's PCI devices: the 53C810 at IDSEL AD17 (device 6), the SIO at
+AD18 (7), the 21040 at AD22 (device 11, PIRQ0), slot 1 at AD23 (device
+12; INTA..D on PIRQ1, 0, 2, 1) and slot 2 at AD24 (device 13; PIRQ2, 1,
+0, 2). So the 21040 is always at device 11 (unconnected without a
+network), the TGA is in slot 1, and a DE500-BA would go in a slot. The
+21040 is a variant of the 21143 model: PCI ID 1011:0002, pass 2.4, no
+MII, and its Ethernet address ROM is read a byte at a time through CSR9
+(a write starts it over), in DEC's 32-byte format (address, checksum,
+reversed, again, test pattern). SRM: "DECchip 21040 Network
+Controller"; Tru64: "tu0: DECchip 21040: Revision: 2.4 ... DEC TULIP
+(10Mbps)", ping, DNS, a 300 KB TCP download intact.
+
+**Next:** V5.1A, the ARC console with NT, the 400's 233 MHz EV45 model
+(its own PCI layout: three slots, no 21040), the TGA's DMA modes if
+something uses them.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

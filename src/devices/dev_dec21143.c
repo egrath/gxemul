@@ -89,6 +89,11 @@ struct dec21143_data {
 	/*  PCI:  */
 	int		pci_little_endian;
 
+	/*  A 21040: its Ethernet address ROM is read a byte at a time
+	    through CSR9 (in srom[0..31]), and it has no MII:  */
+	int		is_21040;
+	int		erom_ptr;
+
 	/*  SROM emulation:  */
 	uint8_t		srom[1 << (ROM_WIDTH + 1)];
 	int		srom_curbit;
@@ -1190,7 +1195,8 @@ static void dec21143_reset(struct cpu *cpu, struct dec21143_data *d)
 	d->cur_rx_addr = d->cur_tx_addr = 0;
 
 	/*  Set the MAC address:  */
-	memcpy(d->nic.mac_address, d->srom + TULIP_ROM_IEEE_NETWORK_ADDRESS, 6);
+	memcpy(d->nic.mac_address, d->srom + (d->is_21040? 0 :
+	    TULIP_ROM_IEEE_NETWORK_ADDRESS), 6);
 
 	/*  MII PHY initial state:  */
 	d->mii_state = MII_STATE_RESET;
@@ -1333,6 +1339,15 @@ DEVICE_ACCESS(dec21143)
 		break;
 
 	case CSR_MIIROM:	/*  csr9  */
+		if (d->is_21040) {
+			/*  Each read gives the next byte of the address ROM
+			    (bit 31 clear: valid); a write starts it over.  */
+			if (writeflag == MEM_WRITE)
+				d->erom_ptr = 0;
+			else
+				odata = d->srom[d->erom_ptr++ & 31];
+			break;
+		}
 		if (writeflag == MEM_WRITE) {
 			if (idata & MIIROM_MDC)
 				mii_access(cpu, d, oldreg, idata);
@@ -1468,8 +1483,51 @@ static void dec21143_srom_default(struct dec21143_data *d)
 }
 
 
+/*
+ *  dec21143_erom_21040():
+ *
+ *  A 21040's 32-byte Ethernet address ROM, in DEC's format: the address,
+ *  a checksum, the first 8 bytes reversed, the first 8 bytes again, and a
+ *  test pattern (as NetBSD's tlp_parse_old_srom() checks it).
+ */
+static void dec21143_erom_21040(struct dec21143_data *d)
+{
+	static const uint8_t testpat[8] =
+	    { 0xff, 0, 0x55, 0xaa, 0xff, 0, 0x55, 0xaa };
+	uint8_t *r = d->srom, *a = d->nic.mac_address;
+	uint32_t cksum;
+	int i;
+
+	memset(r, 0, sizeof(d->srom));
+	memcpy(r, a, 6);
+
+	/*  Little-endian 16-bit words, shifted and added modulo 0xffff:  */
+	cksum = a[0] | (a[1] << 8);
+	cksum <<= 1;
+	if (cksum > 0xffff)
+		cksum -= 0xffff;
+	cksum += a[2] | (a[3] << 8);
+	if (cksum > 0xffff)
+		cksum -= 0xffff;
+	cksum <<= 1;
+	if (cksum > 0xffff)
+		cksum -= 0xffff;
+	cksum += a[4] | (a[5] << 8);
+	if (cksum >= 0xffff)
+		cksum -= 0xffff;
+	r[6] = cksum;
+	r[7] = cksum >> 8;
+
+	for (i = 0; i < 8; i++) {
+		r[15 - i] = r[i];
+		r[16 + i] = r[i];
+	}
+	memcpy(r + 24, testpat, 8);
+}
+
+
 static struct dec21143_data *dec21143_create(struct machine *machine,
-	const char *irq_path, int pci_little_endian, int de500)
+	const char *irq_path, int pci_little_endian, int kind)
 {
 	struct dec21143_data *d;
 
@@ -1481,7 +1539,10 @@ static struct dec21143_data *dec21143_create(struct machine *machine,
 	d->pci_little_endian = pci_little_endian;
 
 	net_generate_unique_mac(machine, d->nic.mac_address);
-	if (de500)
+	d->is_21040 = kind == DEC21143_CHIP_21040;
+	if (kind == DEC21143_CHIP_21040)
+		dec21143_erom_21040(d);
+	else if (kind == DEC21143_CHIP_DE500)
 		dec21143_srom_de500(d);
 	else
 		dec21143_srom_default(d);
@@ -1618,13 +1679,15 @@ void dev_dec21143_set_bars(struct dec21143_data *d, uint64_t io_addr,
 /*
  *  dev_dec21143_pci_init():
  *
- *  A DE500-BA (21143) on PCI bus pci, whose bridge translates its DMA, and
- *  whose BARs the firmware sets (dev_dec21143_set_bars()).
+ *  A DE500-BA (21143) or a 21040 (chip: DEC21143_CHIP_*) on PCI bus pci,
+ *  whose bridge translates its DMA, and whose BARs the firmware sets
+ *  (dev_dec21143_set_bars()).
  */
 struct dec21143_data *dev_dec21143_pci_init(struct machine *machine,
-	struct memory *mem, struct pci_data *pci, const char *irq_path)
+	struct memory *mem, struct pci_data *pci, const char *irq_path,
+	int chip)
 {
-	struct dec21143_data *d = dec21143_create(machine, irq_path, 1, 1);
+	struct dec21143_data *d = dec21143_create(machine, irq_path, 1, chip);
 
 	d->pci = pci;
 	d->mem = mem;

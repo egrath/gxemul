@@ -1396,6 +1396,16 @@ PCIINIT(rtl8139c)
 #define PCI_VENDOR_DEC          0x1011 /* Digital Equipment */
 #define PCI_PRODUCT_DEC_21142   0x0019 /* DECchip 21142/21143 10/100 Ethernet */
 
+/*
+ *  The AlphaStation 200's PIRQ for pin A of a device: the 21040 (device
+ *  11) has PIRQ0, slot 1 (device 12) PIRQ1, and slot 2 (device 13) PIRQ2
+ *  (EK-PCDSA-TI, table 6-3).
+ */
+static int avanti_pirq_pin_a(struct pci_device *pd)
+{
+	return pd->device == 12? 1 : pd->device == 13? 2 : 0;
+}
+
 /*  With BARs as the firmware sets them (the AlphaStation 200's DE500-BA):  */
 static int dec21143_cfg_reg_write(struct pci_device *pd, int reg,
 	uint32_t value)
@@ -1441,6 +1451,40 @@ static int dec21143_cfg_reg_write(struct pci_device *pd, int reg,
 	return 1;
 }
 
+/*
+ *  DEC 21040 ("Tulip") PCI Ethernet, as on the AlphaStation 200's riser
+ *  card (device 11, PIRQ0, as in its technical information, EK-PCDSA-TI),
+ *  in dev_dec21143.c.
+ */
+#define	PCI_PRODUCT_DEC_21040	0x0002
+
+PCIINIT(dec21040)
+{
+	char irqstr[300];
+
+	if (machine->machine_type != MACHINE_AVANTI) {
+		fatal("dec21040 for this machine has not been implemented\n");
+		exit(1);
+	}
+
+	PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_DEC,
+	    PCI_PRODUCT_DEC_21040));
+	PCI_SET_DATA(PCI_COMMAND_STATUS_REG, 0x02800000);
+	/*  Ethernet, pass 2.4:  */
+	PCI_SET_DATA(PCI_CLASS_REG, PCI_CLASS_CODE(PCI_CLASS_NETWORK,
+	    PCI_SUBCLASS_NETWORK_ETHERNET, 0) | 0x24);
+	PCI_SET_DATA(PCI_BHLC_REG, 0);
+	PCI_SET_DATA(PCI_MAPREG_START, PCI_MAPREG_TYPE_IO);
+	PCI_SET_DATA_SIZE(PCI_MAPREG_START, 0xffffff81);
+	PCI_SET_DATA(PCI_MAPREG_START + 4, 0);
+	PCI_SET_DATA_SIZE(PCI_MAPREG_START + 4, 0xffffff80);
+	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x28140100);
+	snprintf(irqstr, sizeof(irqstr), "%s.pirq.0", pd->pcibus->irq_path_pci);
+	pd->extra = dev_dec21143_pci_init(machine, mem, pd->pcibus, irqstr,
+	    DEC21143_CHIP_21040);
+	pd->cfg_reg_write = dec21143_cfg_reg_write;
+}
+
 PCIINIT(dec21143)
 {
 	uint64_t port, memaddr;
@@ -1459,11 +1503,7 @@ PCIINIT(dec21143)
 	PCI_SET_DATA(PCI_BHLC_REG, PCI_BHLC_CODE(0,0,0, 0x40,0));
 
 	if (machine->machine_type == MACHINE_AVANTI) {
-		/*
-		 *  A DE500-BA in the first slot (device 11), whose pin A is
-		 *  the SIO's PIRQ0 (Linux's and NetBSD's tables for the
-		 *  AlphaStation 200; see dev_avanti.c).
-		 */
+		/*  A DE500-BA in a slot (not there by default):  */
 		PCI_SET_DATA(PCI_COMMAND_STATUS_REG, 0x02800000);
 		PCI_SET_DATA(PCI_BHLC_REG, 0);
 		PCI_SET_DATA(PCI_MAPREG_START, PCI_MAPREG_TYPE_IO);
@@ -1473,10 +1513,10 @@ PCIINIT(dec21143)
 		PCI_SET_DATA(PCI_SUBSYS_ID_REG,
 		    (DEC21143_DE500_SUBSYS_ID << 16) | PCI_VENDOR_DEC);
 		PCI_SET_DATA(PCI_INTERRUPT_REG, 0x28140100);
-		snprintf(irqstr, sizeof(irqstr), "%s.pirq.0",
-		    pd->pcibus->irq_path_pci);
+		snprintf(irqstr, sizeof(irqstr), "%s.pirq.%i",
+		    pd->pcibus->irq_path_pci, avanti_pirq_pin_a(pd));
 		pd->extra = dev_dec21143_pci_init(machine, mem, pd->pcibus,
-		    irqstr);
+		    irqstr, DEC21143_CHIP_DE500);
 		pd->cfg_reg_write = dec21143_cfg_reg_write;
 		return;
 	}
@@ -1583,8 +1623,7 @@ PCIINIT(dec21030)
 	char tmpstr[2000];
 
 	if (machine->machine_type == MACHINE_AVANTI) {
-		/*  A ZLXp-E1 in the second slot (device 12), whose pin A is
-		    the SIO's PIRQ1 (see dev_avanti.c):  */
+		/*  A ZLXp-E1 in a slot (dev_avanti.c puts it in slot 1):  */
 		PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_DEC,
 		    PCI_PRODUCT_DEC_21030));
 		PCI_SET_DATA(PCI_COMMAND_STATUS_REG, 0x028000a0);
@@ -1593,8 +1632,8 @@ PCIINIT(dec21030)
 		PCI_SET_DATA(PCI_MAPREG_START, 8);
 		PCI_SET_DATA_SIZE(PCI_MAPREG_START, 0xf8000008);
 		PCI_SET_DATA(PCI_INTERRUPT_REG, 0x00000100);
-		snprintf(tmpstr, sizeof(tmpstr), "%s.pirq.1",
-		    pd->pcibus->irq_path_pci);
+		snprintf(tmpstr, sizeof(tmpstr), "%s.pirq.%i",
+		    pd->pcibus->irq_path_pci, avanti_pirq_pin_a(pd));
 		pd->extra = dev_tga_init(machine, mem, tmpstr);
 		pd->cfg_reg_write = tga_cfg_reg_write;
 		return;

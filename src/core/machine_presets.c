@@ -148,7 +148,7 @@ static const struct machine_preset presets[] = {
 		"53C810 SCSI controller and ISA. Runs the genuine DROM and SRM "
 		"V7.0 console (the flash and the DROM given as one file, see "
 		"doc/avanti-plan.md), on the serial console, with a ZLXp-E1 "
-		"(TGA) for X and CDE, and a DE500-BA (21143) Ethernet card. "
+		"(TGA) for X and CDE, and its on-board 21040 Ethernet. "
 		"Installs and runs Tru64 UNIX V5.1 and V5.1B with CDE.",
 		"{ \"gxemul\": 1, \"name\": \"AlphaStation 200\","
 		"  \"machine\": { \"type\": \"avanti\", \"model\": \"200\","
