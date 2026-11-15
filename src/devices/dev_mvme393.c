@@ -591,6 +591,26 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 
 	if (d->fb != NULL && d->fb->framebuffer != NULL) {
 		uint8_t *in = d->fb->framebuffer + 0xfe000;
+		uint8_t *pal = d->fb->framebuffer + 0xff000;
+		int pal_dirty = 0;
+		int i;
+
+		for (i = 0; i < 256; i++) {
+			uint8_t r = pal[i * 4 + 1];
+			uint8_t g = pal[i * 4 + 2];
+			uint8_t b = pal[i * 4 + 3];
+			if (d->fb->rgb_palette[i * 3 + 0] != r ||
+			    d->fb->rgb_palette[i * 3 + 1] != g ||
+			    d->fb->rgb_palette[i * 3 + 2] != b) {
+				d->fb->rgb_palette[i * 3 + 0] = r;
+				d->fb->rgb_palette[i * 3 + 1] = g;
+				d->fb->rgb_palette[i * 3 + 2] = b;
+				pal_dirty = 1;
+			}
+		}
+		if (pal_dirty) {
+			d->vram_dirty = 1;
+		}
 
 		console_getmouse(&dx, &dy, &buttons, &fb_nr);
 		if (dx != 0 || dy != 0 || buttons != 0) {
@@ -680,14 +700,22 @@ void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187)
 			d->fb->rgb_palette[i * 3 + 1] = g;
 			d->fb->rgb_palette[i * 3 + 2] = b;
 		}
-		d->fb->rgb_palette[0] = 0; d->fb->rgb_palette[1] = 0; d->fb->rgb_palette[2] = 0;
-		d->fb->rgb_palette[3] = 255; d->fb->rgb_palette[4] = 255; d->fb->rgb_palette[5] = 255;
+		/* X11 CFB default colormap: pixel 0 is white, pixel 1 is black */
+		d->fb->rgb_palette[0] = 255; d->fb->rgb_palette[1] = 255; d->fb->rgb_palette[2] = 255;
+		d->fb->rgb_palette[3] = 0;   d->fb->rgb_palette[4] = 0;   d->fb->rgb_palette[5] = 0;
 		d->fb->rgb_palette[255 * 3 + 0] = 255;
 		d->fb->rgb_palette[255 * 3 + 1] = 255;
 		d->fb->rgb_palette[255 * 3 + 2] = 255;
 
-		/* Initial event pending to display mouse cursor immediately */
 		if (d->fb->framebuffer != NULL) {
+			uint8_t *pal = d->fb->framebuffer + 0xff000;
+			for (i = 0; i < 256; i++) {
+				pal[i * 4 + 0] = 0;
+				pal[i * 4 + 1] = d->fb->rgb_palette[i * 3 + 0];
+				pal[i * 4 + 2] = d->fb->rgb_palette[i * 3 + 1];
+				pal[i * 4 + 3] = d->fb->rgb_palette[i * 3 + 2];
+			}
+			/* Initial event pending to display mouse cursor immediately */
 			uint8_t *in = d->fb->framebuffer + 0xfe000;
 			in[15] = 1;
 		}

@@ -392,6 +392,36 @@ DEVICE_TICK(fb)
 		}
 	} while (0);
 
+	/*
+	 *  Synchronize RAMDAC palette if palette region (0xff000..0xff3ff)
+	 *  in framebuffer memory was modified:
+	 */
+	if (d->bit_depth == 8 && d->framebuffer != NULL && d->framebuffer_size >= 0x100000) {
+		uint8_t *pal = d->framebuffer + 0xff000;
+		int pal_changed = 0;
+		int i;
+
+		for (i = 0; i < 256; i++) {
+			uint8_t r = pal[i * 4 + 1];
+			uint8_t g = pal[i * 4 + 2];
+			uint8_t b = pal[i * 4 + 3];
+			if (d->rgb_palette[i * 3 + 0] != r ||
+			    d->rgb_palette[i * 3 + 1] != g ||
+			    d->rgb_palette[i * 3 + 2] != b) {
+				d->rgb_palette[i * 3 + 0] = r;
+				d->rgb_palette[i * 3 + 1] = g;
+				d->rgb_palette[i * 3 + 2] = b;
+				pal_changed = 1;
+			}
+		}
+		if (pal_changed) {
+			d->update_x1 = 0;
+			d->update_y1 = 0;
+			d->update_x2 = d->visible_xsize - 1;
+			d->update_y2 = d->visible_ysize - 1;
+		}
+	}
+
 
 	if (d->update_x2 != -1) {
 		int y;
@@ -534,6 +564,10 @@ DEVICE_ACCESS(fb)
 				d->rgb_palette[col * 3 + 0] = data[1];
 				d->rgb_palette[col * 3 + 1] = data[2];
 				d->rgb_palette[col * 3 + 2] = data[3];
+				d->update_x1 = 0;
+				d->update_y1 = 0;
+				d->update_x2 = d->visible_xsize - 1;
+				d->update_y2 = d->visible_ysize - 1;
 			}
 		}
 		if (len > 8)
