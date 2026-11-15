@@ -454,9 +454,40 @@ in about 50 minutes. Unlike V5.1B, the installer builds the kernel
 EV4, the clock keeps host time, and tu0 (the on-board 21040) pings the
 NAT gateway, also after a reboot with the address in rc.config.
 
-**Next:** the 400's 233 MHz EV45 model
-(its own PCI layout: three slots, no 21040), the TGA's DMA modes if
-something uses them.
+### The EV45 models: AlphaStation 400 4/233, 200 4/233, 250 4/266 (2026-11-15)
+
+- **The model is the serial ROM's code at 0x70.** The DROM (at 0xa8) times
+  the CPU only for codes 2 and 8, and replaces the code from the speed:
+  for 2, 9 = 100 MHz, 3 = 133, 2 = 166, 99 = 200, 4 = 233, 11 = 266,
+  10 = 300; for 8, 8 = 266, 12 = 300. With it, it stores the cycle time
+  (ps) at 0x10, the MHz at 0x68 and BIU_CTL's B-cache fields in
+  PAL_TEMP18. Any other code it takes as it is, with those values. The
+  console makes the HWRPB's system variation `code << 10`, and names the
+  machine from it: 1, 5, 6, 7 "AlphaStation 400", 2, 3, 4, 9 "200", 8
+  "250", 0 "Unknown System type", with the MHz from 0x68. (NetBSD's rpb.h
+  has 0x2000, code 8, as a 400 4/266; SRM V7.0 calls it the 250.) The
+  400 4/233 passes code 5 (NetBSD's 0x1400), 4291 ps, 233 and 0xf460,
+  which is what the DROM picks for 233 MHz.
+- **21064A:** the console PALcode maps DC_STAT's CHIP_ID (bits 2:0) to
+  the HWRPB's CPU type and pass: 0 a 21064 pass 2, 7 pass 3, 1 a 21064A
+  pass 1, 3 pass 2, 5 pass 0 (table at 0xc340). The new CPU type
+  "21064A" (PCS type 6) reads 3: SRM shows "21064A-2", Tru64 "EV4.5".
+  Nothing else differs in the emulation (no caches are modelled).
+- **The 400's PCI layout:** three slots at devices 11, 12 and 13, no
+  21040. With a network, a DE500-BA is in device 11 (PIRQ0); the TGA is
+  in device 12, as on the 200.
+- Models: `200` (4/166, 21064), `200-233`, `400` (4/233) and `250`
+  (4/266, 2 MB cache, the 200's layout), all 21064A but the first. The
+  400 has a preset.
+- **Checked:** the installed V5.1A disk (through an overlay) boots on the
+  400 4/233: "AlphaStation 400 4/233", `psrinfo` "EV4.5 (21064) ... 234
+  MHz" (the HWRPB says 233100233 Hz; Tru64 rounds up, as 167 for the
+  166), tu0 a 21143 in slot 11, ping through the gateway, the clock in
+  step with the host. The 250 and the 200 4/233 come up in SRM with their
+  names and speeds.
+
+**Next:** the TGA's DMA modes if something uses them; Windows NT, when a
+version that supports the Avanti turns up.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

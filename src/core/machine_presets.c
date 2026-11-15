@@ -149,9 +149,28 @@ static const struct machine_preset presets[] = {
 		"V7.0 console (the flash and the DROM given as one file, see "
 		"doc/avanti-plan.md), on the serial console, with a ZLXp-E1 "
 		"(TGA) for X and CDE, and its on-board 21040 Ethernet. "
-		"Installs and runs Tru64 UNIX V5.1 and V5.1B with CDE.",
+		"Installs and runs Tru64 UNIX V5.1A and V5.1B with CDE.",
 		"{ \"gxemul\": 1, \"name\": \"AlphaStation 200\","
 		"  \"machine\": { \"type\": \"avanti\", \"model\": \"200\","
+		"                 \"memory_mb\": 256 },"
+		"  \"boot\": { \"prom_emulation\": false, \"rom\": \"avanti.rom\","
+		"             \"nvram\": \"nvram.bin\" },"
+		"  \"drives\": [ { \"file\": \"disk.img\", \"kind\": \"disk\","
+		"                  \"id\": 0 },"
+		"                { \"file\": \"\", \"kind\": \"cdrom\", \"id\": 4 } ],"
+		"  \"display\": { \"enabled\": true },"
+		"  \"serial\": { \"telnet\": true, \"vt100\": true } }"
+	},
+	{
+		"avanti", "400",
+		"AlphaStation 400 4/233 (Avanti): the deskside model, a 233 MHz "
+		"21064A (EV45) on the APECS chipset, with three PCI slots and "
+		"no on-board Ethernet (a DE500-BA in the first slot, with a "
+		"network). The same DROM and SRM V7.0 console as the "
+		"AlphaStation 200, a ZLXp-E1 (TGA) for X and CDE. Runs Tru64 "
+		"UNIX V5.1A.",
+		"{ \"gxemul\": 1, \"name\": \"AlphaStation 400\","
+		"  \"machine\": { \"type\": \"avanti\", \"model\": \"400\","
 		"                 \"memory_mb\": 256 },"
 		"  \"boot\": { \"prom_emulation\": false, \"rom\": \"avanti.rom\","
 		"             \"nvram\": \"nvram.bin\" },"

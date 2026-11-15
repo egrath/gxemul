@@ -276,6 +276,9 @@ struct machine {
 
 /*  AlphaStation 200/400 ("Avanti") models:  */
 #define	MACHINE_AVANTI_200_166	200
+#define	MACHINE_AVANTI_200_233	201
+#define	MACHINE_AVANTI_400_233	400
+#define	MACHINE_AVANTI_250_266	250
 
 /*  ARM:  */
 #define	MACHINE_BAREARM		5000

@@ -27,8 +27,9 @@
  *
  *  COMMENT: AlphaStation 200/400 ("Avanti")
  *
- *  Digital's first PCI Alpha workstations: an EV4 (21064 or 21064A) on the
- *  APECS chipset, with an 82378ZB SIO for ISA. The machine runs the real
+ *  Digital's first PCI Alpha workstations: an EV4 (21064, in the 4/166) or
+ *  EV45 (21064A: the 200 and 400 4/233, the 250 4/266) on the APECS
+ *  chipset, with an 82378ZB SIO for ISA. The machine runs the real
  *  firmware: the board's DROM and the SRM (or ARC) console in its flash,
  *  given as one file, the chip dumps one after the other:
  *
@@ -60,8 +61,24 @@ MACHINE_SETUP(avanti)
 	char tmp[200];
 
 	switch (machine->machine_subtype) {
+	case MACHINE_AVANTI_200_233:
+		machine->machine_name = strdup("AlphaStation 200 4/233");
+		if (machine->emulated_hz == 0)
+			machine->emulated_hz = 233333333;
+		break;
+	case MACHINE_AVANTI_400_233:
+		machine->machine_name = strdup("AlphaStation 400 4/233");
+		if (machine->emulated_hz == 0)
+			machine->emulated_hz = 233333333;
+		break;
+	case MACHINE_AVANTI_250_266:
+		machine->machine_name = strdup("AlphaStation 250 4/266");
+		if (machine->emulated_hz == 0)
+			machine->emulated_hz = 266666666;
+		break;
 	case MACHINE_AVANTI_200_166:
 	default:
+		machine->machine_subtype = MACHINE_AVANTI_200_166;
 		machine->machine_name = strdup("AlphaStation 200 4/166");
 		if (machine->emulated_hz == 0)
 			machine->emulated_hz = 166666666;
@@ -69,8 +86,8 @@ MACHINE_SETUP(avanti)
 	}
 
 	if (machine->physical_ram_in_mb > 384) {
-		fatal("The AlphaStation 200 can have at most 384 MB of "
-		    "memory.\n");
+		fatal("The AlphaStation 200 and 400 can have at most 384 MB "
+		    "of memory.\n");
 		exit(1);
 	}
 
@@ -142,7 +159,13 @@ int avanti_load_rom(struct machine *machine, const char *filename,
 
 MACHINE_DEFAULT_CPU(avanti)
 {
-	machine->cpu_name = strdup("21064");
+	/*  The 4/233 and 4/266 have a 21064A (EV45):  */
+	if (machine->machine_subtype == MACHINE_AVANTI_200_233 ||
+	    machine->machine_subtype == MACHINE_AVANTI_400_233 ||
+	    machine->machine_subtype == MACHINE_AVANTI_250_266)
+		machine->cpu_name = strdup("21064A");
+	else
+		machine->cpu_name = strdup("21064");
 }
 
 
@@ -161,6 +184,12 @@ MACHINE_REGISTER(avanti)
 
 	machine_entry_add_subtype(me, "AlphaStation 200 4/166",
 	    MACHINE_AVANTI_200_166, "200", "as200", "4/166", "", NULL);
+	machine_entry_add_subtype(me, "AlphaStation 200 4/233",
+	    MACHINE_AVANTI_200_233, "200-233", "as200-233", NULL);
+	machine_entry_add_subtype(me, "AlphaStation 400 4/233",
+	    MACHINE_AVANTI_400_233, "400", "as400", "4/233", NULL);
+	machine_entry_add_subtype(me, "AlphaStation 250 4/266",
+	    MACHINE_AVANTI_250_266, "250", "as250", "4/266", NULL);
 
 	me->set_default_ram = machine_default_ram_avanti;
 }

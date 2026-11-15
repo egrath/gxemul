@@ -901,7 +901,13 @@ uint64_t ev4_mfpr(struct cpu *cpu, int ipr)
 		case EV4_IPR_BIU_STAT:
 			return a->biu_stat;
 		case EV4_IPR_DC_STAT:
-			return 7;		/*  CHIP_ID: production 21064  */
+			/*  CHIP_ID, in bits 2:0. The console PALcode of the
+			    Avanti SRM V7.0 maps it to the CPU type and pass
+			    in the HWRPB: 0 a 21064 pass 2, 7 pass 3, 1 a
+			    21064A (EV45) pass 1, 3 pass 2, 5 pass 0.  */
+			if ((cpu->cd.alpha.cpu_type.pcs_type & 0xffffffff) == 6)
+				return 3;	/*  21064A pass 2  */
+			return 7;		/*  production 21064  */
 		case EV4_IPR_FILL_ADDR:
 			return a->fill_addr;
 		case EV4_IPR_FILL_SYNDROME:

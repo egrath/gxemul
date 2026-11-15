@@ -130,6 +130,9 @@
 #define	AVANTI_PCI_DEV_ETHER	11	/*  the 21040, PIRQ0  */
 #define	AVANTI_PCI_DEV_SLOT1	12	/*  INTA: PIRQ1  */
 #define	AVANTI_PCI_DEV_SLOT2	13	/*  INTA: PIRQ2  */
+/*  The AlphaStation 400 has no 21040; its three PCI slots are devices 11
+    (INTA: PIRQ0), 12 and 13, as in NetBSD's pci_2100_a50.c.  */
+#define	AVANTI_PCI_DEV_SLOT0	11
 
 #define	SIO_PIRQ_ROUTE		0x60	/*  4 bytes: bit 7 off, <3:0> IRQ  */
 #define	SIO_PIRQ_DISABLE	0x80
@@ -149,6 +152,7 @@ struct avanti_data {
 	struct apecs_data	*apecs;
 	uint64_t		ram_size;
 	int			subsys;
+	int			model;		/*  MACHINE_AVANTI_*  */
 
 	struct interrupt	irq_sio;
 	struct interrupt	irq_rtc;
@@ -448,6 +452,13 @@ static void avanti_pirq_deassert(struct interrupt *interrupt)
 }
 
 
+/*  An AlphaStation 400 (rather than a 200)?  */
+static int avanti_is_400(struct avanti_data *d)
+{
+	return d->model == MACHINE_AVANTI_400_233;
+}
+
+
 /*
  *  dev_avanti_init():
  */
@@ -464,6 +475,7 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 
 	d->machine = machine;
 	d->ram_size = ram_size;
+	d->model = machine->machine_subtype;
 	d->subsys = debugmsg_register_subsystem("avanti");
 	d->jumpers = AVANTI_JUMPERS_DEFAULT;
 	memset(d->flash, 0xff, sizeof(d->flash));
@@ -516,15 +528,23 @@ struct avanti_data *dev_avanti_init(struct machine *machine,
 	bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
 	    AVANTI_PCI_DEV_SIO, 0, "i82378zb");
 
-	/*  With the display on, a ZLXp-E1 (TGA) in PCI slot 1:  */
+	/*  With the display on, a ZLXp-E1 (TGA) in PCI slot 1 (the 400's
+	    second slot):  */
 	if (machine->display_md.in_use)
 		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
 		    AVANTI_PCI_DEV_SLOT1, 0, "dec21030");
 
-	/*  The 21040 Ethernet on the riser card (unconnected without a
-	    network, as without a cable):  */
-	bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
-	    AVANTI_PCI_DEV_ETHER, 0, "dec21040");
+	if (avanti_is_400(d)) {
+		/*  With a network, a DE500-BA (21143) in the first slot:  */
+		if (machine->emul->net != NULL)
+			bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
+			    AVANTI_PCI_DEV_SLOT0, 0, "dec21143");
+	} else {
+		/*  The 21040 Ethernet on the riser card (unconnected
+		    without a network, as without a cable):  */
+		bus_pci_add(machine, dev_apecs_pci(d->apecs), mem, 0,
+		    AVANTI_PCI_DEV_ETHER, 0, "dec21040");
+	}
 
 	/*  Behind the SIO: 8259s, 8254, RTC, keyboard, serial ports, LPT,
 	    and the DMA controllers with the floppy (IRQ 6, channel 2).  */
@@ -632,10 +652,20 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
  *		system revision in 15:0. The ARC console's PALcode takes
  *		the cycle time (a2) only with a signature; otherwise it
  *		assumes 8000 ps, and shows 125 MHz.
- *	0x70	the CPU speed code: 2 or 8 makes the DROM time the CPU
- *		against the 8254 and pick the speed (2 = 166 MHz, ...),
- *		and store the cycle time in ps at 0x10, MHz at 0x68 and
- *		the code at 0x70.
+ *	0x70	the model and speed code, which the console makes the
+ *		system variation in the HWRPB (code << 10), and so the
+ *		model name. 2 (AlphaStation 200) or 8 (250) makes
+ *		the DROM time the CPU against the 8254 and pick the code
+ *		from the speed (for 2: 9 = 100 MHz, 3 = 133, 2 = 166,
+ *		99 = 200, 4 = 233, 11 = 266, 10 = 300; for 8: 8 = 266,
+ *		12 = 300), store the cycle time in ps at 0x10, the MHz at
+ *		0x68 and the code at 0x70, and set BIU_CTL's B-cache
+ *		fields (bits 15:4) in PAL_TEMP18. With other codes the
+ *		DROM takes all of these as they are. SRM V7.0 names 1, 5,
+ *		6 and 7 "AlphaStation 400", 2, 3, 4 and 9 "200", 8 "250"
+ *		(NetBSD's rpb.h has 0x2000 as a 400 4/266), 0 unknown;
+ *		the MHz in the name are from 0x68. 5 is NetBSD's second
+ *		400 4/233 (0x1400).
  *
  *  What the rest mean, the console will show.
  *  Returns the entry point.
@@ -643,12 +673,27 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
 uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu)
 {
 	unsigned char speed_code[8] = { 2, 0, 0, 0, 0, 0, 0, 0 };
+	unsigned char cycle_ps[8] = { 0 }, mhz[8] = { 0 };
 	unsigned char memsize[8];
+	uint64_t biu_ctl = 0;
 	unsigned char signature[8] = { 0, 0, 0xca, 0xde, 0, 0, 0, 0 };
 	int i;
 
 	for (i = 0; i < 8; i++)
 		memsize[i] = d->ram_size >> (8 * i);
+
+	switch (d->model) {
+	case MACHINE_AVANTI_400_233:
+		/*  What the DROM would choose for 233 MHz:  */
+		speed_code[0] = 5;
+		cycle_ps[0] = 4291 & 0xff; cycle_ps[1] = 4291 >> 8;
+		mhz[0] = 233;
+		biu_ctl = 0xf460;
+		break;
+	case MACHINE_AVANTI_250_266:
+		speed_code[0] = 8;
+		break;
+	}
 
 	cpu->memory_rw(cpu, cpu->mem, AVANTI_DROM_ADDR,
 	    d->drom + AVANTI_ROM_HEADER_SIZE,
@@ -661,13 +706,19 @@ uint64_t dev_avanti_srom(struct avanti_data *d, struct cpu *cpu)
 	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
 	cpu->memory_rw(cpu, cpu->mem, 0x18, signature, sizeof(signature),
 	    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
+	if (mhz[0] != 0) {
+		cpu->memory_rw(cpu, cpu->mem, 0x10, cycle_ps,
+		    sizeof(cycle_ps), MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
+		cpu->memory_rw(cpu, cpu->mem, 0x68, mhz, sizeof(mhz),
+		    MEM_WRITE, PHYSICAL | NO_EXCEPTIONS);
+	}
 
 	/*  Nothing is connected to the serial ROM port: its receive line
 	    idles at 1 (mark).  */
 	cpu->cd.alpha.sl_rcv = 1;
 
 	cpu->cd.alpha.pal_temp[14] = EV4_ABOX_MCHK_EN | EV4_ABOX_CRD_EN;
-	cpu->cd.alpha.pal_temp[18] = 0;
+	cpu->cd.alpha.pal_temp[18] = biu_ctl;
 	cpu->cd.alpha.pal_base = AVANTI_DROM_ADDR;
 	cpu->cd.alpha.palmode = 1;
 
