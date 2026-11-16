@@ -167,7 +167,7 @@ MACHINE_SETUP(sgi)
 		 */
 
 		/*  int0 at mainbus0 addr 0x1fb801c0  */
-fatal("TODO: SGI legacy interrupt system rewrite!\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: SGI legacy interrupt system rewrite!");
 abort();
 //		machine->md_int.sgi_ip20_data = dev_sgi_ip20_init(cpu, mem,
 //		    DEV_SGI_IP20_BASE);
@@ -215,7 +215,7 @@ abort();
 			strlcat(machineName,
 			    " (Indy, Indigo2, Challenge S; Full-house)",
 			    MACHINE_NAME_MAXBUF);
-fatal("TODO: SGI legacy interrupt system rewrite!\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: SGI legacy interrupt system rewrite!");
 abort();
 //			machine->md_int.sgi_ip22_data =
 //			    dev_sgi_ip22_init(machine, mem, 0x1fbd9000, 0);
@@ -223,7 +223,7 @@ abort();
 			strlcat(machineName,
 			    " (Indy, Indigo2, Challenge S; Guiness)",
 			    MACHINE_NAME_MAXBUF);
-fatal("TODO: SGI legacy interrupt system rewrite!\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: SGI legacy interrupt system rewrite!");
 abort();
 //			machine->md_int.sgi_ip22_data =
 //			    dev_sgi_ip22_init(machine, mem, 0x1fbd9880, 1);
@@ -235,7 +235,7 @@ Why is this here? TODO
 		    128 * 1048576, DEV_RAM_MIRROR, 0x08000000, NULL);
 */
 
-fatal("TODO: Legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: Legacy rewrite");
 abort();
 //		machine->md_interrupt = sgi_ip22_interrupt;
 
@@ -271,7 +271,7 @@ abort();
 		    "z8530 addr=0x1fbd9830 irq=363 addr_mult=4");
 
 		/*  Not supported by NetBSD 1.6.2, but by 2.0_BETA:  */
-fatal("TODO: legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: legacy rewrite");
 abort();
 //		j = dev_pckbc_init(machine, mem, 0x1fbd9840, PCKBC_8242,
 //		    0, 0, machine->display_md.in_use, 0);  /*  TODO: irq numbers  */

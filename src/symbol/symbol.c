@@ -31,6 +31,7 @@
  *  symbol_init() must be called before any other function in this file is used.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -208,14 +209,12 @@ void add_symbol_name(struct symbol_context *sc,
 	struct symbol *s;
 
 	if (sc->sorted_array) {
-		fprintf(stderr, "add_symbol_name(): Internal error: the "
-		    "symbol array is already sorted\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "symbol", "add_symbol_name(): Internal error: the "
+		    "symbol array is already sorted");
 	}
 
 	if (name == NULL) {
-		fprintf(stderr, "add_symbol_name(): name = NULL\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "symbol", "add_symbol_name(): name = NULL");
 	}
 
 	if (addr == 0 && strcmp(name, "_DYNAMIC_LINK") == 0)
@@ -298,8 +297,7 @@ void symbol_readfile(struct symbol_context *sc, char *fname)
 
 	f = fopen(fname, "r");
 	if (f == NULL) {
-		perror(fname);
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "symbol", "%s: %s", fname, strerror(errno));
 	}
 
 	while (!feof(f)) {
@@ -308,15 +306,15 @@ void symbol_readfile(struct symbol_context *sc, char *fname)
 		memset(b3, 0, sizeof(b3));
 		memset(b4, 0, sizeof(b4));
 		if (fscanf(f, "%s %s\n", b1,b2) != 2)
-			fprintf(stderr, "warning: symbol file parse error\n");
+			debugmsg(SUBSYS_EMUL, "symbol", VERBOSITY_WARNING, "warning: symbol file parse error");
 		if (strlen(b2) < 2 && !(b2[0]>='0' && b2[0]<='9')) {
 			strlcpy(b3, b2, sizeof(b3));
 			strlcpy(b2, "0", sizeof(b2));
 			if (fscanf(f, "%s\n", b4) != 1)
-				fprintf(stderr, "warning: symbol file parse error\n");
+				debugmsg(SUBSYS_EMUL, "symbol", VERBOSITY_WARNING, "warning: symbol file parse error");
 		} else {
 			if (fscanf(f, "%s %s\n", b3,b4) != 2)
-				fprintf(stderr, "warning: symbol file parse error\n");
+				debugmsg(SUBSYS_EMUL, "symbol", VERBOSITY_WARNING, "warning: symbol file parse error");
 		}
 
 		/*  printf("b1='%s' b2='%s' b3='%s' b4='%s'\n",

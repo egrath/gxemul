@@ -1487,9 +1487,7 @@ void vnc_init(const char *spec)
 				len -= 2;
 			}
 			if (len >= sizeof(host)) {
-				fprintf(stderr, "--vnc: bad host in '%s'\n",
-				    spec);
-				exit(1);
+				fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: bad host in '%s'", spec);
 			}
 			memcpy(host, h, len);
 			host[len] = '\0';
@@ -1500,8 +1498,7 @@ void vnc_init(const char *spec)
 		long portnr = strtol(port, &end, 10);
 		if (port[0] == '\0' || *end != '\0' || portnr < 0 ||
 		    portnr > 65535) {
-			fprintf(stderr, "--vnc: bad port in '%s'\n", spec);
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: bad port in '%s'", spec);
 		}
 
 		memset(&hints, 0, sizeof(hints));
@@ -1509,14 +1506,12 @@ void vnc_init(const char *spec)
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_flags = AI_PASSIVE;
 		if (getaddrinfo(host, port, &hints, &ai) != 0) {
-			fprintf(stderr, "--vnc: unknown host '%s'\n", host);
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: unknown host '%s'", host);
 		}
 
 		listen_fd = socket(ai->ai_family, SOCK_STREAM, 0);
 		if (listen_fd < 0) {
-			perror("--vnc: socket");
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: socket: %s", strerror(errno));
 		}
 		setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR,
 		    (void *) &one, sizeof(one));
@@ -1529,9 +1524,8 @@ void vnc_init(const char *spec)
 			    (void *) &zero, sizeof(zero));
 		}
 		if (bind(listen_fd, ai->ai_addr, ai->ai_addrlen) < 0) {
-			fprintf(stderr, "--vnc: can't listen on %s port %s "
-			    "(error %i)\n", host, port, socket_error());
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: can't listen on %s port %s "
+			    "(error %i)", host, port, socket_error());
 		}
 
 		bool loopback = ai->ai_family == AF_INET6 ?
@@ -1559,33 +1553,29 @@ void vnc_init(const char *spec)
 			    "GXEMUL_VNC_PASSWORD for a password)\n");
 	} else if (strncmp(spec, "unix:", 5) == 0) {
 #ifdef _WIN32
-		fprintf(stderr, "--vnc: unix: sockets aren't supported on "
-		    "Windows; use tcp:port\n");
-		exit(1);
+		fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: unix: sockets aren't supported on "
+		    "Windows; use tcp:port");
 #else
 		struct sockaddr_un sun;
 		struct stat st;
 		const char *path = spec + 5;
 
 		if (path[0] == '\0' || strlen(path) >= sizeof(sun.sun_path)) {
-			fprintf(stderr, "--vnc: bad path in '%s'\n", spec);
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: bad path in '%s'", spec);
 		}
 
 		/*  Replace an old socket, but nothing else:  */
 		if (lstat(path, &st) == 0) {
 			if (!S_ISSOCK(st.st_mode)) {
-				fprintf(stderr, "--vnc: %s exists, and isn't "
-				    "a socket\n", path);
-				exit(1);
+				fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: %s exists, and isn't "
+				    "a socket", path);
 			}
 			unlink(path);
 		}
 
 		listen_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 		if (listen_fd < 0) {
-			perror("--vnc: socket");
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: socket: %s", strerror(errno));
 		}
 
 		memset(&sun, 0, sizeof(sun));
@@ -1593,9 +1583,7 @@ void vnc_init(const char *spec)
 		strlcpy(sun.sun_path, path, sizeof(sun.sun_path));
 		if (bind(listen_fd, (struct sockaddr *) &sun,
 		    sizeof(sun)) < 0) {
-			fprintf(stderr, "--vnc: can't listen on %s: %s\n",
-			    path, strerror(errno));
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: can't listen on %s: %s", path, strerror(errno));
 		}
 
 		CHECK_ALLOCATION(unix_path = strdup(path));
@@ -1603,14 +1591,12 @@ void vnc_init(const char *spec)
 		fprintf(stderr, "gxemul: VNC server: %s\n", spec);
 #endif
 	} else {
-		fprintf(stderr, "--vnc: expected tcp:port, tcp:host:port or "
-		    "unix:path, not '%s'\n", spec);
-		exit(1);
+		fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: expected tcp:port, tcp:host:port or "
+		    "unix:path, not '%s'", spec);
 	}
 
 	if (listen(listen_fd, VNC_MAX_CLIENTS) < 0) {
-		perror("--vnc: listen");
-		exit(1);
+		fatal_error(SUBSYS_DISPLAY, "vnc", "--vnc: listen: %s", strerror(errno));
 	}
 
 #ifdef FD_CLOEXEC

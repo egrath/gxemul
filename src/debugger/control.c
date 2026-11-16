@@ -3226,14 +3226,12 @@ void control_init(struct emul *emul, const char *spec)
 
 		if (spec[4] == '\0' || *end != '\0' || port < 0 ||
 		    port > 65535) {
-			fprintf(stderr, "--control: bad port in '%s'\n", spec);
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "control", "--control: bad port in '%s'", spec);
 		}
 
 		listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (listen_fd < 0) {
-			perror("--control: socket");
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "control", "--control: socket: %s", strerror(errno));
 		}
 		setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR,
 		    (void *) &one, sizeof(one));
@@ -3244,9 +3242,8 @@ void control_init(struct emul *emul, const char *spec)
 		sin.sin_port = htons(port);
 		if (bind(listen_fd, (struct sockaddr *) &sin,
 		    sizeof(sin)) < 0) {
-			fprintf(stderr, "--control: can't listen on port %li "
-			    "(error %i)\n", port, socket_error());
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "control", "--control: can't listen on port %li "
+			    "(error %i)", port, socket_error());
 		}
 
 		getsockname(listen_fd, (struct sockaddr *) &sin, &sinlen);
@@ -3254,33 +3251,29 @@ void control_init(struct emul *emul, const char *spec)
 		    ntohs(sin.sin_port));
 	} else if (strncmp(spec, "unix:", 5) == 0) {
 #ifdef _WIN32
-		fprintf(stderr, "--control: unix: sockets aren't supported "
-		    "on Windows; use tcp:port\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "control", "--control: unix: sockets aren't supported "
+		    "on Windows; use tcp:port");
 #else
 		struct sockaddr_un sun;
 		struct stat st;
 		const char *path = spec + 5;
 
 		if (path[0] == '\0' || strlen(path) >= sizeof(sun.sun_path)) {
-			fprintf(stderr, "--control: bad path in '%s'\n", spec);
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "control", "--control: bad path in '%s'", spec);
 		}
 
 		/*  Replace an old socket, but nothing else:  */
 		if (lstat(path, &st) == 0) {
 			if (!S_ISSOCK(st.st_mode)) {
-				fprintf(stderr, "--control: %s exists, and "
-				    "isn't a socket\n", path);
-				exit(1);
+				fatal_error(SUBSYS_EMUL, "control", "--control: %s exists, and "
+				    "isn't a socket", path);
 			}
 			unlink(path);
 		}
 
 		listen_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 		if (listen_fd < 0) {
-			perror("--control: socket");
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "control", "--control: socket: %s", strerror(errno));
 		}
 
 		memset(&sun, 0, sizeof(sun));
@@ -3288,23 +3281,19 @@ void control_init(struct emul *emul, const char *spec)
 		strlcpy(sun.sun_path, path, sizeof(sun.sun_path));
 		if (bind(listen_fd, (struct sockaddr *) &sun,
 		    sizeof(sun)) < 0) {
-			fprintf(stderr, "--control: can't listen on %s: %s\n",
-			    path, strerror(errno));
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "control", "--control: can't listen on %s: %s", path, strerror(errno));
 		}
 
 		CHECK_ALLOCATION(unix_path = strdup(path));
 		atexit(remove_unix_socket);
 #endif
 	} else {
-		fprintf(stderr, "--control: expected unix:path or tcp:port, "
-		    "not '%s'\n", spec);
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "control", "--control: expected unix:path or tcp:port, "
+		    "not '%s'", spec);
 	}
 
 	if (listen(listen_fd, 1) < 0) {
-		perror("--control: listen");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "control", "--control: listen: %s", strerror(errno));
 	}
 
 #ifdef FD_CLOEXEC

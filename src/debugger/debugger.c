@@ -341,8 +341,7 @@ void debugger_assignment(struct machine *m, char *cmd)
 	strlcpy(left, cmd, MAX_CMD_BUFLEN);
 	right = strchr(left, '=');
 	if (right == NULL) {
-		fprintf(stderr, "internal error in the debugger\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "debugger", "internal error in the debugger");
 	}
 	*right = '\0';
 
@@ -965,9 +964,8 @@ void debugger_init(struct emul *emul)
 	debugger_emul = emul;
 
 	if (emul->n_machines < 1) {
-		fprintf(stderr, "\nERROR: No machines, "
-		    "cannot handle this situation yet.\n\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "debugger", "ERROR: No machines, "
+		    "cannot handle this situation yet.");
 	}
 
 	debugger_machine = emul->machines[0];

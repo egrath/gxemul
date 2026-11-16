@@ -1671,18 +1671,19 @@ int console_warn_if_slaves_are_needed(int init)
 
 	if (n > 1) {
 		if (init) {
-			fatal("#\n#  ERROR! More than one console input is "
-			    "in use,\n#  but console ports are not enabled.\n"
-			    "#\n");
-			fatal("#  Use -x to enable telnet ports for them.)\n#\n");
+			debugmsg(SUBSYS_EMUL, "console", VERBOSITY_ERROR,
+			    "#\n#  ERROR! More than one console input is "
+			    "in use,\n#  but console ports are not enabled.\n#");
+			debugmsg(SUBSYS_EMUL, "console", VERBOSITY_ERROR,
+			    "#  Use -x to enable telnet ports for them.)\n#");
 			for (i=MAIN_CONSOLE+1; i<n_console_handles; i++)
 				if (console_handles[i].in_use &&
 				    console_handles[i].in_use_for_input &&
 				    !console_handles[i].using_telnet)
-					fatal("#  console handle %i: '%s'\n",
+					debugmsg(SUBSYS_EMUL, "console", VERBOSITY_ERROR,
+					    "#  console handle %i: '%s'",
 					    i, console_handles[i].name);
-			fatal("#\n");
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "console", "#");
 		}
 		return 1;
 	}

@@ -97,8 +97,7 @@ int debugger_parse_name(struct machine *m, char *name, int writeflag,
 	int skip_settings, skip_numeric, skip_symbol;
 
 	if (m == NULL || name == NULL) {
-		fprintf(stderr, "debugger_parse_name(): NULL ptr\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "debugger", "debugger_parse_name(): NULL ptr");
 	}
 
 	while (name[0] == '\t' || name[0] == ' ')

@@ -139,10 +139,9 @@ void scsi_transfer_allocbuf(size_t *lenp, unsigned char **pp, size_t want_len,
 
 	(*lenp) = want_len;
 	if ((p = (unsigned char *) malloc(want_len)) == NULL) {
-		debugmsg(SUBSYS_DISK, "scsi", VERBOSITY_ERROR,
+		fatal_error(SUBSYS_DISK, "scsi",
 		    "scsi_transfer_allocbuf(): out of "
 		    "memory trying to allocate %li bytes", (long)want_len);
-		exit(1);
 	}
 
 	if (clearflag)

@@ -363,7 +363,7 @@ MACHINE_SETUP(pmax)
 			    "have more than 480MB RAM. Continuing anyway.\n");
 
 		/*  KN03 interrupts:  */
-fatal("TODO: Legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: Legacy rewrite");
 abort();
 //		machine->md_interrupt = kn03_interrupt;
 
@@ -381,17 +381,17 @@ abort();
 		 *  asc0 at ioasic0 offset 0x300000: NCR53C94, 25MHz,
 		 *	SCSI ID 7				(0x1fb00000)
 		 */
-fatal("TODO: dec_ioasic legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: dec_ioasic legacy rewrite");
 abort();
 //		machine->md_int.dec_ioasic_data = dev_dec_ioasic_init(cpu,
 //		    mem, 0x1f800000, 0);
 
-fatal("TODO: kn03 dev_le_init rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: kn03 dev_le_init rewrite");
 abort();
 //		dev_le_init(machine, mem, KN03_SYS_LANCE, 0, 0,
 //		    KN03_INTR_LANCE +8, 4 * 65536);
 
-fatal("TODO: dec_ioasic legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: dec_ioasic legacy rewrite");
 abort();
 //		machine->md_int.dec_ioasic_data->dma_func[3] =
 //		    dev_scc_dma_func;
@@ -404,11 +404,11 @@ abort();
 //		    dev_scc_init(machine, mem, KN03_SYS_SCC_1,
 //		    KN03_INTR_SCC_1 +8, machine->display_md.in_use, 1, 1);
 
-fatal("TODO: mc146818 irq\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: mc146818 irq");
 abort();
 //		dev_mc146818_init(machine, mem, KN03_SYS_CLOCK, KN03_INT_RTC,
 //		    MC146818_DEC, 1);
-fatal("TODO: asc init rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: asc init rewrite");
 abort();
 //		dev_asc_init(machine, mem, KN03_SYS_SCSI,
 //		    KN03_INTR_SCSI +8, NULL, DEV_ASC_DEC, NULL, NULL);
@@ -420,7 +420,7 @@ abort();
 		 *
 		 *  TODO: irqs 
 		 */
-fatal("TODO: turbochannel rewrite init\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: turbochannel rewrite init");
 abort();
 #if 0
 		dev_turbochannel_init(machine, mem, 0,
@@ -534,7 +534,7 @@ abort();
 			    "have more than 40MB RAM. Continuing anyway.\n");
 
 		/*  Maxine interrupts:  */
-fatal("TODO: Legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: Legacy rewrite");
 abort();
 
 //		machine->md_interrupt = maxine_interrupt;
@@ -562,12 +562,12 @@ abort();
 		 *  xcfb0 at tc0 slot 2 offset 0x0: 1024x768x8
 		 *	built-in framebuffer			(0xa000000)
 		 */
-fatal("TODO: dec_ioasic legacy rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: dec_ioasic legacy rewrite");
 abort();
 //		machine->md_int.dec_ioasic_data =
 //		    dev_dec_ioasic_init(cpu, mem, 0x1c000000, 0);
 
-fatal("TODO: turbochannel rewrite!\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: turbochannel rewrite!");
 abort();
 #if 0
 		/*  TURBOchannel slots (0 and 1):  */
@@ -593,17 +593,17 @@ abort();
 		 *  TURBOchannel slot 3: fixed, ioasic
 		 *  (the system stuff), 0x1c000000
 		 */
-fatal("TODO: xine dev_le_init rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: xine dev_le_init rewrite");
 abort();
 //		dev_le_init(machine, mem, 0x1c0c0000, 0, 0,
 //		    XINE_INTR_LANCE +8, 4*65536);
 //		dev_scc_init(machine, mem, 0x1c100000,
 //		    XINE_INTR_SCC_0 +8, machine->display_md.in_use, 0, 1);
-fatal("TODO: mc146818 irq\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: mc146818 irq");
 abort();
 //		dev_mc146818_init(machine, mem, 0x1c200000,
 //		    XINE_INT_TOY, MC146818_DEC, 1);
-fatal("TODO: xine asc init rewrite\n");
+debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "TODO: xine asc init rewrite");
 abort();
 //		dev_asc_init(machine, mem, 0x1c300000,
 //		    XINE_INTR_SCSI +8, NULL, DEV_ASC_DEC, NULL, NULL);
