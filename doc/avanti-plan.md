@@ -521,8 +521,26 @@ setup finds "Digital AlphaStation 200/400 Family", the ZLXp-E (TGA) and
 the C810 (symc810), partitions and copies in under two minutes, restarts
 through ARC, and the graphical setup runs on NT's TGA driver.
 
-**Next:** the TGA's DMA modes if something uses them; Windows NT, when a
-version that supports the Avanti turns up.
+The CD is retail media (SETUPP.INI `Pid = "50382"`, no channel suffix),
+so setup asks for a retail 3-7 CD key; it also takes the Pid from
+`HKLM\SYSTEM\Setup\Pid`, written by text-mode setup, so changing the
+CD's SETUPP.INI between the two phases does not switch it to an OEM key.
+With a retail key, setup finishes (stand-alone server, the 21040 found by
+"Start Search" as "DEC PCI Ethernet DECchip 21040", TCP/IP with a fixed
+address) and NT 4.0 boots to the logon screen and the desktop.
+
+NT's DC21X4 driver could not send at first: ping said "Hardware error".
+It sets BUSMODE to 0x9030, a descriptor skip length of 12 longwords,
+keeping its own fields between the ring descriptors, and the 21143
+emulation always stepped 16 bytes to the next descriptor; it also queues
+an empty descriptor (TDES1 0) at start, which made the emulator's
+`realloc(NULL, 0)` fail. Both are fixed in dev_dec21143.c (the skip length
+applies in ring mode only). With the default AutoDetect connection type,
+NT pings the gateway, and Internet Explorer loads a page from the host
+(`route add 10.3.0.76 10.0.0.254`, as for Tru64, since the host is inside
+10/8). Tru64 V5.1A on the same 21040 still pings and downloads 5 MB.
+
+**Next:** Service Pack 6a; the TGA's DMA modes if something uses them.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

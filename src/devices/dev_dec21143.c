@@ -202,6 +202,22 @@ static int dec21143_dma(struct cpu *cpu, struct dec21143_data *d,
 }
 
 
+/*
+ *  dec21143_descr_stride():
+ *
+ *  The distance from one descriptor to the next in a ring: four longwords
+ *  plus the descriptor skip length (BUSMODE <6:2>, in longwords), which
+ *  e.g. Windows NT's DC21X4 driver sets to 12, keeping its own fields
+ *  between the descriptors.
+ */
+static uint32_t dec21143_descr_stride(struct dec21143_data *d)
+{
+	uint32_t dsl = (d->reg[CSR_BUSMODE / 8] & BUSMODE_DSL) >> 2;
+
+	return (4 + dsl) * sizeof(uint32_t);
+}
+
+
 static inline uint32_t load_le32(const uint8_t *buf)
 {
 	return buf[0] | ((uint32_t)buf[1] << 8) |
@@ -469,7 +485,7 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 		if (rdes1 & TDCTL_CH)
 			d->cur_rx_addr = rdes3;
 		else
-			d->cur_rx_addr += 4 * sizeof(uint32_t);
+			d->cur_rx_addr += dec21143_descr_stride(d);
 	}
 
 	debugmsg(d->subsys, "dec21143", VERBOSITY_DEBUG,
@@ -753,7 +769,7 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 		if (tdes1 & TDCTL_CH)
 			d->cur_tx_addr = tdes3;
 		else
-			d->cur_tx_addr += 4 * sizeof(uint32_t);
+			d->cur_tx_addr += dec21143_descr_stride(d);
 	}
 
 	debugmsg(d->subsys, "dec21143", VERBOSITY_DEBUG,
@@ -785,34 +801,38 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 		 */
 		/*  fatal("{ TX: data packet: ");  */
 		if (tdes1 & TDCTL_Tx_FS) {
-			/*  First segment. Let's allocate a new buffer:  */
-			/*  fatal("new frame }\n");  */
-
-			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *) malloc(bufsize));
+			/*  First segment: a new frame.  */
+			free(d->cur_tx_buf);
+			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *)
+			    malloc(bufsize + 1));
 			d->cur_tx_buf_len = 0;
-		} else {
-			/*  Not first segment. Increase the length of
-			    the current buffer:  */
-			/*  fatal("continuing last frame }\n");  */
-
-			if (d->cur_tx_buf == NULL)
-				fatal("[ dec21143: WARNING! tx: middle "
-				    "segment, but no first segment?! ]\n");
-
-			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *) realloc(d->cur_tx_buf,
-			    d->cur_tx_buf_len + bufsize));
+		} else if (d->cur_tx_buf != NULL) {
+			/*  A later segment of the current frame:  */
+			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *)
+			    realloc(d->cur_tx_buf, d->cur_tx_buf_len + bufsize + 1));
+		} else if (bufsize != 0) {
+			fatal("[ dec21143: WARNING! tx: middle "
+			    "segment, but no first segment?! ]\n");
+			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *)
+			    malloc(bufsize + 1));
+			d->cur_tx_buf_len = 0;
 		}
 
-		/*  "DMA" data from emulated physical memory into the buf:  */
-		dec21143_dma(cpu, d, bufaddr, d->cur_tx_buf +
-		    d->cur_tx_buf_len, bufsize, MEM_READ);
-
-		d->cur_tx_buf_len += bufsize;
+		/*  (An empty descriptor outside a frame, as Windows NT's DC21X4
+		    driver queues one when it starts, is just closed.)  */
+		if (d->cur_tx_buf != NULL) {
+			/*  "DMA" data from emulated physical memory into the buf:  */
+			dec21143_dma(cpu, d, bufaddr, d->cur_tx_buf +
+			    d->cur_tx_buf_len, bufsize, MEM_READ);
+			d->cur_tx_buf_len += bufsize;
+		}
 
 		/*  Last segment? Then actually transmit it:  */
 		if (tdes1 & TDCTL_Tx_LS) {
 			/*  fatal("{ TX: data frame complete. }\n");  */
-			if (d->nic.net != NULL) {
+			if (d->cur_tx_buf == NULL)
+				;
+			else if (d->nic.net != NULL) {
 				net_ethernet_tx(d->nic.net, &d->nic,
 				    d->cur_tx_buf, d->cur_tx_buf_len);
 			} else {
