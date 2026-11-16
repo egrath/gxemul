@@ -76,8 +76,7 @@ int alpha_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 	if (!userMode && base == 0) {
 		*return_paddr = vaddr & 0x000003ffffffffffULL;
 if (vaddr == 0xfffffffd80000000ULL) {
-	fatal("Alpha kernel virtual memory seems to want to be used. Not yet implemented.\n");
-	exit(1);
+	fatal_error(SUBSYS_CPU, "cpu", "Alpha kernel virtual memory seems to want to be used. Not yet implemented.\n");
 }
 #if 1
 		if ((vaddr & ~0x7fff) == 0x0000000010000000ULL)
@@ -94,7 +93,7 @@ if (vaddr == 0xfffffffd80000000ULL) {
 	}
 
 	// debug("base = 0x%016"PRIx64"\n", base);
-if (vaddr == 0xfffffffd80000000ULL) fatal("AYONA3\n");
+if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
 
 	uint64_t addr, pte1, pte2, pte3;
 	int i1, i2, i3;
@@ -127,7 +126,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal("AYONA3\n");
 		// ELSE
 		//   {initiate Translation Not Valid fault}
 
-		// fatal("TODO: pte1 not valid.\n");
+		// debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: pte1 not valid.\n");
 		goto not_found;
 	}
 
@@ -148,7 +147,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal("AYONA3\n");
 		// ELSE
 		//   {initiate Translation Not Valid fault}
 
-		fatal("TODO: pte2 not valid.\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: pte2 not valid.\n");
 		goto not_found;
 	}
 
@@ -164,7 +163,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal("AYONA3\n");
 	// debug("pte3 = 0x%016"PRIx64"\n", pte3);
 
 	if (!(pte3 & ALPHA_PTE_VALID)) {
-		fatal("TODO: pte3 not valid.\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: pte3 not valid.\n");
 		goto not_found;
 	}
 
@@ -175,9 +174,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal("AYONA3\n");
 
 not_found:
 	/*  No match.  */
-	fatal("[ alpha_translate_v2p: 0x%016" PRIx64" wasn't found ]\n", vaddr);
-abort();
-	exit(1);
+	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ alpha_translate_v2p: 0x%016" PRIx64" wasn't found ]", vaddr);
 	return 0;
 }
 

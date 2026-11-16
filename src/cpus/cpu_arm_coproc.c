@@ -54,12 +54,11 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 
 	/*  Some sanity checks:  */
 	if (opcode1 != 0) {
-		fatal("[ TODO: arm_coproc_15: opcode1 = %i, should be 0 ]\n", opcode1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: opcode1 = %i, should be 0 ]", opcode1);
 		// exit(1);
 	}
 	if (rd == ARM_PC) {
-		fatal("[ TODO: arm_coproc_15: rd = PC ]\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: rd = PC ]\n");
 	}
 
 	switch (crn) {
@@ -73,16 +72,16 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		case 0:	if (l_bit)
 				cpu->cd.arm.r[rd] = cpu->cd.arm.cpu_type.cpu_id;
 			else
-				fatal("[ TODO: arm_coproc_15: attempt to write "
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: attempt to write "
 				    "to the Main ID register? ]\n");
 			break;
 		case 1:	if (l_bit)
 				cpu->cd.arm.r[rd] = cpu->cd.arm.cachetype;
 			else
-				fatal("[ TODO: arm_coproc_15: attempt to write "
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: attempt to write "
 				    "to the Cache Type register? ]\n");
 			break;
-		default:fatal("[ TODO: arm_coproc_15: cr0, opcode2=%i ]\n",
+		default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: cr0, opcode2=%i ]",
 			    opcode2);
 			// exit(1);
 		}
@@ -96,8 +95,8 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 				break;
 			case 1:	cpu->cd.arm.r[rd] = cpu->cd.arm.auxctrl;
 				break;
-			default:fatal("[ TODO: Unimplemented opcode2 = %i ", opcode2);
-				fatal("(opcode1=%i crn=%i crm=%i rd=%i l=%i) ]\n",
+			default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: Unimplemented opcode2 = %i ", opcode2);
+				fatal_error(SUBSYS_CPU, "cpu", "(opcode1=%i crn=%i crm=%i rd=%i l=%i) ]",
 				    opcode1, crn, crm, rd, l_bit);
 				// exit(1);
 			}
@@ -122,8 +121,8 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			}
 			return;
 		} else if (opcode2 != 0) {
-			fatal("[ Unimplemented write, opcode2 = %i ", opcode2);
-			fatal("(opcode1=%i crn=%i crm=%i rd=%i l=%i)]\n",
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Unimplemented write, opcode2 = %i ", opcode2);
+			fatal_error(SUBSYS_CPU, "cpu", "(opcode1=%i crn=%i crm=%i rd=%i l=%i)]",
 			    opcode1, crn, crm, rd, l_bit);
 			// exit(1);
 		}
@@ -160,9 +159,8 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 
 		if ((old_control & ARM_CONTROL_BIG) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_BIG)) {
-			fatal("ERROR: Trying to switch endianness. Not "
+			fatal_error(SUBSYS_CPU, "cpu", "ERROR: Trying to switch endianness. Not "
 			    "supported yet.\n");
-			exit(1);
 		}
 		if ((old_control & ARM_CONTROL_ICACHE) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_ICACHE))
@@ -178,8 +176,8 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		else {
 			cpu->cd.arm.ttb = cpu->cd.arm.r[rd];
 			if (cpu->cd.arm.ttb & 0x3fff)
-				fatal("[ WARNING! low bits of new TTB non-"
-				    "zero? 0x%08x ]\n", cpu->cd.arm.ttb);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING! low bits of new TTB non-"
+				    "zero? 0x%08x ]", cpu->cd.arm.ttb);
 			cpu->cd.arm.ttb &= 0xffffc000;
 		}
 		break;
@@ -208,7 +206,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 
 	case 7:	/*  Cache functions:  */
 		if (l_bit) {
-			fatal("[ arm_coproc_15: attempt to read cr7? ]\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: attempt to read cr7? ]\n");
 			return;
 		}
 		/*  debug("[ arm_coproc_15: cache op: TODO ]\n");  */
@@ -217,10 +215,10 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 
 	case 8:	/*  TLB functions:  */
 		if (l_bit) {
-			fatal("[ arm_coproc_15: attempt to read cr8? ]\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: attempt to read cr8? ]\n");
 			return;
 		}
-		/*  fatal("[ arm_coproc_15: TLB: op2=%i crm=%i rd=0x%08x ]\n",
+		/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: TLB: op2=%i crm=%i rd=0x%08x ]",
 		    opcode2, crm, cpu->cd.arm.r[rd]);  */
 		if (opcode2 == 0)
 			cpu->invalidate_translation_caches(cpu, 0,
@@ -231,7 +229,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		break;
 
 	case 9:	/*  Cache lockdown:  */
-		fatal("[ arm_coproc_15: cache lockdown: TODO ]\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: cache lockdown: TODO ]\n");
 		/*  TODO  */
 		break;
 
@@ -240,16 +238,15 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			debug("[ arm_coproc_15: PID access, but opcode2 "
 			    "= %i? (should be 0) ]\n", opcode2);
 		if (crm != 0)
-			fatal("[ arm_coproc_15: PID access, but crm "
-			    "= %i? (should be 0) ]\n", crm);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: PID access, but crm "
+			    "= %i? (should be 0) ]", crm);
 		if (l_bit)
 			cpu->cd.arm.r[rd] = cpu->cd.arm.pid;
 		else
 			cpu->cd.arm.pid = cpu->cd.arm.r[rd];
 		if (cpu->cd.arm.pid != 0) {
-			fatal("ARM TODO: pid!=0. Fast Context Switch"
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ARM TODO: pid!=0. Fast Context Switch"
 			    " Extension not implemented yet\n");
-			exit(1);
 		}
 		break;
 
@@ -270,14 +267,14 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			else
 				cpu->cd.arm.cpar = cpu->cd.arm.r[rd];
 			break;
-		default:fatal("[ TODO: arm_coproc_15: IMPLEMENTATION "
+		default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: IMPLEMENTATION "
 			    "DEPENDENT! ]\n");
 			// exit(1);
 		}
 		break;
 
-	default:fatal("[ TODO: arm_coproc_15: unimplemented crn = %i ", crn);
-		fatal("(opcode1=%i opcode2=%i crm=%i rd=%i l=%i) ]\n",
+	default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: unimplemented crn = %i ", crn);
+		fatal_error(SUBSYS_CPU, "cpu", "(opcode1=%i opcode2=%i crm=%i rd=%i l=%i) ]",
 		    opcode1, opcode2, crm, rd, l_bit);
 		// exit(1);
 	}
@@ -297,8 +294,7 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 	case 0:	switch (crn) {
 		case 0:	if (l_bit) {
 				cpu->cd.arm.r[rd] = cpu->cd.arm.i80321_inten;
-				fatal("TODO: XScale read from inten?\n");
-				exit(1);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: XScale read from inten?\n");
 			} else
 				cpu->cd.arm.i80321_inten = cpu->cd.arm.r[rd];
 			break;
@@ -307,9 +303,8 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			else {
 				cpu->cd.arm.i80321_isteer = cpu->cd.arm.r[rd];
 				if (cpu->cd.arm.r[rd] != 0) {
-					fatal("ARM xscale interrupt steering"
+					fatal_error(SUBSYS_CPU, "cpu", "ARM xscale interrupt steering"
 					    " is not yet implemented\n");
-					exit(1);
 				}
 			}
 			break;
@@ -317,16 +312,15 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 				cpu->cd.arm.r[rd] = cpu->cd.arm.i80321_isrc;
 			else {
 				cpu->cd.arm.i80321_isrc = cpu->cd.arm.r[rd];
-				fatal("TODO: XScale int ack?\n");
-				exit(1);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: XScale int ack?\n");
 			}
 			break;
 		default:goto unknown;
 		}
 		break;
 
-	case 1:	/*  fatal("TIMER opcode1=%i opcode2=%i crn="
-    "%i crm=%i rd=%i l=%i)\n", opcode1, opcode2, crn, crm, rd, l_bit);  */
+	case 1:	/*  fatal_error(SUBSYS_CPU, "cpu", "TIMER opcode1=%i opcode2=%i crn="
+    "%i crm=%i rd=%i l=%i)", opcode1, opcode2, crn, crm, rd, l_bit);  */
 
 		switch (crn) {
 		case 0:	/*  tmr0:  */
@@ -402,9 +396,8 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 	return;
 
 unknown:
-	fatal("arm_coproc_i80321_6: unimplemented opcode1=%i opcode2=%i crn="
-	    "%i crm=%i rd=%i l=%i)\n", opcode1, opcode2, crn, crm, rd, l_bit);
-	exit(1);
+	fatal_error(SUBSYS_CPU, "cpu", "arm_coproc_i80321_6: unimplemented opcode1=%i opcode2=%i crn="
+	    "%i crm=%i rd=%i l=%i)", opcode1, opcode2, crn, crm, rd, l_bit);
 }
 
 
@@ -417,7 +410,7 @@ void arm_coproc_xscale_14(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 	int crn, int crm, int rd)
 {
 	if (opcode2 != 0) {
-		fatal("TODO: opcode2 = %i\n", opcode2);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: opcode2 = %i", opcode2);
 		goto unknown;
 	}
 
@@ -512,9 +505,8 @@ void arm_coproc_xscale_14(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 	return;
 
 unknown:
-	fatal("arm_coproc_xscale_14: unimplemented opcode1=%i opcode2="
-	    "%i crn=%i crm=%i rd=%i l=%i)\n", opcode1, opcode2, crn,
+	fatal_error(SUBSYS_CPU, "cpu", "arm_coproc_xscale_14: unimplemented opcode1=%i opcode2="
+	    "%i crn=%i crm=%i rd=%i l=%i)", opcode1, opcode2, crn,
 	    crm, rd, l_bit);
-	exit(1);
 }
 

@@ -128,13 +128,13 @@ X(to_be_translated)
 #endif
 
 	if (page != NULL) {
-		// fatal("PAGE TRANSLATION HIT!\n");
+		// fatal_error(SUBSYS_CPU, "cpu", "PAGE TRANSLATION HIT!\n");
 		memcpy(ib, page + (addr & 0xffe), sizeof(uint16_t));
 	} else {
-		// fatal("PAGE TRANSLATION MISS!\n");
+		// fatal_error(SUBSYS_CPU, "cpu", "PAGE TRANSLATION MISS!\n");
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, ib,
 		    sizeof(uint16_t), MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("to_be_translated(): read failed: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "to_be_translated(): read failed: TODO\n");
 			goto bad;
 		}
 	}
@@ -171,13 +171,13 @@ X(to_be_translated)
 #endif
 
 		if (page2 != NULL) {
-			// fatal("PAGE2 TRANSLATION HIT!\n");
+			// fatal_error(SUBSYS_CPU, "cpu", "PAGE2 TRANSLATION HIT!\n");
 			memcpy(&ib[2], page2 + (addr2 & 0xffe), sizeof(uint16_t));
 		} else {
-			// fatal("PAGE2 TRANSLATION MISS!\n");
+			// fatal_error(SUBSYS_CPU, "cpu", "PAGE2 TRANSLATION MISS!\n");
 			if (!cpu->memory_rw(cpu, cpu->mem, addr2, &ib[2],
 			    sizeof(uint16_t), MEM_READ, CACHE_INSTRUCTION)) {
-				fatal("to_be_translated(): read failed: TODO\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "to_be_translated(): read failed: TODO\n");
 				goto bad;
 			}
 		}
@@ -191,7 +191,7 @@ X(to_be_translated)
 		iw |= (iw2 << 16);
 
 		if (((iw >> 2) & 7) == 7) {
-			fatal("longer than 32-bit instruction: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "longer than 32-bit instruction: TODO\n");
 			goto bad;
 		}
 

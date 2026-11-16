@@ -49,7 +49,7 @@ static void gather_statistics(struct cpu *cpu)
 	    cpu->cd.DYNTRANS_ARCH.cur_ic_page) / sizeof(struct DYNTRANS_IC);
 
 	if (cpu->machine->statistics.file == NULL) {
-		fatal("statistics gathering with no filename set is"
+		fatal_error(SUBSYS_CPU, "cpu", "statistics gathering with no filename set is"
 		    " meaningless\n");
 		return;
 	}
@@ -156,7 +156,7 @@ static void gather_statistics(struct cpu *cpu)
 /*  #define I		{ int k; for (k=1; k<=31; k++)	\
 	cpu->cd.mips.gpr[k] = (int32_t)cpu->cd.mips.gpr[k];\
 	if (cpu->cd.mips.gpr[0] != 0) {			\
-		fatal("NOOOOOO\n"); exit(1);		\
+		fatal_error(SUBSYS_CPU, "cpu", "NOOOOOO\n");		\
 	}						\
 	ic = cpu->cd.DYNTRANS_ARCH.next_ic ++; ic->f(cpu, ic); }
 */
@@ -257,7 +257,7 @@ int DYNTRANS_RUN_INSTR_DEF(struct cpu *cpu)
 
 #ifdef DYNTRANS_ARM
 	if (cpu->cd.arm.cpsr & ARM_FLAG_T) {
-		// fatal("THUMB execution not implemented.\n");
+		// fatal_error(SUBSYS_CPU, "cpu", "THUMB execution not implemented.\n");
 		// cpu->running = false;
 		// return 0;
 		
@@ -299,7 +299,7 @@ int DYNTRANS_RUN_INSTR_DEF(struct cpu *cpu)
 			    DYNTRANS_INSTR_ALIGNMENT_SHIFT];
 			if (!cpu->memory_rw(cpu, cpu->mem, cached_pc, &instr[0],
 			    sizeof(instr), MEM_READ, CACHE_INSTRUCTION)) {
-				fatal("XXX_run_instr(): could not read "
+				fatal_error(SUBSYS_CPU, "cpu", "XXX_run_instr(): could not read "
 				    "the instruction\n");
 			} else {
 #ifdef DYNTRANS_DELAYSLOT
@@ -311,7 +311,7 @@ int DYNTRANS_RUN_INSTR_DEF(struct cpu *cpu)
 				/*  Show the instruction in the delay slot,
 				    if any:  */
 				if (cpu->instruction_has_delayslot == NULL)
-					fatal("WARNING: ihd func not yet"
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "WARNING: ihd func not yet"
 					    " implemented?\n");
 				else if (cpu->instruction_has_delayslot(cpu,
 				    instr)) {
@@ -605,34 +605,34 @@ void DYNTRANS_FUNCTION_TRACE_DEF(struct cpu *cpu, int n_args)
 		symbol = get_symbol_name(&cpu->machine->symbol_context, d, &ot);
 
 		if (d > -256 && d < 256)
-			fatal("%i", (int)d);
+			fatal_error(SUBSYS_CPU, "cpu", "%i", (int)d);
 		else if (memory_points_to_string(cpu, cpu->mem, d, 1)) {
 			memset(strbuf, 0, sizeof(strbuf));
 			memory_conv_to_string(cpu,
 			    cpu->mem, d, strbuf, sizeof(strbuf));
-			fatal("\"%s\"", strbuf);
+			fatal_error(SUBSYS_CPU, "cpu", "\"%s\"", strbuf);
 			// TODO: This shows "..." when the string is longer
 			// _or exactly the max length_. An improvement would
 			// be to detect the case where the string is exactly
 			// the max length and not show "..." then.
 			if (strlen(strbuf) >= sizeof(strbuf)-1)
-				fatal("...");
+				fatal_error(SUBSYS_CPU, "cpu", "...");
 		} else if (symbol != NULL && ot == 0 &&
 		    show_symbolic_function_name)
-			fatal("&%s", symbol);
+			fatal_error(SUBSYS_CPU, "cpu", "&%s", symbol);
 		else {
 			if (cpu->is_32bit)
-				fatal("0x%" PRIx32, (uint32_t)d);
+				fatal_error(SUBSYS_CPU, "cpu", "0x%" PRIx32, (uint32_t)d);
 			else
-				fatal("0x%" PRIx64, (uint64_t)d);
+				fatal_error(SUBSYS_CPU, "cpu", "0x%" PRIx64, (uint64_t)d);
 		}
 
 		if (x < n_args_to_print - 1)
-			fatal(",");
+			fatal_error(SUBSYS_CPU, "cpu", ",");
 	}
 
 	if (print_dots)
-		fatal(",..");
+		fatal_error(SUBSYS_CPU, "cpu", ",..");
 }
 #endif	/*  DYNTRANS_FUNCTION_TRACE_DEF  */
 
@@ -701,12 +701,12 @@ void DYNTRANS_PC_TO_POINTERS_GENERIC(struct cpu *cpu)
 	x1 = (cached_pc >> (64-DYNTRANS_L1N)) & mask1;
 	x2 = (cached_pc >> (64-DYNTRANS_L1N-DYNTRANS_L2N)) & mask2;
 	x3 = (cached_pc >> (64-DYNTRANS_L1N-DYNTRANS_L2N-DYNTRANS_L3N)) & mask3;
-	/*  fatal("X3: cached_pc=%016" PRIx64" x1=%x x2=%x x3=%x\n",
+	/*  fatal_error(SUBSYS_CPU, "cpu", "X3: cached_pc=%016" PRIx64" x1=%x x2=%x x3=%x",
 	    (uint64_t)cached_pc, (int)x1, (int)x2, (int)x3);  */
 	l2 = cpu->cd.DYNTRANS_ARCH.l1_64[x1];
-	/*  fatal("  l2 = %p\n", l2);  */
+	/*  fatal_error(SUBSYS_CPU, "cpu", "  l2 = %p", l2);  */
 	l3 = l2->l3[x2];
-	/*  fatal("  l3 = %p\n", l3);  */
+	/*  fatal_error(SUBSYS_CPU, "cpu", "  l3 = %p", l3);  */
 #endif
 
 	/*  Virtual to physical address translation:  */
@@ -748,9 +748,9 @@ void DYNTRANS_PC_TO_POINTERS_GENERIC(struct cpu *cpu)
 			 *  or if that fails, call translate_v2p for the
 			 *  exception handler.
 			 */
-			/*  fatal("TODO: instruction vaddr=>paddr translation "
-			    "failed. vaddr=0x%" PRIx64"\n", (uint64_t)cached_pc);
-			fatal("!! cpu->pc=0x%" PRIx64"\n", (uint64_t)cpu->pc); */
+			/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: instruction vaddr=>paddr translation "
+			    "failed. vaddr=0x%" PRIx64"", (uint64_t)cached_pc);
+			fatal_error(SUBSYS_CPU, "cpu", "!! cpu->pc=0x%" PRIx64"", (uint64_t)cpu->pc); */
 
 			/*  If there was an exception, the PC has changed.
 			    Update cached_pc:  */
@@ -783,12 +783,11 @@ void DYNTRANS_PC_TO_POINTERS_GENERIC(struct cpu *cpu)
 
 			/*  printf("EXCEPTION HANDLER: vaddr = 0x%x ==> "
 			    "paddr = 0x%x\n", (int)cpu->pc, (int)paddr);
-			fatal("!? cpu->pc=0x%" PRIx64"\n", (uint64_t)cpu->pc); */
+			fatal_error(SUBSYS_CPU, "cpu", "!? cpu->pc=0x%" PRIx64"", (uint64_t)cpu->pc); */
 
 			if (!ok) {
-				fatal("FATAL: could not find physical"
+				fatal_error(SUBSYS_CPU, "cpu", "FATAL: could not find physical"
 				    " address of the exception handler?");
-				exit(1);
 			}
 		}
 
@@ -855,8 +854,8 @@ void DYNTRANS_PC_TO_POINTERS_GENERIC(struct cpu *cpu)
 	if (physpage_ofs == 0) {
 		uint32_t previous_first_page_in_chain;
 
-		/*  fatal("CREATING page %lli (physaddr 0x%" PRIx64"), table "
-		    "index %i\n", (long long)pagenr, (uint64_t)physaddr,
+		/*  fatal_error(SUBSYS_CPU, "cpu", "CREATING page %lli (physaddr 0x%" PRIx64"), table "
+		    "index %i", (long long)pagenr, (uint64_t)physaddr,
 		    (int)table_index);  */
 
 		previous_first_page_in_chain = *physpage_entryp;
@@ -1149,8 +1148,7 @@ static void DYNTRANS_INVALIDATE_TLB_ENTRY(struct cpu *cpu,
 		for (x1b = 0; x1b <= mask1; x1b ++)
 			if (x1 != x1b &&
 			    l2 == cpu->cd.DYNTRANS_ARCH.l1_64[x1b]) {
-				fatal("L2 reuse: %p\n", l2);
-				exit(1);
+				fatal_error(SUBSYS_CPU, "cpu", "L2 reuse: %p", l2);
 			}
 	}
 }
@@ -1162,8 +1160,7 @@ static void DYNTRANS_INVALIDATE_TLB_ENTRY(struct cpu *cpu,
 		if (l3->vaddr_to_tlbindex[i])
 			n++;
 	if (n != l3->refcount) {
-		printf("Z: %i in use, but refcount = %i!\n", n, l3->refcount);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "dyntrans", "Z: %i in use, but refcount = %i!\n", n, l3->refcount);
 	}
 
 	n = 0;
@@ -1171,8 +1168,7 @@ static void DYNTRANS_INVALIDATE_TLB_ENTRY(struct cpu *cpu,
 		if (l3->host_load[i] != NULL)
 			n++;
 	if (n != l3->refcount) {
-		printf("ZHL: %i in use, but refcount = %i!\n", n, l3->refcount);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "dyntrans", "ZHL: %i in use, but refcount = %i!\n", n, l3->refcount);
 	}
 }
 #endif
@@ -1195,9 +1191,7 @@ static void DYNTRANS_INVALIDATE_TLB_ENTRY(struct cpu *cpu,
 				zz = q;
 				printf("%03i: ", zz);
 				printf("vaddr=%016llx\n", (long long)cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[zz].vaddr_page);
-				printf("valid=%i\n", cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[zz].valid);
-
-				exit(1);
+				fatal_error(SUBSYS_CPU, "dyntrans", "valid=%i\n", cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[zz].valid);
 			}
 			
 			found = q;
@@ -1227,8 +1221,7 @@ static void DYNTRANS_INVALIDATE_TLB_ENTRY(struct cpu *cpu,
 	l3->vaddr_to_tlbindex[x3] = 0;
 
 	if (l3->refcount < 0) {
-		fatal("xxx_invalidate_tlb_entry(): huh? Refcount bug.\n");
-		exit(1);
+		fatal_error(SUBSYS_CPU, "cpu", "xxx_invalidate_tlb_entry(): huh? Refcount bug.\n");
 	}
 
 	if (l3->refcount == 0) {
@@ -1243,15 +1236,13 @@ static void DYNTRANS_INVALIDATE_TLB_ENTRY(struct cpu *cpu,
 	int i;
 	for (i=0; i<=mask3; i++)
 		if (l3->host_load[i] != NULL) {
-			fatal("TRYING TO RETURN A NON-CLEAN L3 PAGE!\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu", "TRYING TO RETURN A NON-CLEAN L3 PAGE!\n");
 		}
 }
 #endif
 		l2->refcount --;
 		if (l2->refcount < 0) {
-			fatal("xxx_invalidate_tlb_entry(): Refcount bug L2.\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu", "xxx_invalidate_tlb_entry(): Refcount bug L2.\n");
 		}
 		if (l2->refcount == 0) {
 			l2->next = cpu->cd.DYNTRANS_ARCH.next_free_l2;
@@ -1296,11 +1287,11 @@ void DYNTRANS_INVALIDATE_TC(struct cpu *cpu, uint64_t addr, int flags)
 #endif
 	    addr_page = addr & ~(DYNTRANS_PAGESIZE - 1);
 
-	/*  fatal("invalidate(): ");  */
+	/*  fatal_error(SUBSYS_CPU, "cpu", "invalidate(): ");  */
 
 	/*  Quick case for _one_ virtual addresses: see note above.  */
 	if (flags & INVALIDATE_VADDR) {
-		/*  fatal("vaddr 0x%08x\n", (int)addr_page);  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "vaddr 0x%08x", (int)addr_page);  */
 
 #ifdef MODE32
 		DYNTRANS_INVALIDATE_TLB_ENTRY(cpu, addr_page, flags);
@@ -1331,7 +1322,7 @@ void DYNTRANS_INVALIDATE_TC(struct cpu *cpu, uint64_t addr, int flags)
 	/*  Invalidate everything:  */
 #ifdef DYNTRANS_PPC
 	if (flags & INVALIDATE_ALL && flags & INVALIDATE_VADDR_UPPER4) {
-		/*  fatal("all, upper4 (PowerPC segment)\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "all, upper4 (PowerPC segment)\n");  */
 		for (r=0; r<DYNTRANS_MAX_VPH_TLB_ENTRIES; r++) {
 			if (cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid &&
 			    (cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].vaddr_page
@@ -1348,7 +1339,7 @@ void DYNTRANS_INVALIDATE_TC(struct cpu *cpu, uint64_t addr, int flags)
 	}
 #endif
 	if (flags & INVALIDATE_ALL) {
-		/*  fatal("all\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "all\n");  */
 		for (r=0; r<DYNTRANS_MAX_VPH_TLB_ENTRIES; r++) {
 			if (cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid) {
 				DYNTRANS_INVALIDATE_TLB_ENTRY(cpu, cpu->cd.
@@ -1365,9 +1356,9 @@ void DYNTRANS_INVALIDATE_TC(struct cpu *cpu, uint64_t addr, int flags)
 	/*  Invalidate a physical page:  */
 
 	if (!(flags & INVALIDATE_PADDR))
-		fatal("HUH? Invalidate: Not vaddr, all, or paddr?\n");
+		fatal_error(SUBSYS_CPU, "cpu", "HUH? Invalidate: Not vaddr, all, or paddr?\n");
 
-	/*  fatal("addr 0x%08x\n", (int)addr_page);  */
+	/*  fatal_error(SUBSYS_CPU, "cpu", "addr 0x%08x", (int)addr_page);  */
 
 	for (r=0; r<DYNTRANS_MAX_VPH_TLB_ENTRIES; r++) {
 		if (cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid && addr_page
@@ -1574,14 +1565,13 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 	vaddr_page &= 0xffffffffULL;
 
 	if (paddr_page > 0xffffffffULL) {
-		fatal("update_translation_table(): v=0x%016" PRIx64", h=%p w=%i"
-		    " p=0x%016" PRIx64"\n", vaddr_page, host_page, writeflag,
+		fatal_error(SUBSYS_CPU, "cpu", "update_translation_table(): v=0x%016" PRIx64", h=%p w=%i"
+		    " p=0x%016" PRIx64"", vaddr_page, host_page, writeflag,
 		    paddr_page);
-		exit(1);
 	}
 
-	/*  fatal("update_translation_table(): v=0x%x, h=%p w=%i"
-	    " p=0x%x\n", (int)vaddr_page, host_page, writeflag,
+	/*  fatal_error(SUBSYS_CPU, "cpu", "update_translation_table(): v=0x%x, h=%p w=%i"
+	    " p=0x%x", (int)vaddr_page, host_page, writeflag,
 	    (int)paddr_page);  */
 #else	/*  !MODE32  */
 	const uint32_t mask1 = (1 << DYNTRANS_L1N) - 1;
@@ -1591,8 +1581,8 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 	struct DYNTRANS_L2_64_TABLE *l2;
 	struct DYNTRANS_L3_64_TABLE *l3;
 
-	/*  fatal("update_translation_table(): v=0x%016" PRIx64", h=%p w=%i"
-	    " p=0x%016" PRIx64"\n", (uint64_t)vaddr_page, host_page, writeflag,
+	/*  fatal_error(SUBSYS_CPU, "cpu", "update_translation_table(): v=0x%016" PRIx64", h=%p w=%i"
+	    " p=0x%016" PRIx64"", (uint64_t)vaddr_page, host_page, writeflag,
 	    (uint64_t)paddr_page);  */
 #endif
 
@@ -1694,13 +1684,11 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 					    l3_64_dummy;
 			}
 			if (l2->refcount != 0) {
-				fatal("Huh? l2 Refcount problem.\n");
-				exit(1);
+				fatal_error(SUBSYS_CPU, "cpu", "Huh? l2 Refcount problem.\n");
 			}
 		}
 		if (l2 == cpu->cd.DYNTRANS_ARCH.l2_64_dummy) {
-			fatal("INTERNAL ERROR L2 reuse\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR L2 reuse\n");
 		}
 		l3 = l2->l3[x2];
 		if (l3 == cpu->cd.DYNTRANS_ARCH.l3_64_dummy) {
@@ -1714,14 +1702,12 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 				    struct DYNTRANS_L3_64_TABLE));
 			}
 			if (l3->refcount != 0) {
-				fatal("Huh? l3 Refcount problem.\n");
-				exit(1);
+				fatal_error(SUBSYS_CPU, "cpu", "Huh? l3 Refcount problem.\n");
 			}
 			l2->refcount ++;
 		}
 		if (l3 == cpu->cd.DYNTRANS_ARCH.l3_64_dummy) {
-			fatal("INTERNAL ERROR L3 reuse\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR L3 reuse\n");
 		}
 
 		l3->host_load[x3] = host_page;
@@ -1739,8 +1725,7 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 		if (l3->vaddr_to_tlbindex[i])
 			n++;
 	if (n != l3->refcount) {
-		printf("X: %i in use, but refcount = %i!\n", n, l3->refcount);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "dyntrans", "X: %i in use, but refcount = %i!\n", n, l3->refcount);
 	}
 
 	n = 0;
@@ -1748,8 +1733,7 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 		if (l3->host_load[i] != NULL)
 			n++;
 	if (n != l3->refcount) {
-		printf("XHL: %i in use, but refcount = %i!\n", n, l3->refcount);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "dyntrans", "XHL: %i in use, but refcount = %i!\n", n, l3->refcount);
 	}
 }
 #endif
@@ -1820,8 +1804,7 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 		if (l3->vaddr_to_tlbindex[i])
 			n++;
 	if (n != l3->refcount) {
-		printf("Y: %i in use, but refcount = %i!\n", n, l3->refcount);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "dyntrans", "Y: %i in use, but refcount = %i!\n", n, l3->refcount);
 	}
 
 	n = 0;
@@ -1831,9 +1814,7 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 	if (n != l3->refcount) {
 		printf("YHL: %i in use, but refcount = %i!\n", n, l3->refcount);
 		printf("Entry r = %i\n", r);
-		printf("Valid = %i\n",
-cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "dyntrans", "Valid = %i\n", cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid);
 	}
 }
 #endif
@@ -1868,17 +1849,17 @@ cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid);
 					quiet_mode = tmp_old_quiet_mode;
 				}
 #ifdef MODE32
-				fatal("BREAKPOINT: pc = 0x%" PRIx32"\n(The "
-				    "instruction has not yet executed.)\n",
+				fatal_error(SUBSYS_CPU, "cpu", "BREAKPOINT: pc = 0x%" PRIx32"\n(The "
+				    "instruction has not yet executed.)",
 				    (uint32_t)cpu->pc);
 #else
-				fatal("BREAKPOINT: pc = 0x%" PRIx64"\n(The "
-				    "instruction has not yet executed.)\n",
+				fatal_error(SUBSYS_CPU, "cpu", "BREAKPOINT: pc = 0x%" PRIx64"\n(The "
+				    "instruction has not yet executed.)",
 				    (uint64_t)curpc);
 #endif
 #ifdef DYNTRANS_DELAYSLOT
 				if (cpu->delay_slot != NOT_DELAYED)
-					fatal("ERROR! Breakpoint in a delay"
+					fatal_error(SUBSYS_CPU, "cpu", "ERROR! Breakpoint in a delay"
 					    " slot! Not yet supported.\n");
 #endif
 				single_step_breakpoint = 1;
@@ -1949,15 +1930,15 @@ cpu->cd.DYNTRANS_ARCH.vph_tlb_entry[r].valid);
 
 	/*  An additional check, to catch some bugs:  */
 	if (ic->f == TO_BE_TRANSLATED) {
-		fatal("INTERNAL ERROR: ic->f not set!\n");
+		fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR: ic->f not set!\n");
 		goto bad;
 	}
 	if (ic->f == NULL) {
 #ifdef DYNTRANS_M88K
-		fatal("INTERNAL ERROR: ic->f == NULL! (iword 0x%08x at 0x%08x)\n",
+		fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR: ic->f == NULL! (iword 0x%08x at 0x%08x)",
 		    (int) iword, (int) addr);
 #else
-		fatal("INTERNAL ERROR: ic->f == NULL!\n");
+		fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR: ic->f == NULL!\n");
 #endif
 		goto bad;
 	}

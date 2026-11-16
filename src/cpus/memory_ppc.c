@@ -46,12 +46,10 @@ int ppc_bat(struct cpu *cpu, uint64_t vaddr, uint64_t *return_paddr, int flags,
 		istart = 4;
 
 	if (cpu->cd.ppc.bits != 32) {
-		fatal("TODO: ppc_bat() for non-32-bit\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ppc_bat() for non-32-bit\n");
 	}
 	if (cpu->cd.ppc.cpu_type.flags & PPC_601) {
-		fatal("TODO: ppc_bat() for PPC 601\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ppc_bat() for PPC 601\n");
 	}
 
 	/*  Scan either the 4 instruction BATs or the 4 data BATs:  */
@@ -215,7 +213,7 @@ static int ppc_vtp32(struct cpu *cpu, uint32_t vaddr, uint64_t *return_paddr,
 int ppc_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 	uint64_t *return_paddr, int flags)
 {
-	int instr = flags & FLAG_INSTR, res = 0, match, user;
+	int instr = flags & FLAG_INSTR, res = 0, match = 0, user;
 	int writeflag = flags & FLAG_WRITEFLAG? 1 : 0;
 	uint64_t msr;
 
@@ -231,8 +229,7 @@ int ppc_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 	}
 
 	if (cpu->cd.ppc.cpu_type.flags & PPC_601) {
-		fatal("ppc_translate_v2p(): TODO: 601\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ppc_translate_v2p(): TODO: 601\n");
 	}
 
 	/*  Try the BATs first:  */
@@ -241,8 +238,7 @@ int ppc_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 		if (res > 0)
 			return res;
 		if (res == 0) {
-			fatal("[ TODO: BAT exception ]\n");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: BAT exception ]\n");
 		}
 	}
 
@@ -254,8 +250,7 @@ int ppc_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 			return res;
 	} else {
 		/*  htaborg = sdr1 & 0xfffffffffffc0000ULL;  */
-		fatal("TODO: ppc 64-bit translation\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ppc 64-bit translation\n");
 	}
 
 
@@ -270,8 +265,8 @@ int ppc_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 		return 0;
 
 	if (!quiet_mode)
-		fatal("[ memory_ppc: exception! vaddr=0x%" PRIx64" pc=0x%" PRIx64
-		    " instr=%i user=%i wf=%i ]\n", (uint64_t) vaddr,
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ memory_ppc: exception! vaddr=0x%" PRIx64" pc=0x%" PRIx64
+		    " instr=%i user=%i wf=%i ]", (uint64_t) vaddr,
 		    (uint64_t) cpu->pc, instr, user, writeflag);
 
 	if (cpu->cd.ppc.cpu_type.flags & PPC_603) {

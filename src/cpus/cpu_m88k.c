@@ -729,7 +729,7 @@ void m88k_exception(struct cpu *cpu, int vector, int is_trap)
 		 */
 		if (!is_trap) {
 			vector = M88K_EXCEPTION_ERROR;
-			fatal("[ SFRZ already set in PSR => ERROR ]\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ SFRZ already set in PSR => ERROR ]\n");
 		}
 
 		update_shadow_regs = false;
@@ -799,7 +799,7 @@ void m88k_exception(struct cpu *cpu, int vector, int is_trap)
 		switch (vector) {
 
 		case M88K_EXCEPTION_RESET:
-			fatal("[ m88k_exception: reset ]\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ m88k_exception: reset ]\n");
 			for (int j = 0; j < cpu->machine->ncpus; ++j)
 				cpu->machine->cpus[j]->running = false;
 			break;

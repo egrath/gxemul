@@ -97,8 +97,7 @@ int sh_cpu_new(struct cpu *cpu, struct memory *mem, struct machine *machine,
 	cpu->is_32bit = cpu->cd.sh.cpu_type.bits == 32;
 
 	if (!cpu->is_32bit) {
-		fatal("SH64 emulation not implemented. Sorry.\n");
-		exit(1);
+		fatal_error(SUBSYS_CPU, "cpu", "SH64 emulation not implemented. Sorry.\n");
 	}
 
 	cpu->instruction_has_delayslot = sh_cpu_instruction_has_delayslot;
@@ -309,8 +308,7 @@ void sh_cpu_interrupt_assert(struct interrupt *interrupt)
 
 	if (prio == 0) {
 		/*  Interrupt not implemented? Hm.  */
-		fatal("[ SH interrupt 0x%x, prio 0 (?), aborting ]\n", irq_nr);
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ SH interrupt 0x%x, prio 0 (?), aborting ]", irq_nr);
 	}
 
 	if (cpu->cd.sh.int_to_assert == 0 || prio > cpu->cd.sh.int_level) {
@@ -642,7 +640,7 @@ void sh_exception(struct cpu *cpu, int expevt, int intevt, uint32_t vaddr)
 	}
 
 	if (cpu->cd.sh.sr & SH_SR_BL) {
-		fatal("[ sh_exception(): BL bit already set. ]\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ sh_exception(): BL bit already set. ]\n");
 
 		/*  This is actually OK in two cases: a User Break,
 		    or on NMI interrupts if a special flag is set?  */
@@ -733,9 +731,8 @@ void sh_exception(struct cpu *cpu, int expevt, int intevt, uint32_t vaddr)
 		 *  these are not very common.
 		 */
 #if 1
-		printf("\nRESERVED SuperH instruction at spc=%08" PRIx32"\n",
+		fatal_error(SUBSYS_CPU, "sh", "RESERVED SuperH instruction at spc=%08" PRIx32,
 		    cpu->cd.sh.spc);
-		exit(1);
 #else
 		break;
 #endif
@@ -743,9 +740,8 @@ void sh_exception(struct cpu *cpu, int expevt, int intevt, uint32_t vaddr)
 	case EXPEVT_FPU_DISABLE:
 		break;
 
-	default:fatal("sh_exception(): exception 0x%x is not yet "
-		    "implemented.\n", expevt);
-		exit(1);
+	default:fatal_error(SUBSYS_CPU, "cpu", "sh_exception(): exception 0x%x is not yet "
+		    "implemented.", expevt);
 	}
 
 	sh_pc_to_pointers(cpu);

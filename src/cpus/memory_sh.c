@@ -80,11 +80,11 @@ static int translate_via_mmu(struct cpu *cpu, uint32_t vaddr,
 		urc = (cpu->cd.sh.mmucr & SH4_MMUCR_URC_MASK) >>
 		    SH4_MMUCR_URC_SHIFT;
 
-		/*  fatal("urc = %i  ==>  ", urc);  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "urc = %i  ==>  ", urc);  */
 		urc ++;
 		if (urc >= SH_N_UTLB_ENTRIES || (urb > 0 && urc == urb))
 			urc = 0;
-		/*  fatal("%i\n", urc);  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "%i", urc);  */
 
 		cpu->cd.sh.mmucr &= ~SH4_MMUCR_URC_MASK;
 		cpu->cd.sh.mmucr |= (urc << SH4_MMUCR_URC_SHIFT);
@@ -293,8 +293,7 @@ int sh_translate_v2p(struct cpu *cpu, uint64_t vaddr64, uint64_t *return_paddr,
 	}
 
 	if (flags & FLAG_INSTR) {
-		fatal("TODO: instr at 0x%08" PRIx32"\n", (uint32_t)vaddr);
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: instr at 0x%08" PRIx32"", (uint32_t)vaddr);
 	}
 
 	/*  P4: Special registers mapped at 0xf0000000 .. 0xffffffff:  */
@@ -312,8 +311,7 @@ int sh_translate_v2p(struct cpu *cpu, uint64_t vaddr64, uint64_t *return_paddr,
 
 	/*  The ugly 'if' is just here to fool Compaq CC.  */
 	if (!(flags & FLAG_NOEXCEPTIONS)) {
-		fatal("Unimplemented SH vaddr 0x%08" PRIx32"\n", vaddr);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "cpu", "Unimplemented SH vaddr 0x%08" PRIx32"", vaddr);
 	}
 
 	return 0;

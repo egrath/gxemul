@@ -299,9 +299,8 @@ static void initialize_cop0_config(struct cpu *cpu, struct mips_coproc *c)
 						(TODO)  */
 		    ;
 		break;
-	default:fatal("Internal error: No initialization code for"
+	default:fatal_error(SUBSYS_CPU, "cpu", "Internal error: No initialization code for"
 		    " config0? cpu rev = 0x%x", cpu->cd.mips.cpu_type.rev);
-		exit(1);
 	}
 }
 
@@ -442,17 +441,15 @@ void mips_coproc_tlb_set_entry(struct cpu *cpu, int entrynr, int size,
 	int cachealgo0, int cachealgo1)
 {
 	if (entrynr < 0 || entrynr >= cpu->cd.mips.coproc[0]->nr_of_tlbs) {
-		printf("mips_coproc_tlb_set_entry(): invalid entry nr: %i\n",
+		fatal_error(SUBSYS_CPU, "mips_coproc", "mips_coproc_tlb_set_entry(): invalid entry nr: %i",
 		    entrynr);
-		exit(1);
 	}
 
 	switch (cpu->cd.mips.cpu_type.mmu_model) {
 	case MMU3K:
 		if (size != 4096) {
-			printf("mips_coproc_tlb_set_entry(): invalid pagesize "
-			    "(%i) for MMU3K\n", size);
-			exit(1);
+			fatal_error(SUBSYS_CPU, "mips_coproc", "mips_coproc_tlb_set_entry(): invalid pagesize "
+			    "(%i) for MMU3K", size);
 		}
 		cpu->cd.mips.coproc[0]->tlbs[entrynr].hi =
 		    (vaddr & R2K3K_ENTRYHI_VPN_MASK) |
@@ -605,9 +602,8 @@ void coproc_register_read(struct cpu *cpu,
 			switch (select) {
 			case 1:	*ptr = cpu->cd.mips.cop0_config_select1;
 				break;
-			default:fatal("coproc_register_read(): unimplemented"
-				    " config register select %i\n", select);
-				exit(1);
+			default:fatal_error(SUBSYS_CPU, "cpu", "coproc_register_read(): unimplemented"
+				    " config register select %i", select);
 			}
 			return;
 		}
@@ -633,8 +629,8 @@ void coproc_register_read(struct cpu *cpu,
 	if (cp->coproc_nr==1)	unimpl = 0;
 
 	if (unimpl) {
-		fatal("cpu%i: warning: read from unimplemented coproc%i"
-		    " register %i (%s)\n", cpu->cpu_id, cp->coproc_nr, reg_nr,
+		fatal_error(SUBSYS_CPU, "cpu", "cpu%i: warning: read from unimplemented coproc%i"
+		    " register %i (%s)", cpu->cpu_id, cp->coproc_nr, reg_nr,
 		    cp->coproc_nr==0? cop0_names[reg_nr] : "?");
 
 		mips_cpu_exception(cpu, EXCEPTION_CPU, 0, 0,
@@ -677,8 +673,8 @@ void coproc_register_write(struct cpu *cpu,
 				/*  char *symbol;
 				    uint64_t offset;
 				    symbol = get_symbol_name(cpu->pc, &offset);
-				    fatal("YO! pc = 0x%08llx <%s> "
-				    "lo=%016llx\n", (long long)
+				    fatal_error(SUBSYS_CPU, "cpu", "YO! pc = 0x%08llx <%s> "
+				    "lo=%016llx", (long long)
 				    cpu->pc, symbol? symbol :
 				    "no symbol", (long long)tmp); */
 				tmp &= (R2K3K_ENTRYLO_PFN_MASK |
@@ -753,8 +749,8 @@ void coproc_register_write(struct cpu *cpu,
 				    tmp2 != 0xfff &&
 				    tmp2 != 0x3fff &&
 				    tmp2 != 0xffff)
-					fatal("[ cpu%i: trying to write an invalid"
-					    " pagemask 0x%08lx to COP0_PAGEMASK ]\n",
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ cpu%i: trying to write an invalid"
+					    " pagemask 0x%08lx to COP0_PAGEMASK ]",
 					    cpu->cpu_id, (long)tmp);
 				// Actually just 0xfff << shift for R10000.
 				if (cpu->cd.mips.cpu_type.mmu_model == MMU10K) {
@@ -767,8 +763,8 @@ void coproc_register_write(struct cpu *cpu,
 			break;
 		case COP0_WIRED:
 			if (cpu->cd.mips.cpu_type.mmu_model == MMU3K) {
-				fatal("[ cpu%i: r2k/r3k wired register must "
-				    "always be 8 ]\n", cpu->cpu_id);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ cpu%i: r2k/r3k wired register must "
+				    "always be 8 ]", cpu->cpu_id);
 				tmp = 8;
 			}
 			cp->reg[COP0_RANDOM] = cp->nr_of_tlbs-1;
@@ -777,7 +773,7 @@ void coproc_register_write(struct cpu *cpu,
 			break;
 		case COP0_COUNT:
 			if (tmp != (uint64_t)(int64_t)(int32_t)tmp)
-				fatal("[ WARNING: trying to write a 64-bit value"
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING: trying to write a 64-bit value"
 				    " to the COUNT register! ]\n");
 			tmp = (int64_t)(int32_t)tmp;
 			unimpl = 0;
@@ -817,7 +813,7 @@ void coproc_register_write(struct cpu *cpu,
 			cp->reg[COP0_CAUSE] &= ~0x8000;
 
 			if (tmp != (uint64_t)(int64_t)(int32_t)tmp)
-				fatal("[ WARNING: trying to write a 64-bit value"
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING: trying to write a 64-bit value"
 				    " to the COMPARE register! ]\n");
 
 			tmp = (int64_t)(int32_t)tmp;
@@ -856,8 +852,8 @@ void coproc_register_write(struct cpu *cpu,
 				   uint64_t offset;
 				   symbol = get_symbol_name(cpu->pc,
 				    &offset);
-				   fatal("YO! pc = 0x%08llx <%s> "
-				    "hi=%016llx\n", (long long)cpu->pc,
+				   fatal_error(SUBSYS_CPU, "cpu", "YO! pc = 0x%08llx <%s> "
+				    "hi=%016llx", (long long)cpu->pc,
 				    symbol? symbol :
 				    "no symbol", (long long)tmp);  */
 				tmp &= ~0x3f;
@@ -886,20 +882,19 @@ void coproc_register_write(struct cpu *cpu,
 				switch (select) {
 				case 1:	cpu->cd.mips.cop0_config_select1 = tmp;
 					break;
-				default:fatal("[ coproc_register_write(): unimpl"
+				default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ coproc_register_write(): unimpl"
 					    "emented config register select "
-					    "%i ]\n", select);
-					exit(1);
+					    "%i ]", select);
 				}
 				return;
 			}
 
-			/*  fatal("COP0_CONFIG: modifying K0 bits: "
+			/*  fatal_error(SUBSYS_CPU, "cpu", "COP0_CONFIG: modifying K0 bits: "
 			    "0x%08x => ", cp->reg[reg_nr]);  */
 			tmp = *ptr;
 			tmp &= 0x3;	/*  only bits 2..0 can be written  */
 			cp->reg[reg_nr] &= ~(0x3);  cp->reg[reg_nr] |= tmp;
-			/*  fatal("0x%08x\n", cp->reg[reg_nr]);  */
+			/*  fatal_error(SUBSYS_CPU, "cpu", "0x%08x", cp->reg[reg_nr]);  */
 			return;
 		case COP0_STATUS:
 			oldmode = cp->reg[COP0_STATUS];
@@ -985,8 +980,8 @@ void coproc_register_write(struct cpu *cpu,
 	}
 
 	if (unimpl) {
-		fatal("[ cpu%i: warning: write to unimplemented coproc%i "
-		    "register %i (%s), data = 0x%016llx ]\n", cpu->cpu_id,
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ cpu%i: warning: write to unimplemented coproc%i "
+		    "register %i (%s), data = 0x%016llx ]", cpu->cpu_id,
 		    cp->coproc_nr, reg_nr, cp->coproc_nr==0?
 		    cop0_names[reg_nr] : "?", (long long)tmp);
 
@@ -996,8 +991,8 @@ void coproc_register_write(struct cpu *cpu,
 	}
 
 	if (readonly) {
-		fatal("[ cpu%i: warning: write to READONLY coproc%i register "
-		    "%i ignored ]\n", cpu->cpu_id, cp->coproc_nr, reg_nr);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ cpu%i: warning: write to READONLY coproc%i register "
+		    "%i ignored ]", cpu->cpu_id, cp->coproc_nr, reg_nr);
 		return;
 	}
 
@@ -1458,12 +1453,12 @@ case 15:return !(float_value[0].f > float_value[1].f);	/*  Not greater than  */
 #endif
 
 		default:
-			fatal("fpu_op(): unimplemented condition "
-			    "code %i. see cpu_mips_coproc.c\n", cond);
+			fatal_error(SUBSYS_CPU, "cpu", "fpu_op(): unimplemented condition "
+			    "code %i. see cpu_mips_coproc.c", cond);
 		}
 		break;
 	default:
-		fatal("fpu_op(): unimplemented op %i\n", op);
+		fatal_error(SUBSYS_CPU, "cpu", "fpu_op(): unimplemented op %i", op);
 	}
 
 	return 0;
@@ -1514,10 +1509,9 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 		if (unassemble_only)
 			return 1;
 
-		fatal("INTERNAL ERROR: MIPS coprocessor branches should not"
+		fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR: MIPS coprocessor branches should not"
 		    " be implemented in cpu_mips_coproc.c, but in"
 		    " cpu_mips_instr.c!\n");
-		exit(1);
 	}
 
 	/*  add.fmt: Floating-point add  */
@@ -1731,8 +1725,8 @@ void coproc_tlbpr(struct cpu *cpu, int readflag)
 			    R2K3K_INDEX_SHIFT;
 			if (i >= cp->nr_of_tlbs) {
 				/*  TODO:  exception?  */
-				fatal("[ warning: tlbr from index %i (too "
-				    "high) ]\n", i);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ warning: tlbr from index %i (too "
+				    "high) ]", i);
 				return;
 			}
 
@@ -1743,8 +1737,8 @@ void coproc_tlbpr(struct cpu *cpu, int readflag)
 			i = cp->reg[COP0_INDEX] & INDEX_MASK;
 			if (i >= cp->nr_of_tlbs) {
 				/*  TODO:  exception?  */
-				fatal("[ warning: tlbr from index %i (too "
-				    "high) ]\n", i);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ warning: tlbr from index %i (too "
+				    "high) ]", i);
 				return;
 			}
 
@@ -1865,7 +1859,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 	}
 
 	if (index >= cp->nr_of_tlbs) {
-		fatal("warning: tlb index %i too high (max is %i)\n",
+		fatal_error(SUBSYS_CPU, "cpu", "warning: tlb index %i too high (max is %i)",
 		    index, cp->nr_of_tlbs - 1);
 		/*  TODO:  cause an exception?  */
 		return;
@@ -1874,24 +1868,24 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 
 #if 0
 	/*  Debug dump of the previous entry at that index:  */
-	fatal("{ old TLB entry at index %02x:", index);
+	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ old TLB entry at index %02x:", index);
 	if (cpu->cd.mips.cpu_type.mmu_model == MMU3K) {
-		fatal(" hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
-		fatal(" lo=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
+		fatal_error(SUBSYS_CPU, "cpu", " hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
+		fatal_error(SUBSYS_CPU, "cpu", " lo=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
 	} else {
 		if (cpu->is_32bit) {
-			fatal(" mask=%08" PRIx32,(uint32_t)cp->tlbs[index].mask);
-			fatal(" hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
-			fatal(" lo0=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
-			fatal(" lo1=%08" PRIx32, (uint32_t)cp->tlbs[index].lo1);
+			fatal_error(SUBSYS_CPU, "cpu", " mask=%08" PRIx32,(uint32_t)cp->tlbs[index].mask);
+			fatal_error(SUBSYS_CPU, "cpu", " hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
+			fatal_error(SUBSYS_CPU, "cpu", " lo0=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
+			fatal_error(SUBSYS_CPU, "cpu", " lo1=%08" PRIx32, (uint32_t)cp->tlbs[index].lo1);
 		} else {
-			fatal(" mask=%016" PRIx64, cp->tlbs[index].mask);
-			fatal(" hi=%016" PRIx64, cp->tlbs[index].hi);
-			fatal(" lo0=%016" PRIx64, cp->tlbs[index].lo0);
-			fatal(" lo1=%016" PRIx64, cp->tlbs[index].lo1);
+			fatal_error(SUBSYS_CPU, "cpu", " mask=%016" PRIx64, cp->tlbs[index].mask);
+			fatal_error(SUBSYS_CPU, "cpu", " hi=%016" PRIx64, cp->tlbs[index].hi);
+			fatal_error(SUBSYS_CPU, "cpu", " lo0=%016" PRIx64, cp->tlbs[index].lo0);
+			fatal_error(SUBSYS_CPU, "cpu", " lo1=%016" PRIx64, cp->tlbs[index].lo1);
 		}
 	}
-	fatal(" }\n");
+	fatal_error(SUBSYS_CPU, "cpu", " }\n");
 #endif
 
 	/*
@@ -1943,8 +1937,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 			if (dpmask == 0x7ff) {
 				if (cp->tlbs[index].lo0 & ENTRYLO_V ||
 				    cp->tlbs[index].lo1 & ENTRYLO_V) {
-					fatal("1KB pages don't work with dyntrans.\n");
-					exit(1);
+					fatal_error(SUBSYS_CPU, "cpu", "1KB pages don't work with dyntrans.\n");
 				}
 			}
 
@@ -2000,9 +1993,9 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 			    (ENTRYHI_R_MASK | ENTRYHI_VPN2_MASK_R10K);
 			if (vaddr1 == vaddr2 && ((cp->tlbs[i].lo0 &
 			    ENTRYLO_V) || (cp->tlbs[i].lo1 & ENTRYLO_V)))
-				fatal("\n[ WARNING! tlbw%s to index 0x%02x "
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "\n[ WARNING! tlbw%s to index 0x%02x "
 				    "vaddr=0x%llx (asid 0x%02x) is already in"
-				    " the TLB (entry 0x%02x) ! ]\n\n",
+				    " the TLB (entry 0x%02x) ! ]\n",
 				    randomflag? "r" : "i", index,
 				    (long long)vaddr1, asid, i);
 		}
@@ -2032,11 +2025,10 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 		cpu->cd.mips.last_written_tlb_index = index;
 
 		if (cp->reg[COP0_STATUS] & MIPS1_ISOL_CACHES) {
-			fatal("Wow! Interesting case; tlbw* while caches"
-			    " are isolated. TODO\n");
+			fatal_error(SUBSYS_CPU, "cpu", "Wow! Interesting case; tlbw* while caches"
+			    " are isolated. TODO");
 			/*  Don't update the translation table in this
 			    case...  */
-			exit(1);
 		}
 
 		/*  If we have a memblock (host page) for the physical
@@ -2070,8 +2062,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 		if (dpmask == 0x7ff) {
 			if (cp->tlbs[index].lo0 & ENTRYLO_V ||
 			    cp->tlbs[index].lo1 & ENTRYLO_V) {
-				fatal("1KB pages don't work with dyntrans.\n");
-				exit(1);
+				fatal_error(SUBSYS_CPU, "cpu", "1KB pages don't work with dyntrans.\n");
 			}
 		}
 
@@ -2210,8 +2201,8 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 			    cpnr, (int)function);
 			return;
 		}
-		fatal("[ pc=0x%016llx cop%i\t0x%08x (coprocessor not "
-		    "available)\n", (long long)cpu->pc, cpnr, (int)function);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ pc=0x%016llx cop%i\t0x%08x (coprocessor not "
+		    "available)", (long long)cpu->pc, cpnr, (int)function);
 		return;
 	}
 
@@ -2309,13 +2300,13 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 
 			switch (cpnr) {
 			case 0:	/*  System coprocessor  */
-				fatal("[ warning: unimplemented ctc%i, "
-				    "0x%08x -> ctl reg %i ]\n", cpnr,
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ warning: unimplemented ctc%i, "
+				    "0x%08x -> ctl reg %i ]", cpnr,
 				    (int)cpu->cd.mips.gpr[rt], fs);
 				break;
 			case 1:	/*  FPU  */
 				if (fs == 0)
-					fatal("[ Attempt to write to FPU "
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Attempt to write to FPU "
 					    "control register 0 (?) ]\n");
 				else {
 					uint64_t tmp = cpu->cd.mips.gpr[rt];
@@ -2394,9 +2385,8 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 	/*  TLB operations and other things:  */
 	if (cp->coproc_nr == 0) {
 		if (!unassemble_only) {
-			fatal("FATAL INTERNAL ERROR: Should be implemented"
+			fatal_error(SUBSYS_CPU, "cpu", "FATAL INTERNAL ERROR: Should be implemented"
 			    " with dyntrans instead.\n");
-			exit(1);
 		}
 
 		switch (co_bit) {
@@ -2492,8 +2482,8 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 		return;
 	}
 
-	fatal("cpu%i: UNIMPLEMENTED coproc%i function %08" PRIx32" "
-	    "(pc = %016" PRIx64")\n", cpu->cpu_id, cp->coproc_nr,
+	fatal_error(SUBSYS_CPU, "cpu", "cpu%i: UNIMPLEMENTED coproc%i function %08" PRIx32" "
+	    "(pc = %016" PRIx64")", cpu->cpu_id, cp->coproc_nr,
 	    (uint32_t)function, cpu->pc);
 
 	mips_cpu_exception(cpu, EXCEPTION_CPU, 0, 0, cp->coproc_nr, 0, 0, 0);

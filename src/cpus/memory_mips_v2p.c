@@ -81,7 +81,7 @@ int TRANSLATE_ADDRESS(struct cpu *cpu, uint64_t vaddr,
 #endif
 	uint64_t xuseg_top = ENTRYHI_VPN2_MASK | 0x1fffULL;
 #endif
-	int x_64;	/*  non-zero for 64-bit address space accesses  */
+	int x_64 = 0;	/*  non-zero for 64-bit address space accesses  */
 	int pageshift, n_tlbs;
 	uint32_t pmask;
 #ifdef V2P_MMU4100
@@ -179,9 +179,8 @@ int TRANSLATE_ADDRESS(struct cpu *cpu, uint64_t vaddr,
 		/*  FALLTHROUGH, since supervisor address spaces are not
 		    really implemented yet.  */
 		// fall through
-	default:fatal("memory_mips_v2p.c: ksu=%i not yet implemented yet\n",
+	default:fatal_error(SUBSYS_CPU, "cpu", "memory_mips_v2p.c: ksu=%i not yet implemented yet",
 		    ksu);
-		exit(1);
 	}
 
 	n_tlbs = cpu->cd.mips.cpu_type.nr_of_tlb_entries;
@@ -295,8 +294,7 @@ int TRANSLATE_ADDRESS(struct cpu *cpu, uint64_t vaddr,
 				case 0x07fffff:	pageshift = 22; break;
 				case 0x1ffffff:	pageshift = 24; break;
 				case 0x7ffffff:	pageshift = 26; break;
-				default:fatal("pmask=%08" PRIx32"\n", pmask);
-					exit(1);
+				default:fatal_error(SUBSYS_CPU, "cpu", "pmask=%08" PRIx32"", pmask);
 				}
 
 				entry_vpn2 = (cached_hi &

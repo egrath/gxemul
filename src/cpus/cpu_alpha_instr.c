@@ -709,27 +709,27 @@ void alpha_exception(struct cpu *cpu, int type)
 
 	switch (type) {
 	case ALPHA_EXC_ARITH:
-		fatal("[ Alpha: arithmetic trap, pc 0x%016" PRIx64 ", exc_sum "
-		    "0x%02" PRIx64 ", exc_mask 0x%016" PRIx64 " ]\n",
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: arithmetic trap, pc 0x%016" PRIx64 ", exc_sum "
+		    "0x%02" PRIx64 ", exc_mask 0x%016" PRIx64 " ]",
 		    (uint64_t) cpu->pc, (uint64_t) cpu->cd.alpha.exc_sum,
 		    (uint64_t) cpu->cd.alpha.exc_mask);
 		break;
 	case ALPHA_EXC_OPCDEC:
-		fatal("[ Alpha: reserved instruction, pc 0x%016" PRIx64 " ]\n",
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: reserved instruction, pc 0x%016" PRIx64 " ]",
 		    (uint64_t) cpu->pc);
 		break;
 	case ALPHA_EXC_UNALIGN:
-		fatal("[ Alpha: unaligned access, pc 0x%016" PRIx64 ", va "
-		    "0x%016" PRIx64 ", opcode 0x%02x, reg %i ]\n",
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: unaligned access, pc 0x%016" PRIx64 ", va "
+		    "0x%016" PRIx64 ", opcode 0x%02x, reg %i ]",
 		    (uint64_t) cpu->pc, (uint64_t) cpu->cd.alpha.exc_va,
 		    cpu->cd.alpha.exc_opcode, cpu->cd.alpha.exc_reg);
 		break;
 	case ALPHA_EXC_FEN:
-		fatal("[ Alpha: floating point disabled, pc 0x%016" PRIx64
-		    " ]\n", (uint64_t) cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: floating point disabled, pc 0x%016" PRIx64
+		    " ]", (uint64_t) cpu->pc);
 		break;
 	default:
-		fatal("[ Alpha: exception %i, pc 0x%016" PRIx64 " ]\n",
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: exception %i, pc 0x%016" PRIx64 " ]",
 		    type, (uint64_t) cpu->pc);
 	}
 
@@ -1121,7 +1121,7 @@ static int fp_mem(struct cpu *cpu, struct alpha_instr_call *ic,
 			alpha_pc_to_pointers(cpu);
 			return 0;
 		}
-		fatal("[ Alpha: fp load/store failed: TODO ]\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: fp load/store failed: TODO ]\n");
 		cpu->running = 0;
 		cpu->cd.alpha.next_ic = &nothing_call;
 		return 0;
@@ -1271,13 +1271,13 @@ X(to_be_translated)
 	}
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT!\n");  */
 		memcpy(ib, page + (addr & 8191), sizeof(ib));
 	} else {
-		/*  fatal("TRANSLATION MISS!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS!\n");  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, &ib[0],
 		    sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("to_be_translated(): read failed: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "to_be_translated(): read failed: TODO\n");
 			goto bad;
 		}
 	}
@@ -1642,7 +1642,7 @@ X(to_be_translated)
 			break;
 		}
 		if (!cpu->translation_readahead)
-			fatal("[ Alpha: unimplemented opcode 0x%02x ]\n",
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: unimplemented opcode 0x%02x ]",
 			    opcode);
 		goto bad;
 	case 0x18:

@@ -117,10 +117,9 @@ int cop0_availability_check(struct cpu *cpu, struct mips_instr_call *ic)
  */
 X(invalid)
 {
-	fatal("FATAL ERROR: An internal error occured in the MIPS"
+	fatal_error(SUBSYS_CPU, "cpu", "FATAL ERROR: An internal error occured in the MIPS"
 	    " dyntrans code. Please contact the author with detailed"
 	    " repro steps on how to trigger this bug.\n");
-	exit(1);
 }
 
 
@@ -2173,7 +2172,7 @@ X(promemul)
 {
 	/*  Synchronize the PC and call the correct emulation layer:  */
 	MODE_int_t old_pc;
-	int res, low_pc = ((size_t)ic - (size_t)cpu->cd.mips.cur_ic_page)
+	int res = 0, low_pc = ((size_t)ic - (size_t)cpu->cd.mips.cur_ic_page)
 	    / sizeof(struct mips_instr_call);
 	cpu->pc &= ~((MIPS_IC_ENTRIES_PER_PAGE-1)<< MIPS_INSTR_ALIGNMENT_SHIFT);
 	cpu->pc += (low_pc << MIPS_INSTR_ALIGNMENT_SHIFT);
@@ -2193,8 +2192,9 @@ X(promemul)
 	case MACHINE_EVBMIPS:
 		res = yamon_emul(cpu);
 		break;
-	default:fatal("TODO: Unimplemented machine type for PROM magic trap\n");
-		exit(1);
+	default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: Unimplemented machine type for PROM magic trap");
+		res = 0;
+		break;
 	}
 
 	if (res) {
@@ -2470,8 +2470,7 @@ X(ll)
 	cpu->pc += (low_pc << MIPS_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		fatal("TODO: load linked unaligned access: exception\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: load linked unaligned access: exception\n");
 	}
 
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, word,
@@ -2508,8 +2507,7 @@ X(lld)
 	cpu->pc += (low_pc << MIPS_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		fatal("TODO: load linked unaligned access: exception\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: load linked unaligned access: exception\n");
 	}
 
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, word,
@@ -2551,8 +2549,7 @@ X(sc)
 	cpu->pc += (low_pc << MIPS_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		fatal("TODO: sc unaligned access: exception\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: sc unaligned access: exception\n");
 	}
 
 	if (cpu->byte_order == EMUL_LITTLE_ENDIAN) {
@@ -2609,8 +2606,7 @@ X(scd)
 	cpu->pc += (low_pc << MIPS_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		fatal("TODO: sc unaligned access: exception\n");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: sc unaligned access: exception\n");
 	}
 
 	if (cpu->byte_order == EMUL_LITTLE_ENDIAN) {
@@ -3240,12 +3236,12 @@ X(end_of_page)
 	 *  Calling to_be_translated will translate one instruction manually,
 	 *  execute it, and then discard it.
 	 */
-	/*  fatal("[ end_of_page: delay slot across page boundary! ]\n");  */
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: delay slot across page boundary! ]\n");  */
 
 	instr(to_be_translated)(cpu, cpu->cd.mips.next_ic);
 
 	/*  The instruction in the delay slot has now executed.  */
-	/*  fatal("[ end_of_page: back from executing the delay slot, %i ]\n",
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: back from executing the delay slot, %i ]",
 	    cpu->delay_slot);  */
 
 	/*  Find the physpage etc of the instruction in the delay slot
@@ -3271,8 +3267,7 @@ X(end_of_page2)
 	if (cpu->delay_slot == NOT_DELAYED)
 		return;
 
-	fatal("end_of_page2: fatal error, we're in a delay slot\n");
-	exit(1);
+	fatal_error(SUBSYS_CPU, "cpu", "end_of_page2: fatal error, we're in a delay slot\n");
 }
 
 
@@ -3695,7 +3690,7 @@ X(to_be_translated)
 
 	/*  Special case for branch with delayslot on the next page:  */
 	if (cpu->delay_slot == TO_BE_DELAYED && low_pc == 0) {
-		/*  fatal("[ delay-slot translation across page "
+		/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ delay-slot translation across page "
 		    "boundary ]\n");  */
 		in_crosspage_delayslot = 1;
 	}
@@ -3725,13 +3720,13 @@ X(to_be_translated)
 #endif
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT!\n");  */
 		memcpy(ib, page + (addr & 0xffc), sizeof(ib));
 	} else {
-		/*  fatal("TRANSLATION MISS!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS!\n");  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, ib,
 		    sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("to_be_translated(): read failed: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "to_be_translated(): read failed: TODO\n");
 			goto bad;
 		}
 	}
@@ -3829,13 +3824,13 @@ X(to_be_translated)
 					static int warning_rotate = 0;
 					if (!warning_rotate &&
 					    !cpu->translation_readahead) {
-						fatal("[ WARNING! MIPS32/64 "
+						debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING! MIPS32/64 "
 						    "revision 2 rotate opcode"
 						    " used, but the %s process"
 						    "or does not implement "
 						    "such instructions. Only "
 						    "printing this "
-						    "warning once. ]\n",
+						    "warning once. ]",
 						    cpu->cd.mips.cpu_type.name);
 						warning_rotate = 1;
 					}
@@ -3994,7 +3989,7 @@ X(to_be_translated)
 				}
 				if (rd != MIPS_GPR_ZERO) {
 					if (!cpu->translation_readahead)
-						fatal("TODO: rd NON-zero\n");
+						debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: rd NON-zero\n");
 					goto bad;
 				}
 				/*  These instructions don't use rd.  */
@@ -4046,7 +4041,7 @@ X(to_be_translated)
 			}
 			if (cpu->delay_slot) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: branch in delay "
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: branch in delay "
 					    "slot? (1)\n");
 				goto bad;
 			}
@@ -4146,7 +4141,7 @@ X(to_be_translated)
 		}
 		if (cpu->delay_slot) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: branch in delay slot? (2)\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: branch in delay slot? (2)\n");
 			goto bad;
 		}
 		break;
@@ -4232,8 +4227,8 @@ X(to_be_translated)
 		ic->arg[1] = (addr & 0xffc) + 8;
 		if (cpu->delay_slot) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: branch in delay slot (=%i)? (3);"
-				    " addr=%016" PRIx64" iword=%08" PRIx32"\n",
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: branch in delay slot (=%i)? (3);"
+				    " addr=%016" PRIx64" iword=%08" PRIx32"",
 				    cpu->delay_slot, (uint64_t)addr, iword);
 			goto bad;
 		}
@@ -4273,7 +4268,7 @@ X(to_be_translated)
 					ic->f = instr(reserved);
 					if (!warned &&
 					    !cpu->translation_readahead) {
-						fatal("{ WARNING: Attempt to "
+						debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "{ WARNING: Attempt to "
 						    "execute the WAIT instruct"
 					            "ion, but the emulated CPU "
 						    "is neither RM52xx, nor "
@@ -4290,7 +4285,7 @@ X(to_be_translated)
 					ic->f = instr(reserved);
 					if (!warned &&
 					    !cpu->translation_readahead) {
-						fatal("{ WARNING: Attempt to "
+						debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "{ WARNING: Attempt to "
 						    "execute a R41xx instruct"
 					            "ion, but the emulated CPU "
 						    "doesn't support it! }\n");
@@ -4369,13 +4364,13 @@ X(to_be_translated)
 					static int warning_ei_di = 0;
 					if (!warning_ei_di &&
 					    !cpu->translation_readahead) {
-						fatal("[ WARNING! MIPS32/64 "
+						debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING! MIPS32/64 "
 						    "revision 2 di or ei opcode"
 						    " used, but the %s process"
 						    "or does not implement "
 						    "such instructions. Only "
 						    "printing this "
-						    "warning once. ]\n",
+						    "warning once. ]",
 						    cpu->cd.mips.cpu_type.name);
 						warning_ei_di = 1;
 					}
@@ -4390,7 +4385,7 @@ X(to_be_translated)
 				ic->arg[1] = iword & 0x20;
 			} else {
 				if (!cpu->translation_readahead)
-					fatal("Unimplemented COP0_MFMCz\n");
+					fatal_error(SUBSYS_CPU, "cpu", "Unimplemented COP0_MFMCz\n");
 				goto bad;
 			}
 			break;
@@ -4400,13 +4395,13 @@ X(to_be_translated)
 				ic->f = instr(nop);
 			} else {
 				if (!cpu->translation_readahead)
-					fatal("Unimplemented COP0_BCzc\n");
+					fatal_error(SUBSYS_CPU, "cpu", "Unimplemented COP0_BCzc\n");
 				goto bad;
 			}
 			break;
 		
 		default:if (!cpu->translation_readahead)
-				fatal("UNIMPLEMENTED cop0 (rs = %i)\n", rs);
+				fatal_error(SUBSYS_CPU, "cpu", "UNIMPLEMENTED cop0 (rs = %i)", rs);
 			goto bad;
 		}
 		break;
@@ -4434,16 +4429,16 @@ X(to_be_translated)
 			    MIPS_INSTR_ALIGNMENT_SHIFT) + (addr & 0xffc) + 4);
 			if (cpu->delay_slot) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: branch in delay slot 4\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: branch in delay slot 4\n");
 				goto bad;
 			}
 			if (cpu->cd.mips.cpu_type.isa_level <= 3 &&
 			    ic->arg[0] != 0) {
 				if (!cpu->translation_readahead)
-					fatal("Attempt to execute a non-cc-0 "
+					fatal_error(SUBSYS_CPU, "cpu", "Attempt to execute a non-cc-0 "
 					    "BC* instruction on an isa level "
 					    "%i cpu. TODO: How should this be "
-					    "handled?\n",
+					    "handled?",
 					    cpu->cd.mips.cpu_type.isa_level);
 				goto bad;
 			}
@@ -4470,7 +4465,7 @@ X(to_be_translated)
 			break;
 
 		default:if (!cpu->translation_readahead)
-			    fatal("COP1 floating point opcode = 0x%02x\n", rs);
+			    fatal_error(SUBSYS_CPU, "cpu", "COP1 floating point opcode = 0x%02x", rs);
 			goto bad;
 		}
 		break;
@@ -4484,7 +4479,7 @@ X(to_be_translated)
 			break;
 		}
 		if (!cpu->translation_readahead)
-			fatal("COP2 functionality not yet implemented\n");
+			fatal_error(SUBSYS_CPU, "cpu", "COP2 functionality not yet implemented\n");
 		goto bad;
 		break;
 
@@ -4503,7 +4498,7 @@ X(to_be_translated)
 			ic->f = instr(nop);
 		} else {
 			if (!cpu->translation_readahead)
-				fatal("COP3 iword=0x%08x\n", iword);
+				fatal_error(SUBSYS_CPU, "cpu", "COP3 iword=0x%08x", iword);
 			goto bad;
 		}
 		break;
@@ -4688,7 +4683,7 @@ X(to_be_translated)
 			}
 			if (cpu->delay_slot) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: branch in delay slot:5\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: branch in delay slot:5\n");
 				goto bad;
 			}
 			break;
@@ -4713,10 +4708,10 @@ X(to_be_translated)
 			if (cpu->cd.mips.cpu_type.isa_level < 32) {
 				static int warning = 0;
 				if (!warning && !cpu->translation_readahead) {
-					fatal("[ WARNING! Trap opcode used, but"
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING! Trap opcode used, but"
 					    " the %s processor does not implement "
 					    "such instructions. Only printing this "
-					    "warning once. ]\n",
+					    "warning once. ]",
 					    cpu->cd.mips.cpu_type.name);
 					warning = 1;
 				}
@@ -4725,7 +4720,7 @@ X(to_be_translated)
 			break;
 
 		default:if (!cpu->translation_readahead)
-				fatal("UNIMPLEMENTED regimm rt=%i\n", rt);
+				fatal_error(SUBSYS_CPU, "cpu", "UNIMPLEMENTED regimm rt=%i", rt);
 			goto bad;
 		}
 		break;
@@ -4802,7 +4797,7 @@ X(to_be_translated)
 		ic->arg[2] = (int32_t)imm;
 		if (!store && rt == MIPS_GPR_ZERO) {
 			if (!cpu->translation_readahead)
-				fatal("HM... unusual load linked\n");
+				fatal_error(SUBSYS_CPU, "cpu", "HM... unusual load linked\n");
 			goto bad;
 		}
 		break;
@@ -4873,7 +4868,7 @@ X(to_be_translated)
 			ic->f = instr(nop);
 		} else {
 			if (!cpu->translation_readahead)
-				fatal("TODO: lwc3 not implemented yet\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: lwc3 not implemented yet\n");
 			goto bad;
 		}
 		break;
@@ -4881,12 +4876,12 @@ X(to_be_translated)
 	case HI6_LQ_MDMX:
 		if (cpu->cd.mips.cpu_type.rev == MIPS_R5900) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: R5900 128-bit loads\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: R5900 128-bit loads\n");
 			goto bad;
 		}
 
 		if (!cpu->translation_readahead)
-			fatal("TODO: MDMX\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: MDMX\n");
 
 		goto bad;
 		/*  break  */
@@ -4894,7 +4889,7 @@ X(to_be_translated)
 	case HI6_SQ_SPECIAL3:
 		if (cpu->cd.mips.cpu_type.rev == MIPS_R5900) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: R5900 128-bit stores\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: R5900 128-bit stores\n");
 			goto bad;
 		}
 
@@ -4902,10 +4897,10 @@ X(to_be_translated)
 		    cpu->cd.mips.cpu_type.isa_revision < 2) {
 			static int warning = 0;
 			if (!warning && !cpu->translation_readahead) {
-				fatal("[ WARNING! SPECIAL3 opcode used, but"
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING! SPECIAL3 opcode used, but"
 				    " the %s processor does not implement "
 				    "such instructions. Only printing this "
-				    "warning once. ]\n",
+				    "warning once. ]",
 				    cpu->cd.mips.cpu_type.name);
 				warning = 1;
 			}
@@ -5007,8 +5002,8 @@ X(to_be_translated)
                                  break;
 
 			default:if (!cpu->translation_readahead)
-					fatal("unimplemented rdhwr "
-					    "register rd=%i\n", rd);
+					fatal_error(SUBSYS_CPU, "cpu", "unimplemented rdhwr "
+					    "register rd=%i", rd);
 				goto bad;
 			}
 			break;
@@ -5030,9 +5025,9 @@ X(to_be_translated)
 	if (x64) {
 		static int has_warned = 0;
 		if (!has_warned && !cpu->translation_readahead) {
-			fatal("[ WARNING/NOTE: attempt to execute a 64-bit"
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING/NOTE: attempt to execute a 64-bit"
 			    " instruction on an emulated 32-bit processor; "
-			    "pc=0x%08" PRIx32" ]\n", (uint32_t)cpu->pc);
+			    "pc=0x%08" PRIx32" ]", (uint32_t)cpu->pc);
 			has_warned = 1;
 		}
 		if (cpu->translation_readahead)

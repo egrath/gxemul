@@ -68,8 +68,7 @@ static void update_bdt_statistics(uint32_t iw)
 		size_t s = (1 << 24) * sizeof(long long);
 		f = fopen("bdt_statistics.txt", "w");
 		if (f == NULL) {
-			fprintf(stderr, "update_bdt_statistics(): :-(\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu",  "update_bdt_statistics(): :-(\n");
 		}
 		counts = zeroed_alloc(s);
 		counts_used = zeroed_alloc(65536);
@@ -85,7 +84,7 @@ static void update_bdt_statistics(uint32_t iw)
 	if ((n % 500000) == 0) {
 		int i;
 		long long j;
-		fatal("[ update_bdt_statistics(): n = %lli ]\n", (long long) n);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ update_bdt_statistics(): n = %lli ]", (long long) n);
 		fseek(f, 0, SEEK_SET);
 		for (i=0; i<0x1000000; i++)
 			if (counts_used[i & 0xffff] && counts[i] != 0) {
@@ -213,9 +212,9 @@ X(invalid) {
 	    << ARM_INSTR_ALIGNMENT_SHIFT);
 	cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
 
-	fatal("FATAL ERROR: An internal error occured in the ARM"
+	fatal_error(SUBSYS_CPU, "cpu", "FATAL ERROR: An internal error occured in the ARM"
 	    " dyntrans code. This could be due to an unimplemented instruction"
-	    " encoding. pc = 0x%08" PRIx32"\n",
+	    " encoding. pc = 0x%08" PRIx32"",
 	    (uint32_t)cpu->pc);
 
 	cpu->cd.arm.next_ic = &nothing_call;
@@ -234,7 +233,7 @@ X(never) {
 	    << ARM_INSTR_ALIGNMENT_SHIFT);
 	cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
 
-	fatal("[ ARM: unimplemented 0xf instruction at pc = 0x%08" PRIx32" ]\n", (uint32_t)cpu->pc);
+	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM: unimplemented 0xf instruction at pc = 0x%08" PRIx32" ]", (uint32_t)cpu->pc);
 
 	cpu->cd.arm.next_ic = &nothing_call;
 }
@@ -363,7 +362,7 @@ X(bx)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		fatal("[ ARM pc misaligned? 0x%08x ]\n", (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
 		cpu->running = 0;
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
@@ -394,7 +393,7 @@ X(bx_trace)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		fatal("[ ARM pc misaligned? 0x%08x ]\n", (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
 		cpu->running = 0;
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
@@ -447,7 +446,7 @@ X(blx_imm)
 	if (cpu->pc & 1)
 		cpu->cd.arm.cpsr |= ARM_FLAG_T;
 	else {
-		fatal("[ blx_imm internal error. Should have switched to THUMB! 0x%08x ]\n", (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ blx_imm internal error. Should have switched to THUMB! 0x%08x ]", (int)cpu->pc);
 		cpu->running = 0;
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
@@ -458,7 +457,7 @@ X(blx_imm)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		fatal("[ ARM pc misaligned? 0x%08x ]\n", (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
 		cpu->running = 0;
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
@@ -495,7 +494,7 @@ X(blx_reg)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		fatal("[ ARM pc misaligned? 0x%08x ]\n", (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
 		cpu->running = 0;
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
@@ -878,7 +877,7 @@ X(msr_imm_spsr)
 		cpu->cd.arm.spsr_svc &= ~mask;
 		cpu->cd.arm.spsr_svc |= (new_value & mask);
 		break;
-	default:fatal("msr_spsr: unimplemented mode %i\n",
+	default:fatal_error(SUBSYS_CPU, "cpu", "msr_spsr: unimplemented mode %i",
 		    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 		{
 			/*  Synchronize the program counter:  */
@@ -931,7 +930,7 @@ X(mrs_spsr)
 	case ARM_MODE_SVC32: reg(ic->arg[0]) = cpu->cd.arm.spsr_svc; break;
 	case ARM_MODE_USR32:
 	case ARM_MODE_SYS32: reg(ic->arg[0]) = 0; break;
-	default:fatal("mrs_spsr: unimplemented mode %i\n", cpu->cd.arm.cpsr & ARM_FLAG_MODE);
+	default:fatal_error(SUBSYS_CPU, "cpu", "mrs_spsr: unimplemented mode %i", cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 		cpu->running = 0;
 		cpu->cd.arm.next_ic = &nothing_call;
 	}
@@ -1263,7 +1262,7 @@ X(swp)
 
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, d, sizeof(d), MEM_READ,
 	    CACHE_DATA)) {
-		fatal("swp: load failed\n");
+		fatal_error(SUBSYS_CPU, "cpu", "swp: load failed\n");
 		return;
 	}
 	data = d[0] + (d[1] << 8) + (d[2] << 16) + (d[3] << 24);
@@ -1271,7 +1270,7 @@ X(swp)
 	d[0] = data2; d[1] = data2 >> 8; d[2] = data2 >> 16; d[3] = data2 >> 24;
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, d, sizeof(d), MEM_WRITE,
 	    CACHE_DATA)) {
-		fatal("swp: store failed\n");
+		fatal_error(SUBSYS_CPU, "cpu", "swp: store failed\n");
 		return;
 	}
 	reg(ic->arg[0]) = data;
@@ -1290,14 +1289,14 @@ X(swpb)
 
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, d, sizeof(d), MEM_READ,
 	    CACHE_DATA)) {
-		fatal("swp: load failed\n");
+		fatal_error(SUBSYS_CPU, "cpu", "swp: load failed\n");
 		return;
 	}
 	data = d[0];
 	d[0] = reg(ic->arg[1]);
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, d, sizeof(d), MEM_WRITE,
 	    CACHE_DATA)) {
-		fatal("swp: store failed\n");
+		fatal_error(SUBSYS_CPU, "cpu", "swp: store failed\n");
 		return;
 	}
 	reg(ic->arg[0]) = data;
@@ -1361,7 +1360,7 @@ void arm_pop(struct cpu* cpu, uint32_t* np, int p_bit, int u_bit, int s_bit, int
 	if (s_bit) {
 		/*  Load to USR registers:  */
 		if ((cpu->cd.arm.cpsr & ARM_FLAG_MODE) == ARM_MODE_USR32) {
-			fatal("[ bdt_load: s-bit: in usermode? ]\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ bdt_load: s-bit: in usermode? ]\n");
 			s_bit = 0;
 		}
 		if (iw & 0x8000) {
@@ -1480,7 +1479,7 @@ void arm_pop(struct cpu* cpu, uint32_t* np, int p_bit, int u_bit, int s_bit, int
 			new_cpsr = cpu->cd.arm.spsr_irq; break;
 		case ARM_MODE_SVC32:
 			new_cpsr = cpu->cd.arm.spsr_svc; break;
-		default:fatal("bdt_load: unimplemented mode %i\n",
+		default:fatal_error(SUBSYS_CPU, "cpu", "bdt_load: unimplemented mode %i",
 			    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 			cpu->running = 0;
 			cpu->cd.arm.next_ic = &nothing_call;
@@ -1699,7 +1698,7 @@ X(ldrex)
 	cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		fatal("TODO: ldrex unaligned access: exception\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ldrex unaligned access: exception\n");
 		cpu->running = 0;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -1744,7 +1743,7 @@ X(strex)
 	cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		fatal("TODO: strex unaligned access: exception\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: strex unaligned access: exception\n");
 		cpu->running = 0;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -2994,13 +2993,13 @@ X(to_be_translated)
 	page = cpu->cd.arm.host_load[addr >> 12];
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT! 0x%08x\n", addr);  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT! 0x%08x", addr);  */
 		memcpy(ib, page + (addr & 0xfff), sizeof(ib));
 	} else {
-		/*  fatal("TRANSLATION MISS! 0x%08x\n", addr);  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS! 0x%08x", addr);  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, &ib[0],
 		    sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("to_be_translated(): "
+			fatal_error(SUBSYS_CPU, "cpu", "to_be_translated(): "
 			    "read failed: TODO\n");
 			return;
 		}
@@ -3111,7 +3110,7 @@ X(to_be_translated)
 
 			if (rd == ARM_PC || rn == ARM_PC) {
 				if (!cpu->translation_readahead)
-					fatal("ldrex with pc register: TODO\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ldrex with pc register: TODO\n");
 				goto bad;
 			}
 			
@@ -3127,7 +3126,7 @@ X(to_be_translated)
 			if (rd == ARM_PC || rm == ARM_PC || rn == ARM_PC ||
 			    rd == rm || rd == rn) {
 				if (!cpu->translation_readahead)
-					fatal("strex with bad register: TODO\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "strex with bad register: TODO\n");
 				goto bad;
 			}
 			
@@ -3168,7 +3167,7 @@ X(to_be_translated)
 			/*  Long multiplication:  */
 			if (s_bit) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: sbit mull\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: sbit mull\n");
 				goto bad;
 			}
 			ic->f = cond_instr(mull);
@@ -3177,7 +3176,7 @@ X(to_be_translated)
 		}
 		if ((iword & 0x0f900ff0) == 0x01000050) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: q{,d}{add,sub}\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: q{,d}{add,sub}\n");
 			goto bad;
 		}
 		if ((iword & 0x0ff000d0) == 0x01200010) {
@@ -3252,7 +3251,7 @@ X(to_be_translated)
 			} else {
 				if (rm == ARM_PC) {
 					if (!cpu->translation_readahead)
-						fatal("msr PC?\n");
+						fatal_error(SUBSYS_CPU, "cpu", "msr PC?\n");
 					goto bad;
 				}
 				if (iword & 0x00400000)
@@ -3281,7 +3280,7 @@ X(to_be_translated)
 			/*  mrs: move from CPSR/SPSR to a register:  */
 			if (rd == ARM_PC) {
 				if (!cpu->translation_readahead)
-					fatal("mrs PC?\n");
+					fatal_error(SUBSYS_CPU, "cpu", "mrs PC?\n");
 				goto bad;
 			}
 			if (iword & 0x00400000)
@@ -3328,7 +3327,7 @@ X(to_be_translated)
 
 		if (iword & 0x80 && !(main_opcode & 2) && iword & 0x10) {
 			if (!cpu->translation_readahead)
-				fatal("reg form blah blah\n");
+				fatal_error(SUBSYS_CPU, "cpu", "reg form blah blah\n");
 			goto bad;
 		}
 
@@ -3387,7 +3386,7 @@ X(to_be_translated)
 			ic->f = cond_instr(movw);
 			if (rd == ARM_PC) {
 				if (!cpu->translation_readahead)
-					fatal("movw with rd = pc?\n");
+					fatal_error(SUBSYS_CPU, "cpu", "movw with rd = pc?\n");
 				goto bad;
 			}
 			break;
@@ -3398,7 +3397,7 @@ X(to_be_translated)
 			ic->f = cond_instr(movt);
 			if (rd == ARM_PC) {
 				if (!cpu->translation_readahead)
-					fatal("movt with rd = pc?\n");
+					fatal_error(SUBSYS_CPU, "cpu", "movt with rd = pc?\n");
 				goto bad;
 			}
 			break;
@@ -3434,7 +3433,7 @@ X(to_be_translated)
 
 			if (steps != 0 && (imm != 0 && imm < 256)) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: see cpu_arm_instr_dpi; non-zero steps but still under 256 is not implemented yet\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: see cpu_arm_instr_dpi; non-zero steps but still under 256 is not implemented yet\n");
 				goto bad;
 			}
 
@@ -3495,7 +3494,7 @@ X(to_be_translated)
 				ic->f = cond_instr(uxtab);
 				if (iword & 0xc00) {
 					if (!cpu->translation_readahead)
-						fatal("unimplemented uxtab with rotate != 0\n");
+						fatal_error(SUBSYS_CPU, "cpu", "unimplemented uxtab with rotate != 0\n");
 					goto bad;
 				}
 			} else if ((iword & 0x0fff03f0) == 0x06ff0070) {
@@ -3510,7 +3509,7 @@ X(to_be_translated)
 				ic->f = cond_instr(uxtah);
 				if (iword & 0xc00) {
 					if (!cpu->translation_readahead)
-						fatal("unimplemented uxtah with rotate != 0\n");
+						fatal_error(SUBSYS_CPU, "cpu", "unimplemented uxtah with rotate != 0\n");
 					goto bad;
 				}
 			} else if ((iword & 0x0fe00070) == 0x07c00010) {
@@ -3536,7 +3535,7 @@ X(to_be_translated)
 				ic->arg[2] = (width << 16) + lsb;
 			} else {
 				if (!cpu->translation_readahead)
-					fatal("unimplemented special non-loadstore encoding!\n");
+					fatal_error(SUBSYS_CPU, "cpu", "unimplemented special non-loadstore encoding!\n");
 				goto bad;
 			}
 			break;
@@ -3647,7 +3646,7 @@ X(to_be_translated)
 #endif
 		if (rn == ARM_PC) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: bdt with PC as base\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: bdt with PC as base\n");
 			goto bad;
 		}
 		break;
@@ -3747,14 +3746,14 @@ X(to_be_translated)
 		if ((iword & 0x0fe00fff) == 0x0c400000) {
 			/*  Special case: mar/mra DSP instructions  */
 			if (!cpu->translation_readahead)
-				fatal("TODO: mar/mra DSP instructions!\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: mar/mra DSP instructions!\n");
 			/*  Perhaps these are actually identical to MCRR/MRRC */
 			goto bad;
 		}
 
 		if ((iword & 0x0fe00000) == 0x0c400000) {
 			if (!cpu->translation_readahead)
-				fatal("MCRR/MRRC: TODO\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "MCRR/MRRC: TODO\n");
 			goto bad;
 		}
 
@@ -3769,7 +3768,7 @@ X(to_be_translated)
 		ic->arg[0] = addr & 0xfff;
 #else
 		if (!cpu->translation_readahead)
-			fatal("LDC/STC: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "LDC/STC: TODO\n");
 		goto bad;
 #endif
 		break;
@@ -3779,7 +3778,7 @@ X(to_be_translated)
 			/*  Special case: mia* DSP instructions  */
 			/*  See Intel's 27343601.pdf, page 16-20  */
 			if (!cpu->translation_readahead)
-				fatal("TODO: mia* DSP instructions!\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: mia* DSP instructions!\n");
 			goto bad;
 		}
 		if (iword & 0x10) {

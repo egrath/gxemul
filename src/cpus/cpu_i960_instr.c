@@ -93,12 +93,12 @@ X(end_of_page)
 	 *  Calling to_be_translated will translate one instruction manually,
 	 *  execute it, and then discard it.
 	 */
-	/*  fatal("[ end_of_page: delay slot across page boundary! ]\n");  */
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: delay slot across page boundary! ]\n");  */
 
 	instr(to_be_translated)(cpu, cpu->cd.i960.next_ic);
 
 	/*  The instruction in the delay slot has now executed.  */
-	/*  fatal("[ end_of_page: back from executing the delay slot, %i ]\n",
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: back from executing the delay slot, %i ]",
 	    cpu->delay_slot);  */
 
 	/*  Find the physpage etc of the instruction in the delay slot
@@ -165,13 +165,13 @@ X(to_be_translated)
 	unsigned char ib[4];
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT!\n");  */
 		memcpy(ib, page + (addr & 0xffc), sizeof(ib));
 	} else {
-		/*  fatal("TRANSLATION MISS!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS!\n");  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, ib,
 		    sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("to_be_translated(): read failed: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "to_be_translated(): read failed: TODO\n");
 			goto bad;
 		}
 	}

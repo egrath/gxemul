@@ -75,8 +75,8 @@ static int arm_check_access(struct cpu *cpu, int ap, int dav, int user)
 		return 0;
 	case 1:	/*  Normal access check.  */
 		break;
-	case 2:	fatal("arm_check_access(): 1 shouldn't be used\n");
-		exit(1);
+	case 2:	fatal_error(SUBSYS_CPU, "cpu", "arm_check_access(): 1 shouldn't be used");
+		break;
 	case 3:	/*  Anything is allowed.  */
 		return 2;
 	}
@@ -89,7 +89,7 @@ static int arm_check_access(struct cpu *cpu, int ap, int dav, int user)
 		case 1:	return user? 0 : 1;
 		case 2:	return 1;
 		}
-		fatal("arm_check_access: UNPREDICTABLE s+r value!\n");
+		fatal_error(SUBSYS_CPU, "cpu", "arm_check_access: UNPREDICTABLE s+r value!\n");
 		return 0;
 	case 1:	return user? 0 : 2;
 	case 2:	return user? 1 : 2;
@@ -168,8 +168,7 @@ int arm_translate_v2p_mmu(struct cpu *cpu, uint64_t vaddr64,
 
 		q = memory_paddr_to_hostaddr(cpu->mem, addr & 0x0fffffff, 0);
 		if (q == NULL) {
-			printf("arm memory blah blah adfh asfg asdgasdg\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "arm", "arm memory: no host address for paddr");
 		}
 		d2 = *(uint32_t *)(q);
 #ifdef HOST_LITTLE_ENDIAN
@@ -247,9 +246,8 @@ int arm_translate_v2p_mmu(struct cpu *cpu, uint64_t vaddr64,
 		fs = FAULT_PERM_S;
 		goto exception_return;
 
-	default:fatal("TODO: descriptor for vaddr 0x%08x: 0x%08x ("
-		    "unimplemented type %i)\n", vaddr, d, d&3);
-		exit(1);
+	default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: descriptor for vaddr 0x%08x: 0x%08x ("
+		    "unimplemented type %i)", vaddr, d, d&3);
 	}
 
 exception_return:
@@ -257,10 +255,10 @@ exception_return:
 		return 0;
 
 	if (!quiet_mode) {
-		fatal("{ arm memory fault: vaddr=0x%08x domain=%i dav=%i ap=%i "
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ arm memory fault: vaddr=0x%08x domain=%i dav=%i ap=%i "
 		    "access=%i user=%i", (int)vaddr, domain, dav, ap,
 		    access, user);
-		fatal(" d=0x%08x d2=0x%08x pc=0x%08x }\n", d, d2, (int)cpu->pc);
+		fatal_error(SUBSYS_CPU, "cpu", " d=0x%08x d2=0x%08x pc=0x%08x }", d, d2, (int)cpu->pc);
 	}
 
 	if (instr)

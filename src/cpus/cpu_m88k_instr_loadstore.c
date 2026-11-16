@@ -163,8 +163,8 @@ void LS_GENERIC_N(struct cpu *cpu, struct m88k_instr_call *ic)
 		/*  Cause an address alignment exception:  */
 		m88k_exception(cpu, M88K_EXCEPTION_MISALIGNED_ACCESS, 0);
 #else
-		fatal("{ m88k dyntrans alignment exception, size = %i,"
-		    " addr = %08" PRIx32", pc = %08" PRIx32" }\n", LS_SIZE,
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ m88k dyntrans alignment exception, size = %i,"
+		    " addr = %08" PRIx32", pc = %08" PRIx32" }", LS_SIZE,
 		    (uint32_t) addr, (uint32_t) cpu->pc);
 
 		cpu->running = 0;

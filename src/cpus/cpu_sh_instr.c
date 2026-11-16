@@ -43,7 +43,7 @@
 	}
 
 #define	ABORT_EXECUTION	  {	SYNCH_PC;				\
-				fatal("Execution aborted at: pc = 0x%08x\n", (int)cpu->pc); \
+				fatal_error(SUBSYS_CPU, "cpu", "Execution aborted at: pc = 0x%08x", (int)cpu->pc); \
 				cpu->cd.sh.next_ic = &nothing_call;	\
 				cpu->running = false; }
 
@@ -601,8 +601,7 @@ X(fmov_rm_frn)
 		size_t r1 = ic->arg[1];
 		int ofs = (r1 - (size_t)&cpu->cd.sh.fr[0]) / sizeof(uint32_t);
 		if (ofs & 1) {
-			fatal("ODD fmov_rm_frn: TODO");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ODD fmov_rm_frn: TODO");
 			r1 = (size_t)&cpu->cd.sh.xf[ofs & ~1];
 		}
 		
@@ -657,7 +656,7 @@ X(fmov_r0_rm_frn)
 	FLOATING_POINT_AVAILABLE_CHECK;
 
 	if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
-		fatal("fmov_r0_rm_frn: sz=1 (register pair): TODO\n");
+		fatal_error(SUBSYS_CPU, "cpu", "fmov_r0_rm_frn: sz=1 (register pair): TODO\n");
 		ABORT_EXECUTION;
 		return;
 	}
@@ -1190,8 +1189,7 @@ X(fmov_frm_rn)
 		size_t r0 = ic->arg[1];
 		int ofs = (r0 - (size_t)&cpu->cd.sh.fr[0]) / sizeof(uint32_t);
 		if (ofs & 1) {
-			fatal("ODD fmov_frm_rn: TODO");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ODD fmov_frm_rn: TODO");
 			r0 = (size_t)&cpu->cd.sh.xf[ofs & ~1];
 		}
 
@@ -1236,7 +1234,7 @@ X(fmov_frm_r0_rn)
 	FLOATING_POINT_AVAILABLE_CHECK;
 
 	if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
-		fatal("fmov_frm_r0_rn: sz=1 (register pair): TODO\n");
+		fatal_error(SUBSYS_CPU, "cpu", "fmov_frm_r0_rn: sz=1 (register pair): TODO\n");
 		ABORT_EXECUTION;
 		return;
 	}
@@ -2629,8 +2627,7 @@ X(fneg_frn)
 	if (cpu->cd.sh.fpscr & SH_FPSCR_PR) {
 		int ofs0 = (ic->arg[0] - (size_t)&cpu->cd.sh.fr[0]) / sizeof(uint32_t);
 		if (ofs0 & 1) {
-			fatal("TODO: fneg_frn odd register in double prec. mode.\n");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: fneg_frn odd register in double prec. mode.\n");
 		}
 	}
 
@@ -2646,8 +2643,7 @@ X(fabs_frn)
 	if (cpu->cd.sh.fpscr & SH_FPSCR_PR) {
 		int ofs0 = (ic->arg[0] - (size_t)&cpu->cd.sh.fr[0]) / sizeof(uint32_t);
 		if (ofs0 & 1) {
-			fatal("TODO: fneg_frn odd register in double prec. mode.\n");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: fneg_frn odd register in double prec. mode.\n");
 		}
 	}
 
@@ -2688,7 +2684,7 @@ X(fsrra_frn)
 
 	if (cpu->cd.sh.fpscr & SH_FPSCR_PR) {
 		/*  Double-precision:  */
-		fatal("Double-precision fsrra? TODO\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "Double-precision fsrra? TODO\n");
 		ABORT_EXECUTION;
 		return;
 	} else {
@@ -2987,7 +2983,7 @@ X(pref_rn)
 	else
 		extaddr |= (((cpu->cd.sh.qacr1 >> 2) & 7) << 26);
 
-	// fatal("[ SH4 pref: SQ extaddr = 0x%08x (pc = 0x%08x) ]\n", extaddr, (int)cpu->pc);
+	// debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ SH4 pref: SQ extaddr = 0x%08x (pc = 0x%08x) ]", extaddr, (int)cpu->pc);
 
 	// Is the MMU turned on?
 	if (cpu->cd.sh.mmucr & SH4_MMUCR_AT) {
@@ -3001,7 +2997,7 @@ X(pref_rn)
 			}
 		}
 
-		fatal("Store Queue to external memory, when "
+		fatal_error(SUBSYS_CPU, "cpu", "Store Queue to external memory, when "
 		    "MMU enabled: Not yet implemented... TODO\n");
 		ABORT_EXECUTION;
 		return;
@@ -3012,7 +3008,7 @@ X(pref_rn)
 		cpu->memory_rw(cpu, cpu->mem, 0xe0000000UL + ofs
 		    + sq_nr * 0x20, (unsigned char *)
 		    &word, sizeof(word), MEM_READ, PHYSICAL);
-		// fatal("  addr %08x: %08x\n", (extaddr + ofs), word);
+		// fatal_error(SUBSYS_CPU, "cpu", "  addr %08x: %08x", (extaddr + ofs), word);
 		cpu->memory_rw(cpu, cpu->mem, extaddr+ofs, (unsigned char *)
 		    &word, sizeof(word), MEM_WRITE, PHYSICAL);
 	}
@@ -3073,8 +3069,7 @@ X(prom_emul)
 		sh_ipl_g_emul(cpu);
 		break;
 	default:
-		fatal("SH prom_emul: unimplemented machine type.\n");
-		exit(1);
+		fatal_error(SUBSYS_CPU, "cpu", "SH prom_emul: unimplemented machine type.\n");
 	}
 
 	if (!cpu->running) {
@@ -3209,12 +3204,12 @@ X(end_of_page)
 	 *  Calling to_be_translated will translate one instruction manually,
 	 *  execute it, and then discard it.
 	 */
-	/*  fatal("[ end_of_page: delay slot across page boundary! ]\n");  */
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: delay slot across page boundary! ]\n");  */
 
 	instr(to_be_translated)(cpu, cpu->cd.sh.next_ic);
 
 	/*  The instruction in the delay slot has now executed.  */
-	/*  fatal("[ end_of_page: back from executing the delay slot, %i ]\n",
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: back from executing the delay slot, %i ]",
 	    cpu->delay_slot);  */
 
 	/*  Find the physpage etc of the instruction in the delay slot
@@ -3240,8 +3235,7 @@ X(end_of_page2)
 	if (cpu->delay_slot == NOT_DELAYED)
 		return;
 
-	fatal("end_of_page2: fatal error, we're in a delay slot\n");
-	exit(1);
+	fatal_error(SUBSYS_CPU, "cpu", "end_of_page2: fatal error, we're in a delay slot\n");
 }
 
 
@@ -3271,7 +3265,7 @@ X(to_be_translated)
 
 	/*  Special case for branch with delayslot on the next page:  */
 	if (cpu->delay_slot == TO_BE_DELAYED && low_pc == 0) {
-		/*  fatal("[ delay-slot translation across page "
+		/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ delay-slot translation across page "
 		    "boundary ]\n");  */
 		in_crosspage_delayslot = 1;
 	}
@@ -3286,13 +3280,13 @@ X(to_be_translated)
 	page = cpu->cd.sh.host_load[(uint32_t)addr >> 12];
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT!\n");  */
 		memcpy(ib, page + (addr & 0xfff), isize);
 	} else {
-		/*  fatal("TRANSLATION MISS!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS!\n");  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, ib,
 		    isize, MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("to_be_translated(): read failed: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "to_be_translated(): read failed: TODO\n");
 			goto bad;
 		}
 	}
@@ -3411,7 +3405,7 @@ X(to_be_translated)
 				ic->f = instr(nop);
 				if (iword & 0x0f00) {
 					if (!cpu->translation_readahead)
-						fatal("Unimplemented NOP"
+						fatal_error(SUBSYS_CPU, "cpu", "Unimplemented NOP"
 						    " variant?\n");
 					goto bad;
 				}
@@ -3493,8 +3487,8 @@ X(to_be_translated)
 				ic->arg[1] = (size_t)&cpu->cd.sh.r[r8];
 				break;
 			default:if (!cpu->translation_readahead)
-					fatal("Unimplemented opcode 0x%x,"
-					    "0x%03x\n", main_opcode,
+					fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,"
+					    "0x%03x", main_opcode,
 					    iword & 0xfff);
 				goto bad;
 			}
@@ -3556,7 +3550,7 @@ X(to_be_translated)
 			ic->f = instr(muls_w_rm_rn);
 			break;
 		default:if (!cpu->translation_readahead)
-				fatal("Unimplemented opcode 0x%x,0x%x\n",
+				fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,0x%x",
 				    main_opcode, lo4);
 			goto bad;
 		}
@@ -3601,7 +3595,7 @@ X(to_be_translated)
 			ic->f = instr(addc_rm_rn);
 			break;
 		default:if (!cpu->translation_readahead)
-				fatal("Unimplemented opcode 0x%x,0x%x\n",
+				fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,0x%x",
 				    main_opcode, lo4);
 			goto bad;
 		}
@@ -3836,8 +3830,8 @@ X(to_be_translated)
 				ic->arg[1] = (size_t)&cpu->cd.sh.dbr;
 				break;
 			default:if (!cpu->translation_readahead)
-					fatal("Unimplemented opcode 0x%x,"
-					    "0x%02x\n", main_opcode, lo8);
+					fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,"
+					    "0x%02x", main_opcode, lo8);
 				goto bad;
 			}
 		}
@@ -3912,7 +3906,7 @@ X(to_be_translated)
 			ic->f = instr(exts_w_rm_rn);
 			break;
 		default:if (!cpu->translation_readahead)
-				fatal("Unimplemented opcode 0x%x,0x%x\n",
+				fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,0x%x",
 				    main_opcode, lo4);
 			goto bad;
 		}
@@ -3981,7 +3975,7 @@ X(to_be_translated)
 			samepage_function = instr(bf_s_samepage);
 			break;
 		default:if (!cpu->translation_readahead)
-				fatal("Unimplemented opcode 0x%x,0x%x\n",
+				fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,0x%x",
 				    main_opcode, r8);
 			goto bad;
 		}
@@ -4116,7 +4110,7 @@ X(to_be_translated)
 			ic->arg[0] = lo8;
 			break;
 		default:if (!cpu->translation_readahead)
-				fatal("Unimplemented opcode 0x%x,0x%x\n",
+				fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,0x%x",
 				    main_opcode, r8);
 			goto bad;
 		}
@@ -4293,14 +4287,14 @@ X(to_be_translated)
 			ic->arg[1] = (size_t)&cpu->cd.sh.fr[r8];
 		} else {
 			if (!cpu->translation_readahead)
-				fatal("Unimplemented opcode 0x%x,0x%02x\n",
+				fatal_error(SUBSYS_CPU, "cpu", "Unimplemented opcode 0x%x,0x%02x",
 				    main_opcode, lo8);
 			goto bad;
 		}
 		break;
 
 	default:if (!cpu->translation_readahead)
-			fatal("Unimplemented main opcode 0x%x\n", main_opcode);
+			fatal_error(SUBSYS_CPU, "cpu", "Unimplemented main opcode 0x%x", main_opcode);
 		goto bad;
 	}
 

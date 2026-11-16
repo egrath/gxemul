@@ -72,8 +72,7 @@ X(nop)
  */
 X(invalid)
 {
-	fatal("PPC: invalid(): INTERNAL ERROR\n");
-	exit(1);
+	fatal_error(SUBSYS_CPU, "cpu", "PPC: invalid(): INTERNAL ERROR\n");
 }
 
 
@@ -1290,13 +1289,11 @@ X(llsc)
 
 	if (load) {
 		if (rc) {
-			fatal("ll: rc-bit set?\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu", "ll: rc-bit set?\n");
 		}
 		if (cpu->memory_rw(cpu, cpu->mem, addr, d, len,
 		    MEM_READ, CACHE_DATA) != MEMORY_ACCESS_OK) {
-			fatal("ll: error: TODO\n");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ll: error: TODO\n");
 		}
 
 		value = 0;
@@ -1314,8 +1311,7 @@ X(llsc)
 	} else {
 		uint32_t old_so = cpu->cd.ppc.spr[SPR_XER] & PPC_XER_SO;
 		if (!rc) {
-			fatal("sc: rc-bit not set?\n");
-			exit(1);
+			fatal_error(SUBSYS_CPU, "cpu", "sc: rc-bit not set?\n");
 		}
 
 		value = cpu->cd.ppc.gpr[rt];
@@ -1341,8 +1337,7 @@ X(llsc)
 
 		if (cpu->memory_rw(cpu, cpu->mem, addr, d, len,
 		    MEM_WRITE, CACHE_DATA) != MEMORY_ACCESS_OK) {
-			fatal("sc: error: TODO\n");
-			exit(1);
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "sc: error: TODO\n");
 		}
 
 		cpu->cd.ppc.cr &= 0x0fffffff;
@@ -2036,7 +2031,7 @@ X(extsh) {
 DOT2(extsh)
 X(extsw) {
 #ifdef MODE32
-	fatal("TODO: extsw: invalid instruction\n");
+	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: extsw: invalid instruction\n");
 #else
 	reg(ic->arg[2]) = (int64_t)(int32_t)reg(ic->arg[0]);
 #endif
@@ -2566,7 +2561,7 @@ X(vxor)
  */
 X(tlbia)
 {
-	fatal("[ tlbia ]\n");
+	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ tlbia ]\n");
 	cpu->invalidate_translation_caches(cpu, 0, INVALIDATE_ALL);
 }
 
@@ -2576,7 +2571,7 @@ X(tlbia)
  */
 X(tlbie)
 {
-	/*  fatal("[ tlbie ]\n");  */
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ tlbie ]\n");  */
 	cpu->invalidate_translation_caches(cpu, reg(ic->arg[0]),
 	    INVALIDATE_VADDR);
 }
@@ -2634,7 +2629,7 @@ X(tlbsx_dot)
  */
 X(tlbli)
 {
-	fatal("tlbli\n");
+	fatal_error(SUBSYS_CPU, "cpu", "tlbli\n");
 	cpu->invalidate_translation_caches(cpu, 0, INVALIDATE_ALL);
 }
 
@@ -2647,7 +2642,7 @@ X(tlbld)
 	/*  MODE_uint_t vaddr = reg(ic->arg[0]);
 	    MODE_uint_t paddr = cpu->cd.ppc.spr[SPR_RPA];  */
 
-	fatal("tlbld\n");
+	fatal_error(SUBSYS_CPU, "cpu", "tlbld\n");
 	cpu->invalidate_translation_caches(cpu, 0, INVALIDATE_ALL);
 }
 
@@ -2720,15 +2715,14 @@ X(to_be_translated)
 #endif
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT!\n");  */
 		memcpy(ib, page + (addr & 0xfff), sizeof(ib));
 	} else {
-		/*  fatal("TRANSLATION MISS!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS!\n");  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, ib,
 		    sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-			fatal("PPC to_be_translated(): "
+			fatal_error(SUBSYS_CPU, "cpu", "PPC to_be_translated(): "
 			    "read failed: TODO\n");
-			exit(1);
 			/*  goto bad;  */
 		}
 	}
@@ -2761,8 +2755,8 @@ X(to_be_translated)
 			ic->arg[2] = 19;
 		} else {
 			if (!cpu->translation_readahead)
-				fatal("[ TODO: Unimplemented ALTIVEC, iword"
-				    " = 0x%08" PRIx32"x ]\n", iword);
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: Unimplemented ALTIVEC, iword"
+				    " = 0x%08" PRIx32"x ]", iword);
 			goto bad;
 		}
 		break;
@@ -2818,7 +2812,7 @@ X(to_be_translated)
 	case PPC_HI6_ADDIC_DOT:
 		if (cpu->cd.ppc.bits == 64) {
 			if (!cpu->translation_readahead)
-				fatal("addic for 64-bit: TODO\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "addic for 64-bit: TODO\n");
 			goto bad;
 		}
 		rt = (iword >> 21) & 31;
@@ -2937,7 +2931,7 @@ X(to_be_translated)
 		}
 		if (ra == 0 && update) {
 			if (!cpu->translation_readahead)
-				fatal("TODO: ra=0 && update?\n");
+				debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ra=0 && update?\n");
 			goto bad;
 		}
 		if (fp)
@@ -2959,7 +2953,7 @@ X(to_be_translated)
 		tmp_addr = (int64_t)(int16_t)(iword & 0xfffc);
 		if (aa_bit) {
 			if (!cpu->translation_readahead)
-				fatal("aa_bit: NOT YET\n");
+				fatal_error(SUBSYS_CPU, "cpu", "aa_bit: NOT YET\n");
 			goto bad;
 		}
 		if (lk_bit) {
@@ -3074,7 +3068,7 @@ X(to_be_translated)
 			} else {
 				if (!(bo & 4)) {
 					if (!cpu->translation_readahead)
-						fatal("TODO: bclr/bcctr "
+						debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: bclr/bcctr "
 						    "bo bit 2 clear!\n");
 					goto bad;
 				}
@@ -3201,7 +3195,7 @@ X(to_be_translated)
 			ic->arg[0] = iword;
 			if (cpu->cd.ppc.bits == 32) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: rld* in 32-bit mode?\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: rld* in 32-bit mode?\n");
 				goto bad;
 			}
 			break;
@@ -3246,7 +3240,7 @@ X(to_be_translated)
 			rc = iword & 1;
 			if (rc) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: rc\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: rc\n");
 				goto bad;
 			}
 			ic->arg[0] = (size_t)(&cpu->cd.ppc.gpr[rs]);
@@ -3307,7 +3301,7 @@ X(to_be_translated)
 			l_bit = (iword >> 16) & 1;
 			if (l_bit) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: mtmsr l-bit\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: mtmsr l-bit\n");
 				goto bad;
 			}
 			ic->arg[0] = (size_t)(&cpu->cd.ppc.gpr[rs]);
@@ -3344,7 +3338,7 @@ X(to_be_translated)
 			}
 			if (cpu->cd.ppc.bits == 64) {
 				if (!cpu->translation_readahead)
-					fatal("Not yet for 64-bit mode\n");
+					fatal_error(SUBSYS_CPU, "cpu", "Not yet for 64-bit mode\n");
 				goto bad;
 			}
 			break;
@@ -3360,7 +3354,7 @@ X(to_be_translated)
 			}
 			if (cpu->cd.ppc.bits == 64) {
 				if (!cpu->translation_readahead)
-					fatal("Not yet for 64-bit mode\n");
+					fatal_error(SUBSYS_CPU, "cpu", "Not yet for 64-bit mode\n");
 				goto bad;
 			}
 			break;
@@ -3446,7 +3440,7 @@ X(to_be_translated)
 			case 268: ic->f = instr(mftb); break;
 			case 269: ic->f = instr(mftbu); break;
 			default:if (!cpu->translation_readahead)
-					fatal("mftb spr=%i?\n", spr);
+					fatal_error(SUBSYS_CPU, "cpu", "mftb spr=%i?", spr);
 				goto bad;
 			}
 			break;
@@ -3494,7 +3488,7 @@ X(to_be_translated)
 			break;
 
 		case 0x1c3:
-			fatal("[ mtdcr: TODO ]\n");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ mtdcr: TODO ]\n");
 			ic->f = instr(nop);
 			break;
 
@@ -3582,7 +3576,7 @@ X(to_be_translated)
 			}
 			if (ra == 0 && update) {
 				if (!cpu->translation_readahead)
-					fatal("TODO: ra=0 && update?\n");
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ra=0 && update?\n");
 				goto bad;
 			}
 			break;
@@ -3669,7 +3663,7 @@ X(to_be_translated)
 			rc = iword & 1;
 			if (oe_bit) {
 				if (!cpu->translation_readahead)
-					fatal("oe_bit not yet implemented\n");
+					fatal_error(SUBSYS_CPU, "cpu", "oe_bit not yet implemented\n");
 				goto bad;
 			}
 			switch (xo) {
@@ -3720,7 +3714,7 @@ X(to_be_translated)
 				case PPC_31_SUBFZE:
 					ic->f = instr(subfze_dot); break;
 				default:if (!cpu->translation_readahead)
-						fatal("RC bit not yet "
+						fatal_error(SUBSYS_CPU, "cpu", "RC bit not yet "
 						    "implemented\n");
 					goto bad;
 				}
@@ -3730,7 +3724,7 @@ X(to_be_translated)
 			ic->arg[2] = (size_t)(&cpu->cd.ppc.gpr[rt]);
 			if (cpu->cd.ppc.bits == 64 && n64) {
 				if (!cpu->translation_readahead)
-					fatal("Not yet for 64-bit mode\n");
+					fatal_error(SUBSYS_CPU, "cpu", "Not yet for 64-bit mode\n");
 				goto bad;
 			}
 			break;
@@ -3771,7 +3765,7 @@ X(to_be_translated)
 
 		if (rc) {
 			if (!cpu->translation_readahead)
-				fatal("Floating point (59) "
+				fatal_error(SUBSYS_CPU, "cpu", "Floating point (59) "
 				    "with rc bit! TODO\n");
 			goto bad;
 		}
@@ -3814,7 +3808,7 @@ X(to_be_translated)
 
 		if (rc) {
 			if (!cpu->translation_readahead)
-				fatal("Floating point (63) "
+				fatal_error(SUBSYS_CPU, "cpu", "Floating point (63) "
 				    "with rc bit! TODO\n");
 			goto bad;
 		}

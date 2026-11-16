@@ -550,8 +550,7 @@ not just the device in question.
 		cpu->invalidate_code_translation(cpu, paddr, INVALIDATE_PADDR);
 
 	if ((paddr&((1<<BITS_PER_MEMBLOCK)-1)) + len > (1<<BITS_PER_MEMBLOCK)) {
-		printf("Write over memblock boundary?\n");
-		exit(1);
+		fatal_error(SUBSYS_MEMORY, "memory", "Write over memblock boundary?");
 	}
 
 	/*  And finally, read or write the data:  */

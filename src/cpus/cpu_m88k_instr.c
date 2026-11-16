@@ -1719,12 +1719,12 @@ X(end_of_page)
 	 *  Calling to_be_translated will translate one instruction manually,
 	 *  execute it, and then discard it.
 	 */
-	/*  fatal("[ end_of_page: delay slot across page boundary! ]\n");  */
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: delay slot across page boundary! ]\n");  */
 
 	instr(to_be_translated)(cpu, cpu->cd.m88k.next_ic);
 
 	/*  The instruction in the delay slot has now executed.  */
-	/*  fatal("[ end_of_page: back from executing the delay slot, %i ]\n",
+	/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ end_of_page: back from executing the delay slot, %i ]",
 	    cpu->delay_slot);  */
 
 	/*  Find the physpage etc of the instruction in the delay slot
@@ -2017,7 +2017,7 @@ X(to_be_translated)
 
 	/*  Special case for branch with delayslot on the next page:  */
 	if (cpu->delay_slot == TO_BE_DELAYED && low_pc == 0) {
-		/*  fatal("[ delay-slot translation across page "
+		/*  debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ delay-slot translation across page "
 		    "boundary ]\n");  */
 		in_crosspage_delayslot = 1;
 	}
@@ -2032,10 +2032,10 @@ X(to_be_translated)
 	page = cpu->cd.m88k.host_load[(uint32_t)addr >> 12];
 
 	if (page != NULL) {
-		/*  fatal("TRANSLATION HIT!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION HIT!\n");  */
 		memcpy(ib, page + (addr & 0xffc), sizeof(ib));
 	} else {
-		/*  fatal("TRANSLATION MISS!\n");  */
+		/*  fatal_error(SUBSYS_CPU, "cpu", "TRANSLATION MISS!\n");  */
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, ib,
 		    sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
 			/*  An instruction access exception (or a bus
@@ -2128,7 +2128,7 @@ X(to_be_translated)
 			}
 
 			if (opsize == 3 && d == 31) {
-				fatal("m88k load/store of register pair r31/r0"
+				fatal_error(SUBSYS_CPU, "cpu", "m88k load/store of register pair r31/r0"
 				    " is not yet implemented\n");
 				goto bad;
 			}
@@ -2477,7 +2477,7 @@ X(to_be_translated)
 				switch ((iword >> 10) & 3) {
 				case 0: opsize = 0; break;
 				case 1: opsize = 2; break;
-				default:fatal("Weird xmem opsize/type?\n");
+				default:fatal_error(SUBSYS_CPU, "cpu", "Weird xmem opsize/type?\n");
 					goto bad;
 				}
 			} else {
@@ -2533,7 +2533,7 @@ X(to_be_translated)
 				}
 
 				if (opsize == 3 && d == 31) {
-					fatal("m88k load/store of register "
+					fatal_error(SUBSYS_CPU, "cpu", "m88k load/store of register "
 					    "pair r31/r0: TODO\n");
 					goto bad;
 				}
@@ -2721,14 +2721,14 @@ X(to_be_translated)
 				if (iword == 0xf400fc00)
 					ic->f = instr(rte);
 				else {
-					fatal("unimplemented rte variant: 0x%08" PRIx32"\n", iword);
+					fatal_error(SUBSYS_CPU, "cpu", "unimplemented rte variant: 0x%08" PRIx32"", iword);
 					goto bad;
 				}
 				break;
 			case (M88K_PROM_INSTR & 0xff):
 				ic->f = instr(prom_call);
 				break;
-			default:fatal("Unimplemented 3d/fc instruction\n");
+			default:fatal_error(SUBSYS_CPU, "cpu", "Unimplemented 3d/fc instruction\n");
 				goto bad;
 			}
 			break;

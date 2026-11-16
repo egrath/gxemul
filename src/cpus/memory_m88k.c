@@ -405,7 +405,6 @@ exception:
 		debugmsg_cpu(cpu, SUBSYS_CPU, "m88k",
 		    VERBOSITY_ERROR,
 		    "HUH? CMMU_PFSR_SUCCESS:, but exception? TODO");
-		exit(1);
 		break;
 
 	case CMMU_PFSR_WRITE:
@@ -424,7 +423,6 @@ exception:
 		    VERBOSITY_ERROR,
 		    "Internal error in memory_m88k? pfsr_status = %i",
 		    pfsr_status);
-		exit(1);
 	}
 
 	/*  ... and finally cause the exception:  */

@@ -535,9 +535,8 @@ void arm_save_register_bank(struct cpu *cpu)
 		cpu->cd.arm.und_r13_r14[0] = cpu->cd.arm.r[13];
 		cpu->cd.arm.und_r13_r14[1] = cpu->cd.arm.r[14];
 		break;
-	default:fatal("arm_save_register_bank: unimplemented mode %i\n",
+	default:fatal_error(SUBSYS_CPU, "cpu", "arm_save_register_bank: unimplemented mode %i",
 		    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
-		exit(1);
 	}
 }
 
@@ -582,9 +581,8 @@ void arm_load_register_bank(struct cpu *cpu)
 		cpu->cd.arm.r[13] = cpu->cd.arm.und_r13_r14[0];
 		cpu->cd.arm.r[14] = cpu->cd.arm.und_r13_r14[1];
 		break;
-	default:fatal("arm_load_register_bank: unimplemented mode %i\n",
+	default:fatal_error(SUBSYS_CPU, "cpu", "arm_load_register_bank: unimplemented mode %i",
 		    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
-		exit(1);
 	}
 }
 
@@ -598,8 +596,7 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 	uint32_t retaddr;
 
 	if (exception_nr < 0 || exception_nr >= N_ARM_EXCEPTIONS) {
-		fatal("arm_exception(): exception_nr = %i\n", exception_nr);
-		exit(1);
+		fatal_error(SUBSYS_CPU, "cpu", "arm_exception(): exception_nr = %i", exception_nr);
 	}
 
 	retaddr = cpu->pc;
@@ -608,7 +605,7 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 		debug("[ arm_exception(): ");
 		switch (exception_nr) {
 		case ARM_EXCEPTION_RESET:
-			fatal("RESET: TODO");
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "RESET: TODO");
 			break;
 		case ARM_EXCEPTION_UND:
 			debug("UNDEFINED");
@@ -636,8 +633,8 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 	switch (exception_nr) {
 	case ARM_EXCEPTION_RESET:
 		cpu->running = 0;
-		fatal("ARM RESET: TODO");
-		exit(1);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "ARM RESET: TODO");
+		break;
 	case ARM_EXCEPTION_DATA_ABT:
 		retaddr += 4;
 		break;
@@ -661,8 +658,7 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 		cpu->cd.arm.spsr_irq = cpu->cd.arm.cpsr; break;
 	case ARM_MODE_FIQ32:
 		cpu->cd.arm.spsr_fiq = cpu->cd.arm.cpsr; break;
-	default:fatal("arm_exception(): unimplemented exception nr\n");
-		exit(1);
+	default:fatal_error(SUBSYS_CPU, "cpu", "arm_exception(): unimplemented exception nr\n");
 	}
 
 	/*
@@ -685,8 +681,8 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 	 */
 	newmode = cpu->cd.arm.cpsr & ARM_FLAG_MODE;
 	if (oldmode == newmode && oldmode != ARM_MODE_SVC32) {
-		fatal("[ WARNING! Exception caused no mode change? "
-		    "mode 0x%02x (pc=0x%x) ]\n", newmode, (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_WARNING, "[ WARNING! Exception caused no mode change? "
+		    "mode 0x%02x (pc=0x%x) ]", newmode, (int)cpu->pc);
 		/*  exit(1);  */
 	}
 
@@ -1087,7 +1083,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 	uint32_t addr = cpu->pc & ~1;
 
 	if (!(cpu->pc & 1) || !(cpu->cd.arm.cpsr & ARM_FLAG_T)) {
-		fatal("arm_cpu_interpret_thumb_SLOW called when not in "
+		fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW called when not in "
 			"THUMB mode?\n");
 		cpu->running = 0;
 		return 0;
@@ -1095,7 +1091,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, &ib[0],
 			sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-		fatal("arm_cpu_interpret_thumb_SLOW(): could not read "
+		fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not read "
 			"the instruction\n");
 		cpu->running = 0;
 		return 0;
@@ -1427,7 +1423,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 			if (!cpu->memory_rw(cpu, cpu->mem, tmp, &word[0],
 					sizeof(word), MEM_READ, CACHE_INSTRUCTION)) {
-				fatal("arm_cpu_interpret_thumb_SLOW(): could not load pc-relative word\n");
+				fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load pc-relative word\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -1470,7 +1466,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 				len, isLoad ? MEM_READ : MEM_WRITE, CACHE_DATA)) {
-			fatal("arm_cpu_interpret_thumb_SLOW(): could not load with immediate offset\n");
+			fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load with immediate offset\n");
 			cpu->running = 0;
 			return 0;
 		}
@@ -1499,7 +1495,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			addr = (cpu->cd.arm.r[ARM_SP] + (iw & 0xff) * 4) & ~3;
 			if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 					sizeof(word), MEM_READ, CACHE_DATA)) {
-				fatal("arm_cpu_interpret_thumb_SLOW(): could not load sp-relative word\n");
+				fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load sp-relative word\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -1523,7 +1519,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			addr = (cpu->cd.arm.r[ARM_SP] + (iw & 0xff) * 4) & ~3;
 			if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 					sizeof(word), MEM_WRITE, CACHE_DATA)) {
-				fatal("arm_cpu_interpret_thumb_SLOW(): could not store sp-relative word\n");
+				fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not store sp-relative word\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -1639,7 +1635,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			addr = (cpu->pc + 4 + (cpu->cd.arm.tmp_branch + (((iw >> 1) & 0x3ff) << 2))) & ~3;
 
 			if (iw & 1) {
-				fatal("lowest bit set in thumb blx instruction?\n");
+				fatal_error(SUBSYS_CPU, "cpu", "lowest bit set in thumb blx instruction?\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -2528,8 +2524,8 @@ void arm_mcr_mrc(struct cpu *cpu, uint32_t iword)
 		cpu->cd.arm.coproc[cp_num](cpu, opcode1, opcode2, l_bit,
 		    crn, crm, rd);
 	else {
-		fatal("[ TODO: arm_mcr_mrc: pc=0x%08x, iword=0x%08x: "
-		    "cp_num=%i ]\n", (int)cpu->pc, iword, cp_num);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_mcr_mrc: pc=0x%08x, iword=0x%08x: "
+		    "cp_num=%i ]", (int)cpu->pc, iword, cp_num);
 
 		// arm_exception(cpu, ARM_EXCEPTION_UND);
 		/*  exit(1);  */
@@ -2547,7 +2543,7 @@ void arm_mcr_mrc(struct cpu *cpu, uint32_t iword)
  */
 void arm_cdp(struct cpu *cpu, uint32_t iword)
 {
-	fatal("[ arm_cdp: pc=0x%08x, iword=0x%08x ]\n", (int)cpu->pc, iword);
+	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_cdp: pc=0x%08x, iword=0x%08x ]", (int)cpu->pc, iword);
 	arm_exception(cpu, ARM_EXCEPTION_UND);
 	/*  exit(1);  */
 }

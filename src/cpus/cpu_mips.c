@@ -1832,20 +1832,20 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 		// TODO: debugmsg SUBSYS_CPU, or better: SUBSYS_EXCEPTION
 		// VERBOSITY_WARNING since this is a relatively sure sign of a bug.
 
-		fatal("[ ");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ");
 		if (cpu->machine->ncpus > 1)
-			fatal("cpu%i: ", cpu->cpu_id);
-		fatal("warning: LOW reference: vaddr=");
+			fatal_error(SUBSYS_CPU, "cpu", "cpu%i: ", cpu->cpu_id);
+		fatal_error(SUBSYS_CPU, "cpu", "warning: LOW reference: vaddr=");
 		if (cpu->is_32bit)
-			fatal("0x%08" PRIx32, (uint32_t) vaddr);
+			fatal_error(SUBSYS_CPU, "cpu", "0x%08" PRIx32, (uint32_t) vaddr);
 		else
-			fatal("0x%016" PRIx64, (uint64_t) vaddr);
-		fatal(", exception %s, pc=", exception_names[exccode]);
+			fatal_error(SUBSYS_CPU, "cpu", "0x%016" PRIx64, (uint64_t) vaddr);
+		fatal_error(SUBSYS_CPU, "cpu", ", exception %s, pc=", exception_names[exccode]);
 		if (cpu->is_32bit)
-			fatal("0x%08" PRIx32, (uint32_t) cpu->pc);
+			fatal_error(SUBSYS_CPU, "cpu", "0x%08" PRIx32, (uint32_t) cpu->pc);
 		else
-			fatal("0x%016" PRIx64, (uint64_t)cpu->pc);
-		fatal(" <%s> ]\n", symbol? symbol : "(no symbol)");
+			fatal_error(SUBSYS_CPU, "cpu", "0x%016" PRIx64, (uint64_t)cpu->pc);
+		fatal_error(SUBSYS_CPU, "cpu", " <%s> ]", symbol? symbol : "(no symbol)");
 	}
 
 	/*  Clear the exception code bits of the cause register...  */
@@ -1919,7 +1919,7 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 				//  written into the EntryHi register."
 
 				if ((reg[COP0_ENTRYHI] & ENTRYHI_ASID) != (uint32_t)vaddr_asid)
-					fatal("[ huh? vaddr_asid 0x%02x not same as in ENTRYHI 0x%02x ]\n",
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ huh? vaddr_asid 0x%02x not same as in ENTRYHI 0x%02x ]",
 						vaddr_asid, reg[COP0_ENTRYHI] & ENTRYHI_ASID);
 
 				if (cpu->cd.mips.cpu_type.mmu_model == MMU10K)
