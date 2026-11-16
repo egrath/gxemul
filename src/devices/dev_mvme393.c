@@ -21,6 +21,11 @@
 #include "memory.h"
 #include "misc.h"
 
+#if defined(WITH_SDL) || defined(WITH_SDL2)
+#include <SDL.h>
+#include <SDL_keycode.h>
+#endif
+
 #define MVME393_DPR_SIZE        0x80000         /*  512 KB Dual-Port RAM  */
 #define MVME393_A16_BASE        0xa800          /*  Short I/O base        */
 #define MVME393_A16_SIZE        0x10            /*  16 bytes per card     */
@@ -85,6 +90,139 @@ static void dev_mvme393_enqueue_key(uint32_t key, uint32_t down)
 	}
 }
 
+static void dev_mvme393_flush_kbd_queue(struct mvme393_data *d)
+{
+	if (d != NULL && d->fb != NULL && d->fb->framebuffer != NULL) {
+		uint8_t *in = d->fb->framebuffer + 0xfe000;
+		if (s_kbd_head != s_kbd_tail) {
+			uint32_t kbd_pending = ((uint32_t)in[0x18]<<24) | ((uint32_t)in[0x19]<<16) |
+			                       ((uint32_t)in[0x1a]<<8)  | in[0x1b];
+			if (kbd_pending == 0) {
+				struct mvme393_kbd_event ev = s_kbd_queue[s_kbd_tail];
+				s_kbd_tail = (s_kbd_tail + 1) % MVME393_KBD_QUEUE_SIZE;
+
+				in[0x10] = (ev.key >> 24) & 0xff;
+				in[0x11] = (ev.key >> 16) & 0xff;
+				in[0x12] = (ev.key >> 8) & 0xff;
+				in[0x13] = ev.key & 0xff;
+
+				in[0x14] = (ev.down >> 24) & 0xff;
+				in[0x15] = (ev.down >> 16) & 0xff;
+				in[0x16] = (ev.down >> 8) & 0xff;
+				in[0x17] = ev.down & 0xff;
+
+				in[0x18] = 0; in[0x19] = 0; in[0x1a] = 0; in[0x1b] = 1;
+			}
+		}
+	}
+}
+
+static int dev_mvme393_sdl_to_keycode(int sym)
+{
+#if defined(WITH_SDL) || defined(WITH_SDL2)
+	switch (sym) {
+	/* Modifiers */
+	case SDLK_LSHIFT:	return 16;
+	case SDLK_RSHIFT:	return 21;
+	case SDLK_LCTRL:	return 17;
+	case SDLK_RCTRL:	return 22;
+	case SDLK_LALT:		return 18;
+	case SDLK_RALT:		return 19;
+	case SDLK_CAPSLOCK:	return 20;
+	case SDLK_LGUI:		return 23;
+	case SDLK_RGUI:		return 140;
+
+	/* Editing & Navigation */
+	case SDLK_RETURN:
+	case SDLK_KP_ENTER:	return 13;
+	case SDLK_BACKSPACE:	return 8;
+	case SDLK_TAB:		return 9;
+	case SDLK_ESCAPE:	return 27;
+	case SDLK_DELETE:	return 127;
+	case SDLK_INSERT:	return 15;
+	case SDLK_HOME:		return 29;
+	case SDLK_END:		return 30;
+	case SDLK_PAGEUP:	return 31;
+	case SDLK_PAGEDOWN:	return 14;
+	case SDLK_LEFT:		return 24;
+	case SDLK_UP:		return 25;
+	case SDLK_RIGHT:	return 26;
+	case SDLK_DOWN:		return 28;
+
+	/* Keypad */
+	case SDLK_KP_0:		return (SDL_GetModState() & KMOD_NUM) ? '0' : 15;  /* XK_Insert */
+	case SDLK_KP_1:		return (SDL_GetModState() & KMOD_NUM) ? '1' : 30;  /* XK_End */
+	case SDLK_KP_2:		return (SDL_GetModState() & KMOD_NUM) ? '2' : 28;  /* XK_Down */
+	case SDLK_KP_3:		return (SDL_GetModState() & KMOD_NUM) ? '3' : 14;  /* XK_Next */
+	case SDLK_KP_4:		return (SDL_GetModState() & KMOD_NUM) ? '4' : 24;  /* XK_Left */
+	case SDLK_KP_5:		return (SDL_GetModState() & KMOD_NUM) ? '5' : -1;
+	case SDLK_KP_6:		return (SDL_GetModState() & KMOD_NUM) ? '6' : 26;  /* XK_Right */
+	case SDLK_KP_7:		return (SDL_GetModState() & KMOD_NUM) ? '7' : 29;  /* XK_Home */
+	case SDLK_KP_8:		return (SDL_GetModState() & KMOD_NUM) ? '8' : 25;  /* XK_Up */
+	case SDLK_KP_9:		return (SDL_GetModState() & KMOD_NUM) ? '9' : 31;  /* XK_Prior */
+	case SDLK_KP_PERIOD:	return (SDL_GetModState() & KMOD_NUM) ? '.' : 127; /* XK_Delete */
+	case SDLK_KP_DIVIDE:	return '/';
+	case SDLK_KP_MULTIPLY:	return '*';
+	case SDLK_KP_MINUS:	return '-';
+	case SDLK_KP_PLUS:	return '+';
+
+	/* Function keys */
+	case SDLK_F1:		return 128;
+	case SDLK_F2:		return 129;
+	case SDLK_F3:		return 130;
+	case SDLK_F4:		return 131;
+	case SDLK_F5:		return 132;
+	case SDLK_F6:		return 133;
+	case SDLK_F7:		return 134;
+	case SDLK_F8:		return 135;
+	case SDLK_F9:		return 136;
+	case SDLK_F10:		return 137;
+	case SDLK_F11:		return 138;
+	case SDLK_F12:		return 139;
+
+	default:
+		if (sym >= 'A' && sym <= 'Z')
+			return sym + ('a' - 'A');
+		if (sym >= 32 && sym <= 126)
+			return sym;
+		return -1;
+	}
+#else
+	if (sym >= 'A' && sym <= 'Z')
+		return sym + ('a' - 'A');
+	if (sym >= 32 && sym <= 126)
+		return sym;
+	return -1;
+#endif
+}
+
+static void dev_mvme393_key_event(struct machine *m, int sym, int down)
+{
+	(void)m;
+
+	if (down < 0) {
+		/* Focus lost: release all modifiers */
+		dev_mvme393_enqueue_key(16, 0); /* Shift_L */
+		dev_mvme393_enqueue_key(21, 0); /* Shift_R */
+		dev_mvme393_enqueue_key(17, 0); /* Control_L */
+		dev_mvme393_enqueue_key(22, 0); /* Control_R */
+		dev_mvme393_enqueue_key(18, 0); /* Alt_L */
+		dev_mvme393_enqueue_key(19, 0); /* Alt_R */
+		dev_mvme393_enqueue_key(23, 0); /* Meta_L */
+		dev_mvme393_enqueue_key(140, 0); /* Meta_R */
+		if (s_mvme393 != NULL)
+			dev_mvme393_flush_kbd_queue(s_mvme393);
+		return;
+	}
+
+	int keycode = dev_mvme393_sdl_to_keycode(sym);
+	if (keycode > 0) {
+		dev_mvme393_enqueue_key((uint32_t)keycode, (uint32_t)down);
+		if (s_mvme393 != NULL)
+			dev_mvme393_flush_kbd_queue(s_mvme393);
+	}
+}
+
 static void dev_mvme393_display_key(struct machine *m, int ch)
 {
 	(void)m;
@@ -102,8 +240,8 @@ static void dev_mvme393_display_key(struct machine *m, int ch)
 		dev_mvme393_enqueue_key(8, 1);             /* XK_BackSpace press */
 		dev_mvme393_enqueue_key(8, 0);             /* XK_BackSpace release */
 	} else if (ch == '\t') {
-		dev_mvme393_enqueue_key(10, 1);            /* XK_Tab press */
-		dev_mvme393_enqueue_key(10, 0);            /* XK_Tab release */
+		dev_mvme393_enqueue_key(9, 1);             /* XK_Tab press */
+		dev_mvme393_enqueue_key(9, 0);             /* XK_Tab release */
 	} else if (ch == 27) {
 		dev_mvme393_enqueue_key(27, 1);            /* XK_Escape press */
 		dev_mvme393_enqueue_key(27, 0);            /* XK_Escape release */
@@ -591,6 +729,26 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 
 	if (d->fb != NULL && d->fb->framebuffer != NULL) {
 		uint8_t *in = d->fb->framebuffer + 0xfe000;
+		uint8_t *pal = d->fb->framebuffer + 0xff000;
+		int pal_dirty = 0;
+		int i;
+
+		for (i = 0; i < 256; i++) {
+			uint8_t r = pal[i * 4 + 1];
+			uint8_t g = pal[i * 4 + 2];
+			uint8_t b = pal[i * 4 + 3];
+			if (d->fb->rgb_palette[i * 3 + 0] != r ||
+			    d->fb->rgb_palette[i * 3 + 1] != g ||
+			    d->fb->rgb_palette[i * 3 + 2] != b) {
+				d->fb->rgb_palette[i * 3 + 0] = r;
+				d->fb->rgb_palette[i * 3 + 1] = g;
+				d->fb->rgb_palette[i * 3 + 2] = b;
+				pal_dirty = 1;
+			}
+		}
+		if (pal_dirty) {
+			d->vram_dirty = 1;
+		}
 
 		console_getmouse(&dx, &dy, &buttons, &fb_nr);
 		if (dx != 0 || dy != 0 || buttons != 0) {
@@ -605,26 +763,7 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 		}
 
 		/* Deliver queued keyboard events if previous event was consumed */
-		if (s_kbd_head != s_kbd_tail) {
-			uint32_t kbd_pending = ((uint32_t)in[0x18]<<24) | ((uint32_t)in[0x19]<<16) |
-			                       ((uint32_t)in[0x1a]<<8)  | in[0x1b];
-			if (kbd_pending == 0) {
-				struct mvme393_kbd_event ev = s_kbd_queue[s_kbd_tail];
-				s_kbd_tail = (s_kbd_tail + 1) % MVME393_KBD_QUEUE_SIZE;
-
-				in[0x10] = (ev.key >> 24) & 0xff;
-				in[0x11] = (ev.key >> 16) & 0xff;
-				in[0x12] = (ev.key >> 8) & 0xff;
-				in[0x13] = ev.key & 0xff;
-
-				in[0x14] = (ev.down >> 24) & 0xff;
-				in[0x15] = (ev.down >> 16) & 0xff;
-				in[0x16] = (ev.down >> 8) & 0xff;
-				in[0x17] = ev.down & 0xff;
-
-				in[0x18] = 0; in[0x19] = 0; in[0x1a] = 0; in[0x1b] = 1;
-			}
-		}
+		dev_mvme393_flush_kbd_queue(d);
 
 		if (d->vram_dirty) {
 			d->fb->update_x1 = 0;
@@ -680,20 +819,29 @@ void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187)
 			d->fb->rgb_palette[i * 3 + 1] = g;
 			d->fb->rgb_palette[i * 3 + 2] = b;
 		}
-		d->fb->rgb_palette[0] = 0; d->fb->rgb_palette[1] = 0; d->fb->rgb_palette[2] = 0;
-		d->fb->rgb_palette[3] = 255; d->fb->rgb_palette[4] = 255; d->fb->rgb_palette[5] = 255;
+		/* X11 CFB default colormap: pixel 0 is white, pixel 1 is black */
+		d->fb->rgb_palette[0] = 255; d->fb->rgb_palette[1] = 255; d->fb->rgb_palette[2] = 255;
+		d->fb->rgb_palette[3] = 0;   d->fb->rgb_palette[4] = 0;   d->fb->rgb_palette[5] = 0;
 		d->fb->rgb_palette[255 * 3 + 0] = 255;
 		d->fb->rgb_palette[255 * 3 + 1] = 255;
 		d->fb->rgb_palette[255 * 3 + 2] = 255;
 
-		/* Initial event pending to display mouse cursor immediately */
 		if (d->fb->framebuffer != NULL) {
+			uint8_t *pal = d->fb->framebuffer + 0xff000;
+			for (i = 0; i < 256; i++) {
+				pal[i * 4 + 0] = 0;
+				pal[i * 4 + 1] = d->fb->rgb_palette[i * 3 + 0];
+				pal[i * 4 + 2] = d->fb->rgb_palette[i * 3 + 1];
+				pal[i * 4 + 3] = d->fb->rgb_palette[i * 3 + 2];
+			}
+			/* Initial event pending to display mouse cursor immediately */
 			uint8_t *in = d->fb->framebuffer + 0xfe000;
 			in[15] = 1;
 		}
 	}
 
 	machine->display_key_handler = dev_mvme393_display_key;
+	machine->display_key_event = dev_mvme393_key_event;
 
 	machine_add_tickfunction(machine, dev_mvme393_tick, d, 14);
 }
