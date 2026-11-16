@@ -55,8 +55,7 @@ MACHINE_SETUP(algor)
 	case MACHINE_ALGOR_P5064:
 		machine->machine_name = strdup("Algor P5064");
 		break;
-	default:fatal("Unimplemented Algor machine.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented Algor machine.\n");
 	}
 
 	/*

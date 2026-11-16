@@ -60,18 +60,15 @@ MACHINE_SETUP(dec3000)
 		if (machine->emulated_hz == 0)
 			machine->emulated_hz = 133333333;
 		break;
-	default:fatal("Unimplemented DEC 3000 model %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented DEC 3000 model %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	if (machine->physical_ram_in_mb > 128) {
-		fatal("The DEC 3000/400 can have at most 128 MB of memory.\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine", "The DEC 3000/400 can have at most 128 MB of memory.\n");
 	}
 	if (machine->physical_ram_in_mb % 32 != 0) {
-		fatal("DEC 3000 memory comes in banks of 32 MB.\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine", "DEC 3000 memory comes in banks of 32 MB.\n");
 	}
 
 	/*  The firmware's own PALcode runs on the CPU:  */

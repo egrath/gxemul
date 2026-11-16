@@ -121,8 +121,7 @@ MACHINE_SETUP(arc)
 			    MACHINE_NAME_MAXBUF);
 			break;
 		default:
-			fatal("error in machine.c. jazz\n");
-			exit(1);
+			fatal_error(SUBSYS_MACHINE, "machine", "error in machine.c. jazz\n");
 		}
 
 		jazz_data = device_add(machine, "jazz addr=0x80000000");
@@ -209,9 +208,8 @@ Not yet.
 
 		break;
 
-	default:fatal("Unimplemented ARC machine type %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented ARC machine type %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	/*

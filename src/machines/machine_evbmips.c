@@ -86,7 +86,7 @@ MACHINE_SETUP(evbmips)
 
 		if (machine->display_md.in_use) {
 			if (strlen(machine->boot_string_argument) < 3) {
-				fatal("WARNING: remember to use  -o 'console="
+				fatal_error(SUBSYS_MACHINE, "machine", "WARNING: remember to use  -o 'console="
 				    "tty0'  if you are emulating Linux. (Not"
 				    " needed for NetBSD.)\n");
 			}
@@ -106,8 +106,7 @@ MACHINE_SETUP(evbmips)
 		device_add(machine, "malta_lcd addr=0x1f000400");
 		break;
 
-	default:fatal("Unimplemented EVBMIPS model.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented EVBMIPS model.\n");
 	}
 
 	if (!machine->prom_emulation)
@@ -165,8 +164,7 @@ MACHINE_DEFAULT_CPU(evbmips)
 		machine->cpu_name = strdup("5Kc");
 		break;
 
-	default:fatal("Unimplemented evbmips subtype.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented evbmips subtype.\n");
 	}
 }
 

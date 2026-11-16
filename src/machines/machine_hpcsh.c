@@ -66,7 +66,7 @@ MACHINE_SETUP(hpcsh)
 	cpu->byte_order = EMUL_LITTLE_ENDIAN;
 
 	if (!machine->display_md.in_use)
-		fprintf(stderr, "-------------------------------------"
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "-------------------------------------"
 		    "------------------------------------------\n"
 		    "\n  WARNING!  You are emulating a HPCsh without -X."
 		    "\n            You will miss graphical output!\n\n"

@@ -120,8 +120,7 @@ MACHINE_SETUP(androidarm)
 
 		break;
 
-	default:printf("Unimplemented android-arm machine number.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented android-arm machine number.\n");
 	}
 
 	// See https://www.kernel.org/doc/Documentation/arm/Booting

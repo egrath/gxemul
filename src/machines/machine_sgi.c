@@ -121,8 +121,8 @@ MACHINE_SETUP(sgi)
 		machine->main_console_handle = (size_t)device_add(machine,
 		    "z8530 addr=0x1fbd9830 irq=0 addr_mult=4");
 
-		fatal("TODO ip19 interrupt rewrite\n");
-		abort();
+		fatal_error(SUBSYS_MACHINE, "sgi",
+		    "TODO ip19 interrupt rewrite");
 		//dev_scc_init(machine, mem, 0x10086000, 0,
 		//    machine->display_md.in_use, 0, 8);	/*  serial? irix?  */
 
@@ -309,8 +309,8 @@ j = 0;
 		strlcat(machineName, " (Everest IP25)", MACHINE_NAME_MAXBUF);
 
 		 /*  serial? irix?  */
-		fatal("TODO ip25 interrupt rewrite\n");
-		abort();
+		fatal_error(SUBSYS_MACHINE, "sgi",
+		    "TODO ip25 interrupt rewrite");
 		//dev_scc_init(machine, mem,
 		//    0x400086000ULL, 0, machine->display_md.in_use, 0, 8);
 
@@ -428,8 +428,7 @@ j = 0;
  		 */
 
 		if (machine->physical_ram_in_mb > 1024) {
-			fatal("SGI O2 cannot have more than 1 GB of RAM.\n");
-			exit(1);
+			fatal_error(SUBSYS_MACHINE, "machine", "SGI O2 cannot have more than 1 GB of RAM.\n");
 		}
 
 		/*  In the new framework, this would be the other way around :-), i.e.
@@ -622,9 +621,8 @@ j = 0;
 		break;
 
 	default:
-		fatal("unimplemented SGI machine type IP%i\n",
+		fatal_error(SUBSYS_MACHINE, "machine", "unimplemented SGI machine type IP%i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	if (!machine->prom_emulation)

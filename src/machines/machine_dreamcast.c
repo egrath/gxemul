@@ -51,7 +51,7 @@ MACHINE_SETUP(dreamcast)
 	machine->cpus[0]->cd.sh.pclock = 50000000;
 
 	if (!machine->display_md.in_use)
-		fprintf(stderr, "-------------------------------------"
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "-------------------------------------"
 		    "------------------------------------------\n"
 		    "\n  WARNING!  You are emulating a Dreamcast without -X."
 		    "\n            You will miss graphical output!\n\n"

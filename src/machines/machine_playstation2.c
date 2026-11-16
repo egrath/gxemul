@@ -64,10 +64,10 @@ MACHINE_SETUP(playstation2)
 	cpu->byte_order = EMUL_LITTLE_ENDIAN;
 
 	if (machine->physical_ram_in_mb != 32)
-		fprintf(stderr, "WARNING! Playstation 2 machines are supposed "
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Playstation 2 machines are supposed "
 		    "to have exactly 32 MB RAM. Continuing anyway.\n");
 	if (!machine->display_md.in_use)
-		fprintf(stderr, "WARNING! Playstation 2 without -X is pretty "
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Playstation 2 without -X is pretty "
 		    "meaningless. Continuing anyway.\n");
 
 	/*

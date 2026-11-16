@@ -63,8 +63,7 @@ MACHINE_SETUP(jensen)
 	}
 
 	if (machine->physical_ram_in_mb > 128) {
-		fatal("The DECpc AXP 150 can have at most 128 MB of memory.\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine", "The DECpc AXP 150 can have at most 128 MB of memory.\n");
 	}
 
 	/*  The firmware's own PALcode runs on the CPU:  */

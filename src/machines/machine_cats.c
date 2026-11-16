@@ -57,7 +57,7 @@ MACHINE_SETUP(cats)
 		machine->emulated_hz = 50000000;
 
 	if (machine->physical_ram_in_mb > 256)
-		fprintf(stderr, "WARNING! Real CATS machines cannot"
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real CATS machines cannot"
 		    " have more than 256 MB RAM. Continuing anyway.\n");
 
 	snprintf(tmpstr, sizeof(tmpstr), "footbridge irq=%s.cpu[%i].irq"

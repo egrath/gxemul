@@ -125,9 +125,8 @@ MACHINE_SETUP(mvme88k)
 		/*  TODO  */
 		break;
 
-	default:fatal("Unimplemented MVME88K machine subtype %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented MVME88K machine subtype %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	if (!machine->prom_emulation)
@@ -218,9 +217,8 @@ MACHINE_DEFAULT_CPU(mvme88k)
 		machine->cpu_name = strdup("88110");
 		break;
 
-	default:fatal("Unimplemented MVME88K machine subtype %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented MVME88K machine subtype %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 }
 

@@ -283,8 +283,7 @@ MACHINE_SETUP(hpcmips)
 		hpc_platid_submodel = 0;	/*  0  */
 		break;
 
-	default:printf("Unimplemented hpcmips machine number.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented hpcmips machine number.\n");
 	}
 
 	store_32bit_word_in_host(cpu, (unsigned char *)&hpc_bootinfo.platid_cpu,
@@ -422,8 +421,7 @@ MACHINE_DEFAULT_CPU(hpcmips)
 	case MACHINE_HPCMIPS_IBM_WORKPAD_Z50:
 		machine->cpu_name = strdup("VR4121");
 		break;
-	default:printf("Unimplemented HPCMIPS model?\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented HPCMIPS model?\n");
 	}
 }
 

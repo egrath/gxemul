@@ -385,12 +385,12 @@ int machine_name_to_type(char *stype, char *ssubtype,
 							return 1;
 						}
 
-				fatal("Unknown subtype '%s' for emulation"
-				    " '%s'\n", ssubtype, stype);
-				if (!ssubtype[0])
-					fatal("(Maybe you forgot the -e"
-					    " command line option?)\n");
-				exit(1);
+				fatal_error(SUBSYS_STARTUP, "machine",
+				    "Unknown subtype '%s' for emulation '%s'%s",
+				    ssubtype, stype,
+				    !ssubtype[0] ? " (Maybe you forgot the -e"
+				    " command line option?)" : "");
+				return 0;
 			}
 
 		me = me->next;
@@ -418,23 +418,34 @@ int machine_name_to_type(char *stype, char *ssubtype,
 	}
 
 	switch (nmatches) {
-	case 0:	fatal("\nSorry, emulation \"%s\"", stype);
-		if (ssubtype != NULL && ssubtype[0] != '\0')
-			fatal(" (subtype \"%s\")", ssubtype);
-		fatal(" is unknown.\n");
+	case 0:	{
+		char tmp[128];
+		snprintf(tmp, sizeof(tmp), " (subtype \"%s\")",
+		    ssubtype != NULL ? ssubtype : "");
+		fatal_error(SUBSYS_STARTUP, "machine",
+		    "\nSorry, emulation \"%s\"%s is unknown.",
+		    stype,
+		    (ssubtype != NULL && ssubtype[0] != '\0') ? tmp : "");
 		break;
+	}
 	case 1:	return 1;
-	default:fatal("\nSorry, multiple matches for \"%s\"", stype);
-		if (ssubtype != NULL && ssubtype[0] != '\0')
-			fatal(" (subtype \"%s\")", ssubtype);
-		fatal(".\n");
+	default:{
+		char tmp[128];
+		snprintf(tmp, sizeof(tmp), " (subtype \"%s\")",
+		    ssubtype != NULL ? ssubtype : "");
+		fatal_error(SUBSYS_STARTUP, "machine",
+		    "\nSorry, multiple matches for \"%s\"%s.", stype,
+		    (ssubtype != NULL && ssubtype[0] != '\0') ? tmp : "");
+		break;
+	}
 	}
 
 	*type = MACHINE_NONE;
 	*subtype = 0;
 
-	fatal("Use the -H command line option to get a list of "
-	    "available types and subtypes.\n\n");
+	fatal_error(SUBSYS_STARTUP, "machine",
+	    "Use the -H command line option to get a list of "
+	    "available types and subtypes.");
 
 	return 0;
 }
@@ -498,10 +509,10 @@ void machine_add_tickfunction(struct machine *machine, void (*func)
 	 *  too low tickshifts are not allowed.
 	 */
 	if (tickshift < N_SAFE_DYNTRANS_LIMIT_SHIFT) {
-		fatal("ERROR! tickshift = %i, less than "
-		    "N_SAFE_DYNTRANS_LIMIT_SHIFT (%i)\n",
+		fatal_error(SUBSYS_MACHINE, "machine_add_tick",
+		    "tickshift = %i, less than "
+		    "N_SAFE_DYNTRANS_LIMIT_SHIFT (%i)",
 		    tickshift, N_SAFE_DYNTRANS_LIMIT_SHIFT);
-		exit(1);
 	}
 
 	machine->tick_functions.ticks_till_next[n]   = 0;
@@ -530,8 +541,8 @@ void machine_statistics_init(struct machine *machine, char *fname)
 	machine->allow_instruction_combinations = 0;
 
 	if (machine->statistics.fields != NULL) {
-		fprintf(stderr, "Only one -s option is allowed.\n");
-		exit(1);
+		fatal_error(SUBSYS_STARTUP, "statistics",
+		    "Only one -s option is allowed.");
 	}
 
 	machine->statistics.enabled = 1;
@@ -542,10 +553,10 @@ void machine_statistics_init(struct machine *machine, char *fname)
 		pcolon ++;
 
 	if (*pcolon != ':') {
-		fprintf(stderr, "The syntax for the -s option is:    "
+		fatal_error(SUBSYS_STARTUP, "statistics",
+		    "The syntax for the -s option is:    "
 		    "-s flags:filename\nYou omitted the flags. Run g"
-		    "xemul -h for a list of available flags.\n");
-		exit(1);
+		    "xemul -h for a list of available flags.");
 	}
 
 	while (*fname != ':') {
@@ -570,9 +581,8 @@ void machine_statistics_init(struct machine *machine, char *fname)
 			machine->statistics.enabled = 0;
 			break;
 
-		default:fprintf(stderr, "Unknown flag '%c' used with the"
-			    " -s option. Aborting.\n", *fname);
-			exit(1);
+		default:fatal_error(SUBSYS_STARTUP, "statistics",
+			    "Unknown flag '%c' used with the -s option.", *fname);
 		}
 		fname ++;
 	}
@@ -688,8 +698,8 @@ void machine_setup(struct machine *machine)
 	}
 
 	if (me == NULL) {
-		fatal("Unknown emulation type %i\n", machine->machine_type);
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine_setup",
+		    "Unknown emulation type %i", machine->machine_type);
 	}
 
 	switch (cpu->cpu_family->arch) {
@@ -764,8 +774,8 @@ void machine_add_devices_as_symbols(struct machine *machine, uint64_t offset)
 void machine_memsize_fix(struct machine *m)
 {
 	if (m == NULL) {
-		fatal("machine_defaultmemsize(): m == NULL?\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine",
+		    "machine_defaultmemsize(): m == NULL?");
 	}
 
 	if (m->physical_ram_in_mb == 0) {
@@ -811,8 +821,8 @@ void machine_default_cputype(struct machine *m)
 	struct machine_entry *me;
 
 	if (m == NULL) {
-		fatal("machine_default_cputype(): m == NULL?\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine",
+		    "machine_default_cputype(): m == NULL?");
 	}
 
 	/*  Already set? Then return.  */
@@ -830,10 +840,9 @@ void machine_default_cputype(struct machine *m)
 	}
 
 	if (m->cpu_name == NULL) {
-		fprintf(stderr, "machine_default_cputype(): no default"
-		    " cpu for machine type %i subtype %i\n",
+		fatal_error(SUBSYS_MACHINE, "machine_default_cputype",
+		    "no default cpu for machine type %i subtype %i",
 		    m->machine_type, m->machine_subtype);
-		exit(1);
 	}
 }
 
@@ -866,7 +875,8 @@ void machine_add_event(struct machine *machine, uint64_t when,
 			break;
 	if (i == e->n) {
 		if (e->n >= MAX_MACHINE_EVENTS) {
-			fatal("machine_add_event(): too many events\n");
+			fatal_error(SUBSYS_MACHINE, "machine_add_event",
+	    "too many events");
 			return;
 		}
 		e->n ++;
@@ -1157,7 +1167,8 @@ void machine_list_available_types_and_cpus(void)
 	me = first_machine_entry;
 
 	if (me == NULL)
-		fatal("No machines defined!\n");
+		fatal_error(SUBSYS_MACHINE, "machine",
+		    "No machines defined!");
 
 	while (me != NULL) {
 		int i, j, iadd2 = 1;
@@ -1202,8 +1213,8 @@ void machine_list_available_types_and_cpus(void)
 void machine_init(void)
 {
 	if (first_machine_entry != NULL) {
-		fatal("machine_init(): already called?\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine_init",
+		    "already called?");
 	}
 
 	automachine_init();

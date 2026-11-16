@@ -86,9 +86,8 @@ MACHINE_SETUP(avanti)
 	}
 
 	if (machine->physical_ram_in_mb > 384) {
-		fatal("The AlphaStation 200 and 400 can have at most 384 MB "
+		fatal_error(SUBSYS_MACHINE, "machine", "The AlphaStation 200 and 400 can have at most 384 MB "
 		    "of memory.\n");
-		exit(1);
 	}
 
 	/*  The firmware's own PALcode runs on the CPU:  */
@@ -134,8 +133,8 @@ int avanti_load_rom(struct machine *machine, const char *filename,
 	if (fread(buf, 1, size + 1, f) != size) {
 		fclose(f);
 		free(buf);
-		fatal("%s: not an AlphaStation 200 ROM image (the flash, "
-		    "1 MB, and the DROM, 64 KB)\n", filename);
+		fatal_error(SUBSYS_MACHINE, "machine", "%s: not an AlphaStation 200 ROM image (the flash, "
+		    "1 MB, and the DROM, 64 KB)", filename);
 		return 0;
 	}
 	fclose(f);
@@ -144,8 +143,8 @@ int avanti_load_rom(struct machine *machine, const char *filename,
 	    (!avanti_rom_header(buf, "AVANTI_SRM") &&
 	    !avanti_rom_header(buf + AVANTI_FLASH_SIZE / 2, "AVANTI_ARC"))) {
 		free(buf);
-		fatal("%s: no AVANTI_SRM/AVANTI_ARC and AVANTI-DROM image "
-		    "headers\n", filename);
+		fatal_error(SUBSYS_MACHINE, "machine", "%s: no AVANTI_SRM/AVANTI_ARC and AVANTI-DROM image "
+		    "headers", filename);
 		return 0;
 	}
 

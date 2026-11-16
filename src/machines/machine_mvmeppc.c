@@ -117,9 +117,8 @@ MACHINE_SETUP(mvmeppc)
 
 		break;
 
-	default:fatal("Unimplemented MVMEPPC machine subtype %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented MVMEPPC machine subtype %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	if (!machine->prom_emulation)
@@ -175,9 +174,8 @@ MACHINE_DEFAULT_CPU(mvmeppc)
 		machine->cpu_name = strdup("PPC750");
 		break;
 
-	default:fatal("Unimplemented MVMEPPC machine subtype %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented MVMEPPC machine subtype %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 }
 

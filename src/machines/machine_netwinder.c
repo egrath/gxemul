@@ -49,7 +49,7 @@ MACHINE_SETUP(netwinder)
 	machine->machine_name = strdup("NetWinder");
 
 	if (machine->physical_ram_in_mb > 256)
-		fprintf(stderr, "WARNING! Real NetWinders cannot"
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real NetWinders cannot"
 		    " have more than 256 MB RAM. Continuing anyway.\n");
 
 	/*  CPU at 63.75 MHz, according to NetBSD's netwinder_machdep.c.  */

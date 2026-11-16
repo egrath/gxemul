@@ -107,8 +107,7 @@ MACHINE_SETUP(hpcarm)
 		hpc_platid_submodel = 1;	/*  720  */
 		break;
 
-	default:printf("Unimplemented hpcarm machine number.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented hpcarm machine number.\n");
 	}
 
 	store_32bit_word_in_host(cpu, (unsigned char *)&hpc_bootinfo.platid_cpu,

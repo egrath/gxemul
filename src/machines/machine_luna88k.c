@@ -95,14 +95,12 @@ MACHINE_SETUP(luna88k)
 
 		break;
 
-	default:fatal("Unimplemented LUNA88K machine subtype %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented LUNA88K machine subtype %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	if (machine->ncpus > 4) {
-		fatal("More than 4 CPUs is not supported for LUNA 88K.\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "machine", "More than 4 CPUs is not supported for LUNA 88K.\n");
 	}
 
 	// Unpause all CPUs. (Normally, the emulator only starts with

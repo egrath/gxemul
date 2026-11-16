@@ -97,11 +97,11 @@ MACHINE_SETUP(pmax)
 			machine->emulated_hz = 16670000;
 
 		if (machine->physical_ram_in_mb > 24)
-			fprintf(stderr, "WARNING! Real DECstation 3100 machines"
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real DECstation 3100 machines"
 			    " cannot have more than 24MB RAM.\n");
 
 		if ((machine->physical_ram_in_mb % 4) != 0)
-			fprintf(stderr, "WARNING! Real DECstation 3100 machines"
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real DECstation 3100 machines"
 			    " have an integer multiple of 4 MBs of RAM.\n");
 
 		/*  1 for color, 0 for mono. TODO: command line option?  */
@@ -161,10 +161,10 @@ MACHINE_SETUP(pmax)
 			machine->emulated_hz = 25000000;
 
 		if (machine->physical_ram_in_mb < 8)
-			fprintf(stderr, "WARNING! Real KN02 machines do not "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real KN02 machines do not "
 			    "have less than 8MB RAM. Continuing anyway.\n");
 		if (machine->physical_ram_in_mb > 480)
-			fprintf(stderr, "WARNING! Real KN02 machines cannot "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real KN02 machines cannot "
 			    "have more than 480MB RAM. Continuing anyway.\n");
 
 		/*  An R3220 memory thingy:  */
@@ -258,7 +258,7 @@ MACHINE_SETUP(pmax)
 		if (machine->emulated_hz == 0)
 			machine->emulated_hz = 33000000;
 		if (machine->physical_ram_in_mb > 128)
-			fprintf(stderr, "WARNING! Real 3MIN machines cannot "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real 3MIN machines cannot "
 			    "have more than 128MB RAM. Continuing anyway.\n");
 
 		/*  KN02BA "3min" TurboChannel interrupt controller:  */
@@ -359,7 +359,7 @@ MACHINE_SETUP(pmax)
 		if (machine->emulated_hz == 0)
 			machine->emulated_hz = 40000000;
 		if (machine->physical_ram_in_mb > 480)
-			fprintf(stderr, "WARNING! Real KN03 machines cannot "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real KN03 machines cannot "
 			    "have more than 480MB RAM. Continuing anyway.\n");
 
 		/*  KN03 interrupts:  */
@@ -454,7 +454,7 @@ abort();
 
 		/*  TODO: this is incorrect, banks multiply by 8 etc  */
 		if (machine->physical_ram_in_mb < 48)
-			fprintf(stderr, "WARNING! 5800 will probably not run "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! 5800 will probably not run "
 			    "with less than 48MB RAM. Continuing anyway.\n");
 
 		/*
@@ -527,10 +527,10 @@ abort();
 			machine->emulated_hz = 33000000;
 
 		if (machine->physical_ram_in_mb < 8)
-			fprintf(stderr, "WARNING! Real KN02CA machines do not "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real KN02CA machines do not "
 			    "have less than 8MB RAM. Continuing anyway.\n");
 		if (machine->physical_ram_in_mb > 40)
-			fprintf(stderr, "WARNING! Real KN02CA machines cannot "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real KN02CA machines cannot "
 			    "have more than 40MB RAM. Continuing anyway.\n");
 
 		/*  Maxine interrupts:  */
@@ -667,12 +667,12 @@ abort();
 			machine->emulated_hz = 20000000;
 
 		if (machine->physical_ram_in_mb > 128)
-			fprintf(stderr, "WARNING! Real MIPSMATE 5100 machines "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real MIPSMATE 5100 machines "
 			    "cannot have more than 128MB RAM. Continuing"
 			    " anyway.\n");
 
 		if (machine->display_md.in_use)
-			fprintf(stderr, "WARNING! Real MIPSMATE 5100 machines "
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,  "WARNING! Real MIPSMATE 5100 machines "
 			    "cannot have a graphical framebuffer. "
 			    "Continuing anyway.\n");
 
@@ -718,9 +718,8 @@ abort();
 		serial_console_name = "osconsole=0";
 		break;
 
-	default:fatal("Unknown DEC machine type: %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unknown DEC machine type: %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	/*
@@ -833,8 +832,7 @@ abort();
 	strlcpy(machine->bootarg, init_bootpath, BOOTARG_BUFLEN);
 	if (strlcat(machine->bootarg, machine->boot_kernel_filename,
 	    BOOTARG_BUFLEN) > BOOTARG_BUFLEN) {
-		fprintf(stderr, "bootarg truncated?\n");
-		exit(1);
+		fatal_error(SUBSYS_MACHINE, "pmax", "bootarg truncated?");
 	}
 
 	machine->bootstr = strdup("boot");
@@ -853,8 +851,7 @@ abort();
 		strlcat(machine->bootarg, " ", BOOTARG_BUFLEN);
 		if (strlcat(machine->bootarg, machine->boot_string_argument,
 		    BOOTARG_BUFLEN) >= BOOTARG_BUFLEN) {
-			fprintf(stderr, "bootstr truncated?\n");
-			exit(1);
+			fatal_error(SUBSYS_MACHINE, "pmax", "bootstr truncated?");
 		}
 	}
 

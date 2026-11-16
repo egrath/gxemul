@@ -75,9 +75,8 @@ MACHINE_SETUP(alpha)
 		machine->machine_name = strdup("EB164");
 		break;
 
-	default:fatal("Unimplemented Alpha machine type %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented Alpha machine type %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 
 	if (!machine->prom_emulation)
@@ -220,9 +219,8 @@ MACHINE_DEFAULT_CPU(alpha)
 		machine->cpu_name = strdup("21164PC");
 		break;
 
-	default:fatal("Unimplemented Alpha machine type %i\n",
+	default:fatal_error(SUBSYS_MACHINE, "machine", "Unimplemented Alpha machine type %i",
 		    machine->machine_subtype);
-		exit(1);
 	}
 }
 
