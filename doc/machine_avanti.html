@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>GXemul: AlphaStation 200/400 emulation</title>
+  <meta name="robots" content="noarchive,nofollow,noindex">
+</head>
+<body style="font-family : sans-serif;">
+
+<!-- 10 lines header.  -->
+
+<h1>GXemul: AlphaStation 200/400 ("Avanti") emulation</h1>
+<p>
+
+<a href="./">Back to the index.</a>
+
+<!--
+
+Copyright (C) 2026  Anders Gavare and contributors.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the author may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+
+-->
+
+<p>The <b>AlphaStation 200</b> and <b>400</b> (code-named <i>"Avanti"</i>)
+were Digital's first PCI-based Alpha workstations, introduced in 1994. They
+are built around the DECchip 21071 (APECS) core logic chipset, with PCI and
+ISA buses, and were supported by both of Digital's consoles: SRM (for
+Digital UNIX / Tru64 and OpenVMS) and ARC (for Windows NT).</p>
+
+<p>GXemul emulates:
+<ul>
+	<li><b>Models</b> (the <tt>"model"</tt> in the configuration):
+	<ul>
+		<li><tt>200</tt>: AlphaStation 200 4/166, DECchip 21064 (EV4) at 166 MHz.
+		<li><tt>200-233</tt>: AlphaStation 200 4/233, 21064A (EV45).
+		<li><tt>400</tt>: AlphaStation 400 4/233, 21064A, three PCI slots, no
+		    on-board Ethernet.
+		<li><tt>250</tt>: AlphaStation 250 4/266, 21064A.
+	</ul>
+	<li>Execution of the genuine <b>DROM</b> (diagnostic ROM, with its power-up
+	    tests) and the <b>SRM V7.0</b> or <b>ARC 4.58</b> console from the flash.
+	<li><b>DECchip 21071 (APECS)</b>: the COMANCHE memory controller and the
+	    EPIC PCI bridge, with direct mapped and scatter/gather DMA windows.
+	<li><b>Intel 82378 (SIO)</b> PCI-to-ISA bridge, with the 8259 interrupt
+	    controllers, the 8254 timer, DMA, the MC146818 real-time clock
+	    with 128 bytes of CMOS, the 8242 keyboard and mouse controller, two
+	    serial ports, the parallel port and the floppy controller.
+	<li><b>NCR/Symbios 53C810</b> PCI SCSI controller, with its SCRIPTS
+	    processor; disk and CD-ROM images as SCSI targets.
+	<li><b>DECchip 21040</b> on-board Ethernet (on the 200), or a
+	    <b>DE500-BA</b> (21143) in the first slot (on the 400).
+	<li><b>ZLXp-E1</b> graphics (DECchip 21030 "TGA", 8 planes, Bt485), with
+	    the display enabled.
+</ul>
+
+<p>The following guest operating systems have been verified to install and
+run:
+<ul>
+	<li><a href="#tru64">Tru64 UNIX V5.1A and V5.1B</a> (multi-user,
+	    networking, CDE)
+	<li><a href="#windowsnt">Windows NT Server 4.0</a>, with
+	    <a href="#sp6a">Service Pack 6a</a> (networking, Internet Explorer)
+</ul>
+
+
+
+
+<p><br>
+<a name="firmware"></a>
+<h3>Firmware:</h3>
+
+<p>The machine runs the real firmware (the DROM, and the flash with the
+SRM and ARC consoles), from a single file: the dumps of the board's five
+ROM chips, concatenated in this order:
+<pre>
+	<b>cat E13 E19 E33 E46 E47 &gt; avanti.rom</b>
+</pre>
+
+<p>The flash holds both consoles. Which one starts is a CMOS setting, as on
+the real machine: from SRM, <tt>set os_type NT</tt> and a power cycle (a
+restart of GXemul) start ARC; from ARC's Setup menu, "Switch to OpenVMS or
+Digital UNIX console", "Switch to Digital UNIX" and a power cycle start SRM
+again. The CMOS and SRM's environment are kept in the <tt>"nvram"</tt>
+file, and ARC's environment in the same file name with <tt>.wart</tt>
+appended.
+
+<p>SRM uses the serial console (COM1, <tt>tty0</tt>); ARC and Windows NT
+use the graphics card.
+
+
+
+
+<p><br>
+<a name="config"></a>
+<h3>Configuration:</h3>
+
+<p>The <b>avanti</b> presets (AlphaStation 200 and 400) are a good start.
+A configuration for an AlphaStation 200 with 128 MB, the graphics card, a
+4 GB disk (an RZ29B), a CD-ROM and the on-board Ethernet on GXemul's
+simulated network:
+<pre>
+{
+ "gxemul": 1,
+ "name": "AlphaStation 200",
+ "machine": {
+  "type": "avanti",
+  "model": "200",
+  "memory_mb": 128
+ },
+ "boot": {
+  "prom_emulation": false,
+  "rom": "avanti.rom",
+  "nvram": "nvram.bin"
+ },
+ "drives": [
+  {
+   "file": "rz29.img",
+   "kind": "disk",
+   "id": 0,
+   "vendor": "DEC",
+   "product": "RZ29B    (C) DEC",
+   "revision": "0016"
+  },
+  {
+   "file": "cdrom.iso",
+   "kind": "cdrom",
+   "id": 4,
+   "readonly": true,
+   "vendor": "DEC",
+   "product": "RRD45   (C) DEC",
+   "revision": "0436"
+  }
+ ],
+ "display": {
+  "enabled": true
+ },
+ "network": {
+  "enabled": true,
+  "type": "simulated",
+  "ipv4": "10.0.0.0",
+  "ipv4len": 8,
+  "gateway": true
+ }
+}
+</pre>
+
+<p>An empty RZ29B disk image has 8380080 sectors:
+<pre>
+	<b>dd if=/dev/zero of=rz29.img bs=512 count=0 seek=8380080</b>
+</pre>
+
+<p>On the simulated network, the gateway (and name server) is
+<tt>10.0.0.254</tt>. If the host itself is inside 10.0.0.0/8, add a host
+route to it through the gateway in the guest.
+
+
+
+
+<p><br>
+<a name="tru64"></a>
+<h3>Tru64 UNIX V5.1A and V5.1B:</h3>
+
+<p>Start the machine with the OS CD as the CD-ROM and an empty disk image.
+At SRM's <tt>&gt;&gt;&gt;</tt> prompt on the serial console:
+<pre>
+	&gt;&gt;&gt; <b>boot dka400</b>
+</pre>
+<p>Choose U.S. English, install all software, the mandatory kernel options,
+and the default AdvFS layout. Loading the subsets takes 35 (V5.1B) to 50
+(V5.1A) minutes. The installer reboots through SRM by itself, configures the
+subsets, builds a kernel for the machine (<tt>cpu "DEC2100_A50"</tt>),
+reboots again, and comes up to <tt>login:</tt>. (V5.1B may need
+<tt>boot dka0 -flags A</tt> at the SRM prompt after its first reboot;
+V5.1A does it all by itself.)
+
+<p>The on-board 21040 is <tt>tu0</tt> (a DE500-BA on the 400 is too); with
+the display on, the graphics card is <tt>tga0</tt>. If the kernel was built
+before the display or the network were enabled, rebuild it with
+<tt>doconfig</tt>, and set up the network with <tt>netsetup</tt> or
+<tt>rcmgr</tt>.
+
+
+
+
+<p><br>
+<a name="windowsnt"></a>
+<h3>Windows NT 4.0:</h3>
+
+<p>Windows NT 4.0 for Alpha supports the AlphaStation 200/400 (its HAL is
+<tt>HALAVANT.DLL</tt>). The NT Server 4.0 CD (the multi-architecture one,
+with an <tt>\ALPHA</tt> directory) installs from the ARC console:
+
+<p><ol>
+  <li>Use a configuration as above, with the NT CD in the CD-ROM drive, the
+	display and the network enabled, and an empty disk image.
+  <p>
+
+  <li>In SRM, switch to ARC (see <a href="#firmware">Firmware</a>):
+<pre>
+	&gt;&gt;&gt; <b>set os_type NT</b>
+</pre>
+	and restart GXemul. ARC starts on the graphics card. On the first
+	start it asks for the language, and wants "Set default environment
+	variables" and "Set default configuration" in its Setup menu
+	(then "Supplementary menu, and save changes").
+  <p>
+
+  <li>Make the system partition, a small FAT partition from which ARC
+	starts NT: in the Supplementary menu, "Run a program":
+<pre>
+	<b>scsi(0)cdrom(4)fdisk(0)\alpha\arcinst</b>
+</pre>
+	"Configure partitions", "Create system partition", on the disk, 10 MB.
+  <p>
+
+  <li>In the Supplementary menu, "Install Windows NT from CD-ROM". Text-mode
+	setup finds the "Digital AlphaStation 200/400 Family", the
+	"Symbios Logic C810" SCSI controller and the "Digital ZLXp-E"
+	graphics. Create an NTFS partition for NT in the rest of the disk
+	(e.g. 2000 MB), and let setup copy the files; it restarts through
+	ARC by itself.
+  <p>
+
+  <li>The graphical setup asks for the CD key (the CD's kind, retail or
+	OEM, decides which kind it takes), the licensing mode, the computer
+	name, the server type (a stand-alone server is simplest) and the
+	Administrator password. For the network, "Start Search" finds the
+	"DEC PCI Ethernet DECchip 21040"; keep its "AutoDetect" connection
+	type. GXemul's simulated network has no DHCP server, so give TCP/IP
+	a fixed address, e.g. 10.0.0.2, mask 255.0.0.0, gateway 10.0.0.254.
+  <p>
+
+  <li>After the last restart, ARC boots "Windows NT Server Version 4.00",
+	and NT comes up to the logon screen (Ctrl-Alt-Del).
+</ol>
+
+<a name="sp6a"></a>
+<p><b>Service Pack 6a:</b> with the Service Pack 6a CD in the CD-ROM drive,
+run <tt>\alpha\update\update.exe</tt> from it in NT (e.g. <tt>e:</tt> is the
+CD-ROM), accept the license, and restart when it asks. NT then reports
+"Version 4.0 (Build 1381: Service Pack 6)", "Revised Service Pack 6a".
+
+
+
+
+<p><br>
+<a name="limitations"></a>
+<h3>Limitations:</h3>
+
+<ul>
+	<li>The TGA's DMA and 3D modes are not emulated (none of the guests
+	    above use them).
+	<li>SRM's graphics console needs the card's x86 option ROM, which is
+	    not there: SRM stays on the serial console.
+	<li>The SCSI targets don't disconnect, and only LUN 0 exists.
+	<li>No caches are modelled.
+</ul>
+
+<p>The development notes, with the details of the hardware and of what the
+firmware and the guests expect, are in
+<a href="avanti-plan.md"><tt>doc/avanti-plan.md</tt></a>.
+
+</body>
+</html>

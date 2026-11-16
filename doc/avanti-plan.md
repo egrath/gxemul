@@ -231,7 +231,7 @@ it decompresses the console.
 
 ---
 
-## 6. Status (2026-11-14)
+## 6. Status (2026-11-15)
 
 **M1 done, M2 mostly:** the real DROM V1.7 runs all its power-up tests
 and starts SRM V7.0-9 from the flash, which comes up to `>>>` on COM1;
@@ -280,8 +280,8 @@ boots, and Tru64 V5.1's `genvmunix` comes up to the single-user prompt with
   Tru64 uses the memory BAR), the SCRIPTS processor (block moves, I/O,
   register moves, transfer control, memory moves, LOAD/STORE), and a SCSI
   bus with the disk images as targets: SDTR is accepted as asked, WDTR
-  answered with 8 bits, only LUN 0 exists, nothing ever disconnects, so
-  WAIT RESELECT waits for SIGP. SCRIPTS (SRM's and Tru64's) and data go
+  answered with 8 bits (each once per connection), only LUN 0 exists,
+  nothing ever disconnects, so WAIT RESELECT waits for SIGP. SCRIPTS (SRM's and Tru64's) and data go
   through the DMA windows; Tru64's 810 SCRIPTS load and save registers with
   memory moves to the chip's own memory BAR.
 - **DMA windows** in the EPIC: direct mapped and scatter/gather.
@@ -442,8 +442,8 @@ and at the next power-up (a restart of gxemul) the DROM starts SRM again
   host time), OSF/1 V3.0 on the DEC 3000, NT 3.1 on the Jensen, and
   Ultrix 4.5 on a 5000/200.
 
-No Windows NT for Alpha with AlphaStation 200 support is here: only NT
-3.1, which predates the machine.
+Windows NT 4.0, which supports the machine (HALAVANT.DLL), installs and
+runs under ARC: see "Windows NT 4.0" below.
 
 ### Tru64 V5.1A (2026-11-14)
 
@@ -540,7 +540,34 @@ NT pings the gateway, and Internet Explorer loads a page from the host
 (`route add 10.3.0.76 10.0.0.254`, as for Tru64, since the host is inside
 10/8). Tru64 V5.1A on the same 21040 still pings and downloads 5 MB.
 
-**Next:** Service Pack 6a; the TGA's DMA modes if something uses them.
+**Service Pack 6a (2026-11-15).** From the SP6a CD,
+`\alpha\update\update.exe` installs (with the uninstall backup) and
+restarts; NT then stopped after its banner. SP6a's symc810 is a newer
+Symbios driver, with SCRIPTS that took three 53C810 fixes:
+
+- **Memory moves through the FIFO:** a memory move reads its source
+  before TEMP takes the destination address, and writes after. The
+  SCRIPTS store TEMP's old value (a computed address, DSA + 4) with one,
+  and still load TEMP with another (a move to the chip's own TEMP). With
+  TEMP set first, a patched CALL jumped to itself forever.
+- **A SELECT that no one answers** no longer halts at once. As on the
+  chip, SCRIPTS go on to the first instruction that needs the target (a
+  block move, a phase test, WAIT DISCONNECT) and wait there, and STO comes
+  after STIME0's selection timeout (0Ch: 256 ms). The driver's SCRIPTS
+  take the request off their queue right after the SELECT (they clear the
+  slot's flag and advance the queue pointer); halted at the SELECT, the
+  same request was selected again and again, and completed twice (STOP
+  0xA in SCSIPORT). With STO at once, the ISR also ran without a break,
+  and the DPC that starts the next request never did.
+- **SDTR once:** the target replies to SDTR (and WDTR) once per
+  connection; the driver answers the target's reply with another SDTR,
+  which gets none (it was negotiating with the CD-ROM forever).
+
+NT then boots: "Version 4.0 (Build 1381: Service Pack 6)", "Revised
+Service Pack 6a"; the 21040 still pings. SRM V7.0 and Tru64 V5.1A on the
+same 53C810 still find the RZ29B and the RRD45 and boot, and read the disk.
+
+**Next:** the TGA's DMA modes if something uses them.
 
 ## 7. Risks
 - **Firmware:** on hand (V7.0-9 and V6.4-1 dumps), but the DROM and the

@@ -147,9 +147,10 @@ static const struct machine_preset presets[] = {
 		"workstation: a 166 MHz 21064 on the APECS chipset, with a "
 		"53C810 SCSI controller and ISA. Runs the genuine DROM and SRM "
 		"V7.0 console (the flash and the DROM given as one file, see "
-		"doc/avanti-plan.md), on the serial console, with a ZLXp-E1 "
-		"(TGA) for X and CDE, and its on-board 21040 Ethernet. "
-		"Installs and runs Tru64 UNIX V5.1A and V5.1B with CDE.",
+		"doc/machine_avanti.html), on the serial console, with a "
+		"ZLXp-E1 (TGA) for X and CDE, and its on-board 21040 Ethernet. "
+		"Installs and runs Tru64 UNIX V5.1A and V5.1B with CDE, and, "
+		"under the ARC console, Windows NT 4.0 with Service Pack 6a.",
 		"{ \"gxemul\": 1, \"name\": \"AlphaStation 200\","
 		"  \"machine\": { \"type\": \"avanti\", \"model\": \"200\","
 		"                 \"memory_mb\": 256 },"
