@@ -187,7 +187,7 @@ static void rx_enqueue(struct scc_data *d, int portnr, int ch)
 
         if (d->cur_rx_queue_pos_write[portnr] ==
 	    d->cur_rx_queue_pos_read[portnr])
-                fatal("warning: add_to_rx_queue(): rx_queue overrun!\n");
+                fatal_error(SUBSYS_DEVICE, "scc", "warning: add_to_rx_queue(): rx_queue overrun!\n");
 }
 
 
@@ -676,7 +676,7 @@ DEVICE_ACCESS(scc)
 			    and by the WR0 commands (scc_wr0_command()).  */
 			if (d->register_selected[port] == SCC_RR3 &&
 			    port == SCC_CHANNEL_B)
-				fatal("WARNING! scc channel B has no RR3\n");
+				debugmsg(SUBSYS_DEVICE, "scc", VERBOSITY_WARNING, "WARNING! scc channel B has no RR3\n");
 
 			debugmsg(d->subsys, "scc", VERBOSITY_DEBUG,
 			    "port %i, register %i, read value 0x%02x\n",

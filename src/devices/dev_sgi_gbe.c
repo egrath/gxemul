@@ -130,8 +130,7 @@ void get_rgb(struct sgi_gbe_data *d, uint32_t color, uint8_t* r, uint8_t* g, uin
 		*g = color >> 16;
 		*b = color >>  8;
 		break;
-	default:fatal("sgi gbe get_rgb(): unimplemented mode %i\n", d->color_mode);
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "sgi_gbe", "sgi gbe get_rgb(): unimplemented mode %i", d->color_mode);
 	}
 }
 
@@ -178,7 +177,7 @@ DEVICE_TICK(sgi_gbe)
 		    (d->y_intr01 & CRMFB_INTR_1_MASK) != 0xfff ||
 		    (d->y_intr23 & CRMFB_INTR_2_MASK) != 0xfff000 ||
 		    (d->y_intr23 & CRMFB_INTR_3_MASK) != 0xfff) {
-			fatal("[ sgi_gbe: WARNING: Y interrupts not yet implemented. ]\n");
+			debugmsg(SUBSYS_DEVICE, "sgi_gbe", VERBOSITY_WARNING, "[ sgi_gbe: WARNING: Y interrupts not yet implemented. ]\n");
 		}
 	}
 
@@ -205,7 +204,7 @@ DEVICE_TICK(sgi_gbe)
 	}
 
 #ifdef GBE_DEBUG
-	fatal("[ sgi_gbe: dev_sgi_gbe_tick(): tiletable = 0x%llx, bytes_per_pixel = %i ]\n", (long long)tiletable,
+	debugmsg(SUBSYS_DEVICE, "sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: dev_sgi_gbe_tick(): tiletable = 0x%llx, bytes_per_pixel = %i ]", (long long)tiletable,
 		bytes_per_pixel);
 #endif
 
@@ -399,8 +398,8 @@ DEVICE_ACCESS(sgi_gbe)
 		idata = memory_readmax64(cpu, data, len);
 
 #ifdef GBE_DEBUG
-		fatal("[ sgi_gbe: DEBUG: write to address 0x%llx, data"
-		    "=0x%llx ]\n", (long long)relative_addr, (long long)idata);
+		debugmsg(SUBSYS_DEVICE, "sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: DEBUG: write to address 0x%llx, data"
+		    "=0x%llx ]", (long long)relative_addr, (long long)idata);
 #endif
 	}
 
@@ -434,7 +433,7 @@ DEVICE_ACCESS(sgi_gbe)
 		if (writeflag == MEM_WRITE) {
 			//if (!(d->i2c & CRMFB_I2C_SCL) &&
 			//    (idata & CRMFB_I2C_SCL)) {
-			//	fatal("vga i2c data: %i\n", idata & CRMFB_I2C_SDA);
+			//	fatal_error(SUBSYS_DEVICE, "sgi_gbe", "vga i2c data: %i", idata & CRMFB_I2C_SDA);
 			//}
 
 			d->i2c = idata;
@@ -448,7 +447,7 @@ DEVICE_ACCESS(sgi_gbe)
 		if (writeflag == MEM_WRITE) {
 			//if (d->i2c & CRMFB_I2C_SCL &&
 			//    !(idata & CRMFB_I2C_SCL)) {
-			//	fatal("fp i2c data: %i\n", idata & CRMFB_I2C_SDA);
+			//	fatal_error(SUBSYS_DEVICE, "sgi_gbe", "fp i2c data: %i", idata & CRMFB_I2C_SDA);
 			//}
 
 			d->i2cfp = idata;
@@ -719,7 +718,7 @@ DEVICE_ACCESS(sgi_gbe)
 		/*  Cursor bitmap at 0x78000 ..:  */
 		if (relative_addr >= CRMFB_CURSOR_BITMAP && relative_addr <= CRMFB_CURSOR_BITMAP + 0xff) {
 			if (len != 4) {
-				printf("unimplemented CRMFB_CURSOR_BITMAP len %i\n", (int)len);
+				debugmsg(SUBSYS_DEVICE, "sgi_gbe", VERBOSITY_WARNING, "unimplemented CRMFB_CURSOR_BITMAP len %i", (int)len);
 			}
 
 			int index = (relative_addr & 0xff) / 4;
@@ -731,12 +730,12 @@ DEVICE_ACCESS(sgi_gbe)
 		}
 
 		if (writeflag == MEM_WRITE)
-			fatal("[ sgi_gbe: unimplemented write to address "
-			    "0x%llx, data=0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: unimplemented write to address "
+			    "0x%llx, data=0x%llx ]",
 			    (long long)relative_addr, (long long)idata);
 		else
-			fatal("[ sgi_gbe: unimplemented read from address "
-			    "0x%llx ]\n", (long long)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: unimplemented read from address "
+			    "0x%llx ]", (long long)relative_addr);
 	}
 
 	if (writeflag == MEM_READ) {

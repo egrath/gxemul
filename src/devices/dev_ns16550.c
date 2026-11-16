@@ -117,7 +117,7 @@ DEVICE_ACCESS(ns16550)
 #if 0
 	/*  The NS16550 should be accessed using byte read/writes:  */
 	if (len != 1)
-		fatal("[ ns16550 (%s): len=%i, idata=0x%16llx! ]\n",
+		debugmsg(SUBSYS_DEVICE, "ns16550", VERBOSITY_DEBUG, "[ ns16550 (%s): len=%i, idata=0x%16llx! ]",
 		    d->name, len, (long long)idata);
 #endif
 
@@ -138,8 +138,8 @@ DEVICE_ACCESS(ns16550)
 	relative_addr /= d->addrmult;
 
 	if (relative_addr >= DEV_NS16550_LENGTH) {
-		fatal("[ ns16550 (%s): outside register space? relative_addr="
-		    "0x%llx. bad addrmult? bad device length? ]\n", d->name,
+		debugmsg(SUBSYS_DEVICE, "ns16550", VERBOSITY_DEBUG, "[ ns16550 (%s): outside register space? relative_addr="
+		    "0x%llx. bad addrmult? bad device length? ]", d->name,
 		    (long long)relative_addr);
 		return 0;
 	}

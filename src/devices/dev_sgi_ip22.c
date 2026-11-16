@@ -311,8 +311,7 @@ DEVICE_ACCESS(sgi_ip22)
 			 *  (TODO: Fix this.)
 			 */
 
-fatal("TODO: ip22 legacy interrupt rewrite!\n");
-abort();
+debugmsg(SUBSYS_DEVICE, "sgi_ip22", VERBOSITY_DEBUG, "TODO: ip22 legacy interrupt rewrite!\n");
 
 //			cpu_interrupt_ack(cpu, 8 + 63);
 //			debug("[ sgi_ip22: write to local0 IRQ MASK, "
@@ -335,8 +334,7 @@ abort();
 		if (writeflag == MEM_WRITE) {
 			/*  See commen above, about local0 irq mask.  */
 
-fatal("TODO: ip22 legacy interrupt rewrite!\n");
-abort();
+debugmsg(SUBSYS_DEVICE, "sgi_ip22", VERBOSITY_DEBUG, "TODO: ip22 legacy interrupt rewrite!\n");
 //			cpu_interrupt_ack(cpu, 8 + 63);
 //			debug("[ sgi_ip22: write to local1 IRQ MASK, "
 //			    "data=0x%llx ]\n", (long long)idata);

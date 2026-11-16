@@ -379,7 +379,7 @@ struct bus_isa_data *bus_isa_init(struct machine *machine,
 	    BUS_ISA_JENSEN_IRQS);
 
 	if (bus_isa_flags != 0)
-		fatal("WARNING! bus_isa(): unimplemented bus_isa_flags 0x%x\n",
+		debugmsg(SUBSYS_DEVICE, "bus_isa", VERBOSITY_WARNING, "WARNING! bus_isa(): unimplemented bus_isa_flags 0x%x",
 		    bus_isa_flags);
 
 	return d;

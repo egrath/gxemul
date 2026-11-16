@@ -140,18 +140,17 @@ static void dev_igsfb_op3_written(struct dev_igsfb_data *d)
 		return;
 	}
 
-	fatal("\nUnimplemented igsfb accelerated framebuffer command:\n");
-	fatal("pixel_op_0 = 0x%02x\n", d->pixel_op_0);
-	fatal("pixel_op_1 = 0x%02x\n", d->pixel_op_1);
-	fatal("pixel_op_2 = 0x%02x\n", d->pixel_op_2);
-	fatal("pixel_op_3 = 0x%02x\n", d->pixel_op_3);
-	fatal("fg_mix     = 0x%02x\n", d->fg_mix);
-	fatal("ctl        = 0x%02x\n", d->ctl);
-	fatal("src_start  = 0x%x\n", d->src_start);
-	fatal("dst_start  = 0x%x\n", d->dst_start);
-	fatal("width      = %i\n", d->width);
-	fatal("height     = %i\n", d->height);
-	exit(1);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "\nUnimplemented igsfb accelerated framebuffer command:\n");
+	fatal_error(SUBSYS_DEVICE, "igsfb", "pixel_op_0 = 0x%02x", d->pixel_op_0);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "pixel_op_1 = 0x%02x", d->pixel_op_1);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "pixel_op_2 = 0x%02x", d->pixel_op_2);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "pixel_op_3 = 0x%02x", d->pixel_op_3);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "fg_mix     = 0x%02x", d->fg_mix);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "ctl        = 0x%02x", d->ctl);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "src_start  = 0x%x", d->src_start);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "dst_start  = 0x%x", d->dst_start);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "width      = %i", d->width);
+	fatal_error(SUBSYS_DEVICE, "igsfb", "height     = %i", d->height);
 }
 
 
@@ -170,7 +169,7 @@ DEVICE_ACCESS(igsfb)
 				d->palette_write_index = idata;
 				d->palette_write_subindex = 0;
 			} else {
-				fatal("[ igsdb: WARNING: Read from "
+				debugmsg(SUBSYS_DEVICE, "igsfb", VERBOSITY_WARNING, "[ igsdb: WARNING: Read from "
 				    "VGA_DAC_ADDR_WRITE? ]\n");
 				odata = d->palette_write_index;
 			}
@@ -229,8 +228,7 @@ DEVICE_ACCESS(igsfb)
 
 	if (relative_addr >= IGS_COP_BASE_A &&
 	    relative_addr < IGS_COP_BASE_A + IGS_COP_SIZE) {
-		fatal("[ igsfb: BASE A not implemented yet, only BASE B ]\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "igsfb", VERBOSITY_DEBUG, "[ igsfb: BASE A not implemented yet, only BASE B ]\n");
 	}
 
 	switch (relative_addr) {
@@ -238,9 +236,8 @@ DEVICE_ACCESS(igsfb)
 	case IGS_VDO:
 		if (writeflag == MEM_WRITE) {
 			if (idata & ~(IGS_VDO_ENABLE | IGS_VDO_SETUP)) {
-				fatal("[ igsfb: Unimplemented IGS_VDO flags:"
-				    " 0x%08x ]\n", (int)idata);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "igsfb", VERBOSITY_DEBUG, "[ igsfb: Unimplemented IGS_VDO flags:"
+				    " 0x%08x ]", (int)idata);
 			}
 		}
 		break;
@@ -248,9 +245,8 @@ DEVICE_ACCESS(igsfb)
 	case IGS_VSE:
 		if (writeflag == MEM_WRITE) {
 			if (idata & ~(IGS_VSE_ENABLE)) {
-				fatal("[ igsfb: Unimplemented IGS_VSE flags:"
-				    " 0x%08x ]\n", (int)idata);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "igsfb", VERBOSITY_DEBUG, "[ igsfb: Unimplemented IGS_VSE flags:"
+				    " 0x%08x ]", (int)idata);
 			}
 		}
 		break;
@@ -384,13 +380,12 @@ DEVICE_ACCESS(igsfb)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ igsfb: unimplemented write to address 0x%x"
-			    " data=0x%02x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "igsfb", VERBOSITY_DEBUG, "[ igsfb: unimplemented write to address 0x%x"
+			    " data=0x%02x ]", (int)relative_addr, (int)idata);
 		} else {
-			fatal("[ igsfb: unimplemented read from address 0x%x "
-			    "]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "igsfb", VERBOSITY_DEBUG, "[ igsfb: unimplemented read from address 0x%x "
+			    "]", (int)relative_addr);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

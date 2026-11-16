@@ -178,7 +178,7 @@ void pvr_dma_transfer(struct cpu *cpu, struct pvr_data *d)
 	// Dump all SH4 DMA channels, for debugging:
 	for (int dmaChannel = 0; dmaChannel < 4; ++dmaChannel)
 	{
-		fatal("{# dma channel %i: sar=%08x dar=%08x count=%08x chcr=%08x #}\n",
+		debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{# dma channel %i: sar=%08x dar=%08x count=%08x chcr=%08x #}",
 		    dmaChannel,
 		    cpu->cd.sh.dmac_sar[dmaChannel],
 		    cpu->cd.sh.dmac_dar[dmaChannel],
@@ -189,8 +189,7 @@ void pvr_dma_transfer(struct cpu *cpu, struct pvr_data *d)
 
 	/*  DMAC not enabled?  */
 	if (!(chcr & CHCR_TD)) {
-		fatal("pvr_dma_transfer: SH4 dma not enabled?\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "pvr", "pvr_dma_transfer: SH4 dma not enabled?\n");
 	}
 
 	/*  Transfer End already set? Then don't transfer again.  */
@@ -207,27 +206,24 @@ void pvr_dma_transfer(struct cpu *cpu, struct pvr_data *d)
 	case CHCR_TS_2BYTE: transmit_size = 2; break;
 	case CHCR_TS_4BYTE: transmit_size = 4; break;
 	case CHCR_TS_32BYTE: transmit_size = 32; break;
-	default: fatal("Unimplemented transmit size?! CHCR[%i] = 0x%08x\n",
+	default: fatal_error(SUBSYS_DEVICE, "pvr", "Unimplemented transmit size?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
-	exit(1);
 	}
 
 	switch (chcr & CHCR_DM) {
 	case CHCR_DM_FIXED:       dst_delta = 0; break;
 	case CHCR_DM_INCREMENTED: dst_delta = 1; break;
 	case CHCR_DM_DECREMENTED: dst_delta = -1; break;
-	default: fatal("Unimplemented destination delta?! CHCR[%i] = 0x%08x\n",
+	default: fatal_error(SUBSYS_DEVICE, "pvr", "Unimplemented destination delta?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
-	exit(1);
 	}
 
 	switch (chcr & CHCR_SM) {
 	case CHCR_SM_FIXED:       src_delta = 0; break;
 	case CHCR_SM_INCREMENTED: src_delta = 1; break;
 	case CHCR_SM_DECREMENTED: src_delta = -1; break;
-	default: fatal("Unimplemented source delta?! CHCR[%i] = 0x%08x\n",
+	default: fatal_error(SUBSYS_DEVICE, "pvr", "Unimplemented source delta?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
-	exit(1);
 	}
 
 	src_delta *= transmit_size;
@@ -238,7 +234,7 @@ void pvr_dma_transfer(struct cpu *cpu, struct pvr_data *d)
 		dar = d->dma_reg[PVR_ADDR / sizeof(uint32_t)];
 
 		if (dar != 0x10000000) {
-			//fatal("[ NOTE: DMA to non-TA: dar=%08x (delta %i), sar=%08x (delta %i) ]\n",
+			//debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ NOTE: DMA to non-TA: dar=%08x (delta %i), sar=%08x (delta %i) ]",
 			//    (int)dar, (int)dst_delta, (int)sar, (int)src_delta);
 			dar = 0x04000000 | (dar & 0x007fffff);
 			if (dst_delta == 0)
@@ -301,14 +297,12 @@ void pvr_dma_transfer(struct cpu *cpu, struct pvr_data *d)
 
 		break;
 	default:
-		fatal("Unimplemented SH4 RS DMAC: 0x%08x (PVR)\n",
+		fatal_error(SUBSYS_DEVICE, "pvr", "Unimplemented SH4 RS DMAC: 0x%08x (PVR)",
 		    (int) (chcr & CHCR_RS));
-		exit(1);
 	}
 
 	if (cause_interrupt) {
-		fatal("TODO: pvr sh4 dmac interrupt!\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "TODO: pvr sh4 dmac interrupt!\n");
 	}
 }
 
@@ -357,9 +351,8 @@ DEVICE_ACCESS(pvr_dma)
 	case 0x10:
 	case 0x14:
 		if (writeflag == MEM_WRITE && idata != 0x0cff0000) {
-			fatal("[ pvr_dma: TODO: unknown_0x%02x set to "
-			    "0x%08x ]\n", (int) relative_addr, (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: unknown_0x%02x set to "
+			    "0x%08x ]", (int) relative_addr, (int) idata);
 		}
 		break;
 
@@ -371,32 +364,28 @@ DEVICE_ACCESS(pvr_dma)
 	case 0x48:
 	case 0x4c:
 		if (writeflag == MEM_WRITE && idata != 0) {
-			fatal("[ pvr_dma: TODO: unknown_0x%02x set to "
-			    "0x%08x ]\n", (int) relative_addr, (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: unknown_0x%02x set to "
+			    "0x%08x ]", (int) relative_addr, (int) idata);
 		}
 		break;
 
 	case PVR_LMMODE0:	/*  0x84  */
 		if (writeflag == MEM_WRITE && idata != 0) {
-			fatal("[ pvr_dma: TODO: LMMODE0 set to "
-			    "0x%08x ]\n", (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: LMMODE0 set to "
+			    "0x%08x ]", (int) idata);
 		}
 		break;
 
 	case PVR_LMMODE1:	/*  0x88  */
 		if (writeflag == MEM_WRITE && idata != 0) {
-			fatal("[ pvr_dma: TODO: LMMODE1 set to "
-			    "0x%08x ]\n", (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: LMMODE1 set to "
+			    "0x%08x ]", (int) idata);
 		}
 		break;
 
 	case 0x8c:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ pvr_dma: write to 0x8c: TODO ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: write to 0x8c: TODO ]\n");
 		} else {
 			/*  0x20 means G2 DMA in progress?  */
 			/*  0x11 = mask which has to do with AICA  */
@@ -406,38 +395,33 @@ DEVICE_ACCESS(pvr_dma)
 
 	case 0x9c:
 		if (writeflag == MEM_WRITE && idata != 0) {
-			fatal("[ pvr_dma: TODO: unknown_0x%02x set to "
-			    "0x%08x ]\n", (int) relative_addr, (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: unknown_0x%02x set to "
+			    "0x%08x ]", (int) relative_addr, (int) idata);
 		}
 		break;
 
 	case 0xa0:
 		if (writeflag == MEM_WRITE && idata != 0x80000000) {
-			fatal("[ pvr_dma: TODO: unknown_0x%02x set to "
-			    "0x%08x ]\n", (int) relative_addr, (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: unknown_0x%02x set to "
+			    "0x%08x ]", (int) relative_addr, (int) idata);
 		}
 		break;
 
 	case 0xa4:
 	case 0xac:
 		if (writeflag == MEM_WRITE && idata != 0) {
-			fatal("[ pvr_dma: TODO: unknown_0x%02x set to "
-			    "0x%08x ]\n", (int) relative_addr, (int) idata);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: TODO: unknown_0x%02x set to "
+			    "0x%08x ]", (int) relative_addr, (int) idata);
 		}
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ pvr_dma: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ pvr_dma: write to addr 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma: write to addr 0x%x: 0x%x ]",
 			    (int)relative_addr, (int)idata);
 		}
-
-		exit(1);
 	}
 
 	/*  Default write:  */
@@ -477,26 +461,23 @@ DEVICE_ACCESS(pvr_dma_more)
 	case 0x18:
 		if (writeflag == MEM_WRITE && idata != 0)
 		{
-			fatal("PVR other DMA mode (?):\n");
-			fatal("0x00: %08x\n", d->dma_more_reg[0x00/4]);
-			fatal("0x04: %08x\n", d->dma_more_reg[0x04/4]);
-			fatal("0x08: %08x\n", d->dma_more_reg[0x08/4]);
-			fatal("0x0c: %08x\n", d->dma_more_reg[0x0c/4]);
-			fatal("0x10: %08x\n", d->dma_more_reg[0x10/4]);
-			fatal("0x14: %08x\n", d->dma_more_reg[0x14/4]);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "pvr", "PVR other DMA mode (?):\n");
+			fatal_error(SUBSYS_DEVICE, "pvr", "0x00: %08x", d->dma_more_reg[0x00/4]);
+			fatal_error(SUBSYS_DEVICE, "pvr", "0x04: %08x", d->dma_more_reg[0x04/4]);
+			fatal_error(SUBSYS_DEVICE, "pvr", "0x08: %08x", d->dma_more_reg[0x08/4]);
+			fatal_error(SUBSYS_DEVICE, "pvr", "0x0c: %08x", d->dma_more_reg[0x0c/4]);
+			fatal_error(SUBSYS_DEVICE, "pvr", "0x10: %08x", d->dma_more_reg[0x10/4]);
+			fatal_error(SUBSYS_DEVICE, "pvr", "0x14: %08x", d->dma_more_reg[0x14/4]);
 		}
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ pvr_dma_more: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma_more: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ pvr_dma_more: write to addr 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_dma_more: write to addr 0x%x: 0x%x ]",
 			    (int)relative_addr, (int)idata);
 		}
-
-		exit(1);
 	}
 
 	/*  Default write:  */
@@ -835,8 +816,7 @@ static void texturedline(struct pvr_data *d,
 					}
 					break;
 				default:
-					fatal("pvr: unimplemented texture_pixelformat %i\n", texture_pixelformat);
-					exit(1);
+					fatal_error(SUBSYS_DEVICE, "pvr", "pvr: unimplemented texture_pixelformat %i", texture_pixelformat);
 				}
 
 				if (a == 255)
@@ -1051,8 +1031,7 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 	int fb_base = REG(PVRREG_FB_RENDER_ADDR1);
 
 	if ((fb_render_cfg & FB_RENDER_CFG_RENDER_MODE_MASK) != 0x1) {
-		printf("pvr: only RGB565 rendering has been implemented\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "pvr", "only RGB565 rendering has been implemented");
 	}
 
 	// Settings for the current polygon being rendered:
@@ -1130,7 +1109,7 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 		case 0:	// END_OF_LIST
 			// Interrupt event already triggered in pvr_ta_command().
 			if (ta_debug)
-				fatal("\nTA end_of_list (list type %i)\n", d->current_list_type);
+				fatal_error(SUBSYS_DEVICE, "pvr", "\nTA end_of_list (list type %i)", d->current_list_type);
 			break;
 
 		case 1:	// USER_CLIP
@@ -1156,16 +1135,16 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 			uv_format = list[0] & 1;
 
 			if (ta_debug) {
-				fatal("\nTA polygon  listtype %i, ", listtype);
-				fatal("striplength %i, ", striplength);
-				fatal("clipmode %i, ", clipmode);
-				fatal("modifier %i, ", modifier);
-				fatal("modifier_mode %i,\n", modifier_mode);
-				fatal("            color_type %i, ", color_type);
-				fatal("texture %s, ", texture ? "TRUE" : "false");
-				fatal("specular %s, ", specular ? "TRUE" : "false");
-				fatal("shading %s, ", shading ? "TRUE" : "false");
-				fatal("uv_format %s\n", uv_format ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "\nTA polygon  listtype %i, ", listtype);
+				fatal_error(SUBSYS_DEVICE, "pvr", "striplength %i, ", striplength);
+				fatal_error(SUBSYS_DEVICE, "pvr", "clipmode %i, ", clipmode);
+				fatal_error(SUBSYS_DEVICE, "pvr", "modifier %i, ", modifier);
+				fatal_error(SUBSYS_DEVICE, "pvr", "modifier_mode %i,", modifier_mode);
+				fatal_error(SUBSYS_DEVICE, "pvr", "            color_type %i, ", color_type);
+				fatal_error(SUBSYS_DEVICE, "pvr", "texture %s, ", texture ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "specular %s, ", specular ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "shading %s, ", shading ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "uv_format %s", uv_format ? "TRUE" : "false");
 			}
 
 			// List Word 1:
@@ -1179,24 +1158,23 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 			dcalcexact = (list[1] >> 20) & 1;
 
 			if (ta_debug) {
-				fatal("            depthmode %i, ", depthmode);
-				fatal("cullingmode %i, ", cullingmode);
-				fatal("zwrite %s, ", zwrite ? "TRUE" : "false");
-				fatal("texture1 %s\n", texture1 ? "TRUE" : "false");
-				fatal("            specular1 %s, ", specular1 ? "TRUE" : "false");
-				fatal("shading1 %s, ", shading1 ? "TRUE" : "false");
-				fatal("uv_format1 %s, ", uv_format1 ? "TRUE" : "false");
-				fatal("dcalcexact %s\n", dcalcexact ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "            depthmode %i, ", depthmode);
+				fatal_error(SUBSYS_DEVICE, "pvr", "cullingmode %i, ", cullingmode);
+				fatal_error(SUBSYS_DEVICE, "pvr", "zwrite %s, ", zwrite ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "texture1 %s", texture1 ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "            specular1 %s, ", specular1 ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "shading1 %s, ", shading1 ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "uv_format1 %s, ", uv_format1 ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "dcalcexact %s", dcalcexact ? "TRUE" : "false");
 			}
 
 			if (!zwrite) {
-				fatal("pvr: no zwrite? not implemented yet.\n");
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "pvr", "pvr: no zwrite? not implemented yet.\n");
 			}
 
 			// For now, trust texture and ignore texture1.
 			// if (texture != texture1) {
-			//	fatal("pvr: texture != texture1. what to do?\n");
+			//	fatal_error(SUBSYS_DEVICE, "pvr", "pvr: texture != texture1. what to do?\n");
 			//	exit(1);
 			// }
 
@@ -1226,19 +1204,19 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 			textureAddr = (list[3] << 3) & 0x7fffff;
 
 			if (ta_debug) {
-				fatal("            texture: mipmap %s, ", texture_mipmap ? "TRUE" : "false");
-				fatal("vq_compression %s, ", texture_vq_compression ? "TRUE" : "false");
-				fatal("pixelformat %i, ", texture_pixelformat);
-				fatal("twiddled %s\n", texture_twiddled ? "TRUE" : "false");
-				fatal("            stride %s, ", texture_stride ? "TRUE" : "false");
-				fatal("textureAddr 0x%08x\n", textureAddr);
+				fatal_error(SUBSYS_DEVICE, "pvr", "            texture: mipmap %s, ", texture_mipmap ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "vq_compression %s, ", texture_vq_compression ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "pixelformat %i, ", texture_pixelformat);
+				fatal_error(SUBSYS_DEVICE, "pvr", "twiddled %s", texture_twiddled ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "            stride %s, ", texture_stride ? "TRUE" : "false");
+				fatal_error(SUBSYS_DEVICE, "pvr", "textureAddr 0x%08x", textureAddr);
 			}
 
 			if (fog != 2)
-				fatal("[ pvr: fog type %i not yet implemented ]\n", fog);
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: fog type %i not yet implemented ]", fog);
 
 			if (texture_vq_compression) {
-				fatal("pvr: texture_vq_compression not supported yet\n");
+				fatal_error(SUBSYS_DEVICE, "pvr", "pvr: texture_vq_compression not supported yet\n");
 				// exit(1);
 			}
 
@@ -1273,7 +1251,7 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 			wf_z[vertex_index] = fz.f;
 
 			if (ta_debug)
-				fatal("TA vertex   %f %f %f%s\n", fx.f, fy.f, fz.f, eos ? " end_of_strip" : "");
+				fatal_error(SUBSYS_DEVICE, "pvr", "TA vertex   %f %f %f%s", fx.f, fy.f, fz.f, eos ? " end_of_strip" : "");
 
 			if (texture) {
 				ieee_interpret_float_value(list[4], &u, IEEE_FMT_S);
@@ -1364,8 +1342,7 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 		}
 
 		default:
-			fatal("pvr_render: unimplemented list cmd %i\n", cmd);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "pvr", "pvr_render: unimplemented list cmd %i", cmd);
 		}
 	}
 
@@ -1424,21 +1401,21 @@ static void pvr_tilebuf_debugdump(struct pvr_data *d)
 	// TODO: endianness
 	uint32_t *p = (uint32_t*) (d->vram + tilebuf);
 
-	fatal("PVR tile buffer debug dump:\n");
+	fatal_error(SUBSYS_DEVICE, "pvr", "PVR tile buffer debug dump:\n");
 	p -= 24;
 	for (int i = 0; i < 24; ++i)
-		fatal("  %08x", *p++);
+		fatal_error(SUBSYS_DEVICE, "pvr", "  %08x", *p++);
 
-	fatal("\n%i x %i tiles:\n", d->tilebuf_xsize, d->tilebuf_ysize);
+	fatal_error(SUBSYS_DEVICE, "pvr", "\n%i x %i tiles:", d->tilebuf_xsize, d->tilebuf_ysize);
 
 	for (int x = 0; x < d->tilebuf_xsize; ++x)
 	{
 		for (int y = 0; y < d->tilebuf_ysize; ++y)
 		{
-			fatal("  Tile %i,%i:", x, y);
+			fatal_error(SUBSYS_DEVICE, "pvr", "  Tile %i,%i:", x, y);
 			for (int i = 0; i < 6; ++i)
-				fatal(" %08x", *p++);
-			fatal("\n");
+				fatal_error(SUBSYS_DEVICE, "pvr", " %08x", *p++);
+			fatal_error(SUBSYS_DEVICE, "pvr", "\n");
 		}
 	}
 }
@@ -1459,10 +1436,10 @@ static void pvr_ta_command(struct cpu *cpu, struct pvr_data *d, int list_ofs)
 
 	/*  Dump the Tile Accelerator command for debugging:  */
 	if (ta_debug) {
-		fatal("TA cmd:");
+		fatal_error(SUBSYS_DEVICE, "pvr", "TA cmd:");
 		for (int i = 0; i < 8; ++i)
-			fatal(" %08x", (int) ta[i]);
-		fatal("\n");
+			fatal_error(SUBSYS_DEVICE, "pvr", " %08x", (int) ta[i]);
+		fatal_error(SUBSYS_DEVICE, "pvr", "\n");
 	}
 
 	// ob_ofs = REG(PVRREG_TA_OB_POS);
@@ -1517,8 +1494,7 @@ DEVICE_ACCESS(pvr_ta)
 	uint64_t idata = 0, odata = 0;
 
 	if (len != sizeof(uint32_t)) {
-		fatal("pvr_ta access len = %i: TODO\n", (int) len);
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "pvr_ta access len = %i: TODO", (int) len);
 	}
 
 	// Tile Accelerator commands can be sent to 0x10000000 through
@@ -1528,7 +1504,7 @@ DEVICE_ACCESS(pvr_ta)
 	if (writeflag == MEM_WRITE) {
 		idata = memory_readmax64(cpu, data, len);
 #if 0
-		fatal("[ pvr_ta: WRITE addr=%08x value=%08x ]\n",
+		debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_ta: WRITE addr=%08x value=%08x ]",
 		    (int)relative_addr, (int)idata);
 #endif
 
@@ -1546,7 +1522,7 @@ DEVICE_ACCESS(pvr_ta)
 		odata = d->ta[relative_addr / sizeof(uint32_t)];
 		memory_writemax64(cpu, data, len, odata);
 #if 1
-		fatal("[ pvr_ta: READ addr=%08x value=%08x ]\n", (int)relative_addr, (int)odata);
+		debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr_ta: READ addr=%08x value=%08x ]", (int)relative_addr, (int)odata);
 #endif
 	}
 
@@ -1615,8 +1591,7 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: STARTRENDER ]\n");
 			pvr_render(cpu, d);
 		} else {
-			fatal("[ pvr: huh? read from STARTRENDER ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: huh? read from STARTRENDER ]\n");
 		}
 		break;
 
@@ -1625,10 +1600,9 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: OB_ADDR set to 0x%08" PRIx32" ]\n",
 			    (uint32_t)(idata & PVR_OB_ADDR_MASK));
 			if (idata & ~PVR_OB_ADDR_MASK) {
-				fatal("[ pvr: OB_ADDR: Fatal error: Unknown"
-				    " bits set: 0x%08" PRIx32" ]\n",
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: OB_ADDR: Fatal error: Unknown"
+				    " bits set: 0x%08" PRIx32" ]",
 				    (uint32_t)(idata & ~PVR_OB_ADDR_MASK));
-				exit(1);
 			}
 			idata &= PVR_OB_ADDR_MASK;
 			DEFAULT_WRITE;
@@ -1640,10 +1614,9 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: TILEBUF_ADDR set to 0x%08" PRIx32" ]\n",
 			    (uint32_t)(idata & PVR_TILEBUF_ADDR_MASK));
 			if (idata & ~PVR_TILEBUF_ADDR_MASK) {
-				fatal("[ pvr: TILEBUF_ADDR: Unknown"
-				    " bits set: 0x%08" PRIx32" ]\n",
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: TILEBUF_ADDR: Unknown"
+				    " bits set: 0x%08" PRIx32" ]",
 				    (uint32_t)(idata & ~PVR_TILEBUF_ADDR_MASK));
-				exit(1);
 			}
 			idata &= PVR_TILEBUF_ADDR_MASK;
 			DEFAULT_WRITE;
@@ -1832,7 +1805,7 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: VRAM_CFG1 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != VRAM_CFG1_GOOD_REFRESH_VALUE)
-				fatal("{ VRAM_CFG1 = 0x%08" PRIx32" is not "
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ VRAM_CFG1 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
 			debug(" ]\n");
 			DEFAULT_WRITE;
@@ -1844,7 +1817,7 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: VRAM_CFG2 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != VRAM_CFG2_UNKNOWN_MAGIC)
-				fatal("{ VRAM_CFG2 = 0x%08" PRIx32" is not "
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ VRAM_CFG2 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
 			debug(" ]\n");
 			DEFAULT_WRITE;
@@ -1856,7 +1829,7 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: VRAM_CFG3 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != VRAM_CFG3_UNKNOWN_MAGIC)
-				fatal("{ VRAM_CFG3 = 0x%08" PRIx32" is not "
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ VRAM_CFG3 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
 			debug(" ]\n");
 			DEFAULT_WRITE;
@@ -2034,9 +2007,8 @@ DEVICE_ACCESS(pvr)
 			if ((idata & DIWCONF_MAGIC_MASK) !=
 			    DIWCONF_MAGIC && (idata & DIWCONF_MAGIC_MASK)
 			    != 0) {
-				fatal("PVRREG_DIWCONF magic not set to "
-				    "Magic value. 0x%08x\n", (int)idata);
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "pvr", "PVRREG_DIWCONF magic not set to "
+				    "Magic value. 0x%08x", (int)idata);
 			}
 			if (idata & DIWCONF_BLANK)
 				debug("[ pvr: PVRREG_DIWCONF: BLANK: TODO ]\n");
@@ -2091,7 +2063,7 @@ DEVICE_ACCESS(pvr)
 			debug("[ pvr: MAGIC_110 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != MAGIC_110_VALUE)
-				fatal("{ MAGIC_110 = 0x%08" PRIx32" is not "
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ MAGIC_110 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
 			debug(" ]\n");
 			DEFAULT_WRITE;
@@ -2109,9 +2081,8 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OPB_START:
 		if (writeflag == MEM_WRITE) {
 			if (idata & ~TA_OPB_START_MASK) {
-				fatal("[ pvr: UNEXPECTED bits in "
-				    "TA_OPB_START: 0x%08x ]\n", (int)idata);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: UNEXPECTED bits in "
+				    "TA_OPB_START: 0x%08x ]", (int)idata);
 			}
 			idata &= TA_OPB_START_MASK;
 			debug("[ pvr: TA_OPB_START set to 0x%x ]\n",
@@ -2123,9 +2094,8 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OB_START:
 		if (writeflag == MEM_WRITE) {
 			if (idata & ~TA_OB_START_MASK) {
-				fatal("[ pvr: UNEXPECTED bits in "
-				    "TA_OB_START: 0x%08x ]\n", (int)idata);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: UNEXPECTED bits in "
+				    "TA_OB_START: 0x%08x ]", (int)idata);
 			}
 			idata &= TA_OB_START_MASK;
 			debug("[ pvr: TA_OB_START set to 0x%x ]\n",
@@ -2207,7 +2177,7 @@ DEVICE_ACCESS(pvr)
 				pvr_ta_init(cpu, d);
 
 			if (idata != PVR_TA_INIT && idata != 0)
-				fatal("{ TA_INIT = 0x%08" PRIx32" is not "
+				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ TA_INIT = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
 
 			/*  Always reset to 0.  */
@@ -2221,15 +2191,13 @@ DEVICE_ACCESS(pvr)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ pvr: read from UNIMPLEMENTED addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: read from UNIMPLEMENTED addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ pvr: write to UNIMPLEMENTED addr 0x%x: 0x%x"
-			    " ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: write to UNIMPLEMENTED addr 0x%x: 0x%x"
+			    " ]", (int)relative_addr, (int)idata);
 			DEFAULT_WRITE;
 		}
-
-		exit(1);
 	}
 
 return_ok:
@@ -2477,7 +2445,7 @@ DEVICE_ACCESS(pvr_vram_alt)
 
 	// Writes are only allowed as 16-bit access or higher.
 	if (len < sizeof(uint16_t))
-		fatal("pvr_vram_alt: write of less than 16 bits attempted?\n");
+		fatal_error(SUBSYS_DEVICE, "pvr", "pvr_vram_alt: write of less than 16 bits attempted?\n");
 
 	/*
 	 *  Convert writes to alternative VRAM, into normal writes:
@@ -2511,7 +2479,7 @@ DEVICE_ACCESS(pvr_vram)
 
 	// However, writes are only allowed as 16-bit access or higher.
 	if (len < sizeof(uint16_t))
-		fatal("pvr_vram: write of less than 16 bits attempted?\n");
+		fatal_error(SUBSYS_DEVICE, "pvr", "pvr_vram: write of less than 16 bits attempted?\n");
 
 	/*
 	 *  Write to VRAM:

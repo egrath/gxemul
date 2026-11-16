@@ -93,14 +93,14 @@ DEVICE_ACCESS(irqc)
 		if (writeflag == MEM_READ) {
 			odata = d->status;
 		} else {
-			fatal("[ irqc: WARNING! write to DEV_IRQC_IRQ ]\n");
+			debugmsg(SUBSYS_DEVICE, "irqc", VERBOSITY_WARNING, "[ irqc: WARNING! write to DEV_IRQC_IRQ ]\n");
 		}
 		break;
 
 	case DEV_IRQC_MASK:
 		/*  Mask interrupts by clearing Enable bits:  */
 		if (writeflag == MEM_READ) {
-			fatal("[ irqc: WARNING! read from DEV_IRQC_MASK ]\n");
+			debugmsg(SUBSYS_DEVICE, "irqc", VERBOSITY_WARNING, "[ irqc: WARNING! read from DEV_IRQC_MASK ]\n");
 		} else {
 			int old_assert = d->status & d->enabled;
 			int new_assert;
@@ -119,7 +119,7 @@ DEVICE_ACCESS(irqc)
 	case DEV_IRQC_UNMASK:
 		/*  Unmask interrupts by setting Enable bits:  */
 		if (writeflag == MEM_READ) {
-			fatal("[ irqc: WARNING! read from DEV_IRQC_UNMASK ]\n");
+			debugmsg(SUBSYS_DEVICE, "irqc", VERBOSITY_WARNING, "[ irqc: WARNING! read from DEV_IRQC_UNMASK ]\n");
 		} else {
 			int old_assert = d->status & d->enabled;
 			int new_assert;
@@ -136,12 +136,12 @@ DEVICE_ACCESS(irqc)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ irqc: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "irqc", VERBOSITY_DEBUG, "[ irqc: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ irqc: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "irqc", VERBOSITY_DEBUG, "[ irqc: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 

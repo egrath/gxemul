@@ -117,8 +117,7 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		 *  See NetBSD's sys/arch/dreamcast/dev/gdrom.c: gdrom_read_toc().
 		 */
 		if (d->cnt != 408) {
-			fatal("GDROM Read TOC not 408 bytes?\n");
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM Read TOC not 408 bytes?\n");
 		}
 		alloc_data(d);
 
@@ -166,11 +165,10 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		 *  See NetBSD's sys/arch/dreamcast/dev/gdrom.c: gdrom_read_sectors().
 		 */
 		if (d->cmd[1] == 0x24) {
-			fatal("GDROM unimplemented data format 0x%02x. Continuing anway.\n", d->cmd[1]);
+			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM unimplemented data format 0x%02x. Continuing anway.", d->cmd[1]);
 		} else if (d->cmd[1] != 0x20) {
-			fatal("GDROM unimplemented data format 0x%02x\n",
+			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM unimplemented data format 0x%02x",
 			    d->cmd[1]);
-			exit(1);
 		}
 		sector_nr = d->cmd[2] * 65536 + d->cmd[3] * 256 + d->cmd[4];
 		sector_count = d->cmd[8] * 65536 + d->cmd[9] * 256 + d->cmd[10];
@@ -184,9 +182,8 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 			d->cnt = 2048 * sector_count;
 
 		if (sector_count * 2048 != d->cnt) {
-			fatal("Huh? GDROM data_len=0x%x, but sector_count"
-			    "=0x%x\n", (int)d->cnt, (int)sector_count);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Huh? GDROM data_len=0x%x, but sector_count"
+			    "=0x%x", (int)d->cnt, (int)sector_count);
 		}
 
 		alloc_data(d);
@@ -215,7 +212,7 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		res = diskimage_access(cpu->machine, 0, DISKIMAGE_IDE,
 		    0, sector_nr * 2048, d->data, d->data_len);
 		if (!res) {
-			fatal("GDROM: diskimage_access failed? TODO\n");
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "GDROM: diskimage_access failed? TODO\n");
 			free(d->data);
 			d->data = NULL;
 		}
@@ -239,9 +236,8 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		// Note/TODO: This is ignored for now.
 		break;
 
-	default:fatal("GDROM handle_command: unimplemented command 0x%02x"
-		    "\n", d->cmd[0]);
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM handle_command: unimplemented command 0x%02x"
+		    "", d->cmd[0]);
 	}
 
 	// Any resulting data? Then set COND_DATA_AVAIL. Otherwise, clear
@@ -288,7 +284,7 @@ DEVICE_ACCESS(dreamcast_gdrom)
 		if (writeflag == MEM_READ) {
 			odata = d->busy;
 		} else {
-			// fatal("[ Write to GDROM_BUSY: 0x%08x ]\n", (int)idata);
+			// debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ Write to GDROM_BUSY: 0x%08x ]", (int)idata);
 			// I'm assuming that writing bits to BUSY clears them.
 			d->busy &= ~idata;
 		}
@@ -296,15 +292,13 @@ DEVICE_ACCESS(dreamcast_gdrom)
 
 	case GDROM_DATA:
 		if (len != sizeof(uint16_t)) {
-			fatal("Non-16bit GDROM data access? TODO\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "Non-16bit GDROM data access? TODO\n");
 		}
 
 		if (writeflag == MEM_READ) {
 			if (!(d->cond & COND_DATA_AVAIL)) {
-				fatal("Read from GDROM_DATA when no data"
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Read from GDROM_DATA when no data"
 				    " is available? TODO\n");
-				exit(1);
 			}
 
 			if (d->cur_data_offset < d->data_len) {
@@ -322,14 +316,12 @@ DEVICE_ACCESS(dreamcast_gdrom)
 					SYSASIC_TRIGGER_EVENT(SYSASIC_EVENT_GDROM);
 				}
 			} else {
-				fatal("Read too much from GDROM_DATA\n");
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Read too much from GDROM_DATA\n");
 			}
 		} else {
 			if (d->busy & 0x08) {
 				if (d->cmd_count >= 12) {
-					fatal("Too much GDROM_DATA?\n");
-					exit(1);
+					fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Too much GDROM_DATA?\n");
 				}
 				/*  Add data to cmd:  */
 				d->cmd[d->cmd_count++] = idata;
@@ -339,9 +331,8 @@ DEVICE_ACCESS(dreamcast_gdrom)
 					handle_command(cpu, d);
 				}
 			} else {
-				fatal("Write to GDROM_DATA, but not waiting"
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Write to GDROM_DATA, but not waiting"
 				    " for data?\n");
-				exit(1);
 			}
 		}
 		break;
@@ -358,12 +349,11 @@ DEVICE_ACCESS(dreamcast_gdrom)
 
 	case GDROM_UNKNOWN_0x88:
 		if (writeflag == MEM_READ) {
-			fatal("Read from GDROM_UNKNOWN_0x88?\n");
+			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Read from GDROM_UNKNOWN_0x88?\n");
 			// exit(1);
 		} else {
 			if (idata != 0xb) {
-				fatal("[ Write to GDROM_UNKNOWN_0x88: TODO ]\n");
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ Write to GDROM_UNKNOWN_0x88: TODO ]\n");
 			}
 		}
 		break;
@@ -373,7 +363,7 @@ DEVICE_ACCESS(dreamcast_gdrom)
 			dreamcast_gdrom_update_stat(cpu, d);
 			odata = d->stat;
 		} else {
-			fatal("[ Write to GDROM_STAT? ]\n");
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ Write to GDROM_STAT? ]\n");
 /*			exit(1);  */
 		}
 		break;
@@ -421,22 +411,19 @@ DEVICE_ACCESS(dreamcast_gdrom)
 				debug("dreamcast_gdrom: ROM: TODO\n");
 				SYSASIC_TRIGGER_EVENT(SYSASIC_EVENT_GDROM);
 			} else {
-				fatal("dreamcast_gdrom: unimplemented "
-				    "GDROM_COND = 0x%02x\n", (int)idata);
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "dreamcast_gdrom: unimplemented "
+				    "GDROM_COND = 0x%02x", (int)idata);
 			}
 		}
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ dreamcast_gdrom: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ dreamcast_gdrom: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ dreamcast_gdrom: write to addr 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ dreamcast_gdrom: write to addr 0x%x: 0x%x ]",
 			    (int)relative_addr, (int)idata);
 		}
-
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)
@@ -474,11 +461,10 @@ DEVICE_ACCESS(dreamcast_gdrom_dma)
 				// GDROM DMA transfer.
 				uint32_t dst = d->dma_reg[0x04 / sizeof(uint32_t)];
 				int length = d->dma_reg[0x08 / sizeof(uint32_t)];
-				fatal("[ dreamcast_gdrom_dma: Transfering %i bytes to 0x%08" PRIx32" ]\n", length, dst);
+				debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ dreamcast_gdrom_dma: Transfering %i bytes to 0x%08" PRIx32" ]", length, dst);
 
 				if (d->data == NULL) {
-					fatal("dreamcast_gdrom_dma: DMA transfer but d->data is NULL. TODO\n");
-					exit(1);
+					debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "dreamcast_gdrom_dma: DMA transfer but d->data is NULL. TODO\n");
 				}
 
 				dst &= 0x0fffffff;	// 0x8c008000 => 0x0c008000
@@ -489,25 +475,22 @@ DEVICE_ACCESS(dreamcast_gdrom_dma)
 
 				idata = 0;
 			} else {
-				fatal("Unimplemented GDROM DMA start? TODO\n");
-				fatal("  %08x\n", (int) d->dma_reg[4 / sizeof(uint32_t)]);
-				fatal("  %08x\n", (int) d->dma_reg[8 / sizeof(uint32_t)]);
-				fatal("  %08x\n", (int) d->dma_reg[0xc / sizeof(uint32_t)]);
-				fatal("  %08x\n", (int) d->dma_reg[0x14 / sizeof(uint32_t)]);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "Unimplemented GDROM DMA start? TODO\n");
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "  %08x", (int) d->dma_reg[4 / sizeof(uint32_t)]);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "  %08x", (int) d->dma_reg[8 / sizeof(uint32_t)]);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "  %08x", (int) d->dma_reg[0xc / sizeof(uint32_t)]);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "  %08x", (int) d->dma_reg[0x14 / sizeof(uint32_t)]);
 			}
 		}
 		break;			
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ dreamcast_gdrom_dma: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ dreamcast_gdrom_dma: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ dreamcast_gdrom_dma: write to addr 0x%x: "
-			    "0x%x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_gdrom", VERBOSITY_DEBUG, "[ dreamcast_gdrom_dma: write to addr 0x%x: "
+			    "0x%x ]", (int)relative_addr, (int)idata);
 		}
-
-		exit(1);
 	}
 
 	/*  Default write:  */

@@ -87,7 +87,7 @@ DEVICE_ACCESS(kn01)
 
 	/*  Read:  */
 	if (len != 2 || relative_addr != 0) {
-		fatal("[ kn01: trying to read something which is not "
+		debugmsg(SUBSYS_DEVICE, "kn01", VERBOSITY_DEBUG, "[ kn01: trying to read something which is not "
 		    "the first half-word of the csr ]");
 	}
 

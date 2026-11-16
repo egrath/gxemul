@@ -77,7 +77,7 @@ return 1;
 		else
 			ppc_pc_to_pointers(other_cpu);
 	} else {
-		fatal("[ HAMMERHEAD read: TODO ]\n");
+		debugmsg(SUBSYS_DEVICE, "hammerhead", VERBOSITY_DEBUG, "[ HAMMERHEAD read: TODO ]\n");
 	}
 
 	if (writeflag == MEM_READ)

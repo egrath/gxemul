@@ -190,12 +190,12 @@ DEVICE_ACCESS(gc)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ gc: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "gc", VERBOSITY_DEBUG, "[ gc: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ gc: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "gc", VERBOSITY_DEBUG, "[ gc: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 

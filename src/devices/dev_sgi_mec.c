@@ -136,8 +136,8 @@ static int mec_try_rx(struct cpu *cpu, struct sgi_mec_data *d)
 
 	base = d->rx_addr[d->cur_rx_addr_index];
 	if (base & 0xfff)
-		fatal("[ mec_try_rx(): WARNING! lowest bits of base are "
-		    "non-zero (0x%3x). TODO ]\n", (int)(base & 0xfff));
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_WARNING, "[ mec_try_rx(): WARNING! lowest bits of base are "
+		    "non-zero (0x%3x). TODO ]", (int)(base & 0xfff));
 	base &= 0xfffff000ULL;
 	if (base == 0)
 		goto skip;
@@ -255,8 +255,8 @@ static int mec_try_tx(struct cpu *cpu, struct sgi_mec_data *d)
 
 	/*  Is this packet transmitted already?  */
 	if (data[0] & 0x80) {
-		fatal("[ mec_try_tx: tx_ring_ptr = %i, already"
-		    " transmitted? ]\n", tx_ring_ptr);
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ mec_try_tx: tx_ring_ptr = %i, already"
+		    " transmitted? ]", tx_ring_ptr);
 		goto advance_tx;
 	}
 
@@ -297,7 +297,7 @@ static int mec_try_tx(struct cpu *cpu, struct sgi_mec_data *d)
 
 		d->cur_tx_packet[j++] = ch;
 		if (j >= MAX_TX_PACKET_LEN) {
-			fatal("[ mec_try_tx: packet too large? ]\n");
+			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ mec_try_tx: packet too large? ]\n");
 			break;
 		}
 	}
@@ -330,7 +330,7 @@ static int mec_try_tx(struct cpu *cpu, struct sgi_mec_data *d)
 
 				d->cur_tx_packet[j++] = ch;
 				if (j >= MAX_TX_PACKET_LEN) {
-					fatal("[ mec_try_tx: packet too large?"
+					debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ mec_try_tx: packet too large?"
 					    " ]\n");
 					break;
 				}
@@ -341,7 +341,7 @@ static int mec_try_tx(struct cpu *cpu, struct sgi_mec_data *d)
 	}
 
 	if (j < len)
-		fatal("[ mec_try_tx: not enough data? ]\n");
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ mec_try_tx: not enough data? ]\n");
 
 	net_ethernet_tx(cpu->machine->emul->net, &d->nic,
 	    d->cur_tx_packet, d->cur_tx_packet_len);
@@ -446,7 +446,7 @@ DEVICE_ACCESS(sgi_mec)
 		}
 	} else if (len == sizeof(uint16_t)) {
 		if (writeflag == MEM_WRITE) {
-			fatal("[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]",
 				writeflag ? "write" : "read", len, (long long)relative_addr);
 		} else if ((relative_addr & 7) == 4) {
 			odata = d->reg[regnr];
@@ -455,18 +455,18 @@ DEVICE_ACCESS(sgi_mec)
 			odata = d->reg[regnr];
 			odata = (uint16_t)odata;
 		} else {
-			fatal("[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]",
 				writeflag ? "write" : "read", len, (long long)relative_addr);
 		}
 	} else {
-		fatal("[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]",
 			writeflag ? "write" : "read", len, (long long)relative_addr);
 	}
 
 #ifdef MEC_DEBUG
 	if (writeflag == MEM_WRITE)
-		fatal("[ sgi_mec: write to address"
-		    " 0x%llx, len %i, data=0x%016llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to address"
+		    " 0x%llx, len %i, data=0x%016llx ]",
 		    (long long)relative_addr, len, (long long)idata);
 #endif
 
@@ -596,8 +596,8 @@ DEVICE_ACCESS(sgi_mec)
 			    (idata >> 24) & 255, (idata >> 16) & 255,
 			    (idata >>  8) & 255, (idata >>  0) & 255);
 		else
-			fatal("[ sgi_mec: reading the MAC address as "
-			    "%02x:%02x:%02x:%02x:%02x:%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: reading the MAC address as "
+			    "%02x:%02x:%02x:%02x:%02x:%02x ]",
 			    (odata >> 40) & 255, (odata >> 32) & 255,
 			    (odata >> 24) & 255, (odata >> 16) & 255,
 			    (odata >>  8) & 255, (odata >>  0) & 255);
@@ -652,8 +652,8 @@ DEVICE_ACCESS(sgi_mec)
 
 #ifdef MEC_DEBUG
 	if (writeflag == MEM_READ)
-		fatal("[ sgi_mec: read from address"
-		    " 0x%llx, len %i, data=0x%llx ]\n", (long long)relative_addr,
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: read from address"
+		    " 0x%llx, len %i, data=0x%llx ]", (long long)relative_addr,
 		    	len, (long long)odata);
 #endif
 

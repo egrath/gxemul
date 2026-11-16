@@ -109,7 +109,7 @@ DEVICE_ACCESS(kn02)
 			 */
 			int old_assert = (d->csr[0] & d->csr[2])? 1 : 0;
 			int new_assert;
-			/* fatal("[ kn02: write to CSR: 0x%08x ]\n", idata); */
+			/* debugmsg(SUBSYS_DEVICE, "kn02", VERBOSITY_DEBUG, "[ kn02: write to CSR: 0x%08x ]", idata); */
 
 			d->csr[1] = (idata >> 8) & 255;
 			d->csr[2] = (idata >> 16) & 255;

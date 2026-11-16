@@ -78,13 +78,12 @@ DEVICE_ACCESS(iq80321_7seg)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ iq80321_7seg: read from 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "iq80321_7seg", VERBOSITY_DEBUG, "[ iq80321_7seg: read from 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ iq80321_7seg: write to 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "iq80321_7seg", VERBOSITY_DEBUG, "[ iq80321_7seg: write to 0x%x: 0x%llx ]",
 			    (int)relative_addr, (long long)idata);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

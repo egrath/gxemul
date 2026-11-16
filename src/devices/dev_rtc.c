@@ -141,12 +141,12 @@ DEVICE_ACCESS(rtc)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ rtc: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "rtc", VERBOSITY_DEBUG, "[ rtc: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ rtc: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "rtc", VERBOSITY_DEBUG, "[ rtc: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 

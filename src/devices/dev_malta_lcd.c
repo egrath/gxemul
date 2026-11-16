@@ -112,12 +112,12 @@ DEVICE_ACCESS(malta_lcd)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ malta_lcd: unimplemented write to "
-			    "offset 0x%x: data=0x%02x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "malta_lcd", VERBOSITY_DEBUG, "[ malta_lcd: unimplemented write to "
+			    "offset 0x%x: data=0x%02x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ malta_lcd: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "malta_lcd", VERBOSITY_DEBUG, "[ malta_lcd: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 

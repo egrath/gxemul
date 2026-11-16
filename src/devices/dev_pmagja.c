@@ -81,7 +81,7 @@ size_t i;
 for (i=0; i<len; i++)
   if (data[i] != 0 && data[i] != 1 && data[i]!=0xff)
 	if (writeflag)
-		fatal("[ pmagja: write to addr 0x%08llx: 0x%08llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "pmagja", VERBOSITY_DEBUG, "[ pmagja: write to addr 0x%08llx: 0x%08llx ]",
 		    (long long)relative_addr, (long long)idata);
 }
 #endif
@@ -134,7 +134,7 @@ for (i=0; i<len; i++)
 {
 	if (writeflag)
 	    if (idata != 0)
-		fatal("[ pmagja: write to addr 0x%08llx: 0x%08llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "pmagja", VERBOSITY_DEBUG, "[ pmagja: write to addr 0x%08llx: 0x%08llx ]",
 		    (long long)relative_addr, (long long)idata);
 }
 #endif
@@ -172,12 +172,12 @@ for (i=0; i<len; i++)
 		} else {
 			/*  Unknown:  */
 			if (writeflag==MEM_READ) {
-				fatal("[ pmagja: read from addr 0x%x: "
-				    "0x%llx ]\n", (int)relative_addr,
+				debugmsg(SUBSYS_DEVICE, "pmagja", VERBOSITY_DEBUG, "[ pmagja: read from addr 0x%x: "
+				    "0x%llx ]", (int)relative_addr,
 				    (long long)odata);
 			} else {
-				fatal("[ pmagja: write to addr 0x%x: "
-				    "0x%llx ]\n", (int)relative_addr,
+				debugmsg(SUBSYS_DEVICE, "pmagja", VERBOSITY_DEBUG, "[ pmagja: write to addr 0x%x: "
+				    "0x%llx ]", (int)relative_addr,
 				    (long long)idata);
 			}
 		}
@@ -189,7 +189,7 @@ for (i=0; i<len; i++)
 #ifdef JA_DEBUG
 /*
 	if (!writeflag)
-		fatal("[ pmagja: read from addr 0x%08llx: 0x%08llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "pmagja", VERBOSITY_DEBUG, "[ pmagja: read from addr 0x%08llx: 0x%08llx ]",
 		    (long long)relative_addr, (long long)odata);
 */
 #endif
@@ -211,14 +211,12 @@ void dev_pmagja_init(struct machine *machine, struct memory *mem,
 
 	d->fb_mem = memory_new(XSIZE * YSIZE * 3);
 	if (d->fb_mem == NULL) {
-		fprintf(stderr, "dev_pmagja_init(): out of memory (1)\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "pmagja",  "dev_pmagja_init(): out of memory (1)\n");
 	}
 	d->vfb_data = dev_fb_init(machine, d->fb_mem, 0, VFB_GENERIC,
 	    XSIZE, YSIZE, XSIZE, YSIZE, 24, "PMAG-JA");
 	if (d->vfb_data == NULL) {
-		fprintf(stderr, "dev_pmagja_init(): out of memory (2)\n");
-		exit(2);
+		fatal_error(SUBSYS_DEVICE, "pmagja",  "dev_pmagja_init(): out of memory (2)\n");
 	}
 
 	/*  TODO: not bt459, but a bt463:  */

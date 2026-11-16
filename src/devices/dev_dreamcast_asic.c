@@ -117,7 +117,7 @@ DEVICE_ACCESS(dreamcast_asic)
 
 	r = (relative_addr / 4) & 3;
 	if (r == 3) {
-		fatal("[ dreamcast_asic: Bad address ]\n");
+		debugmsg(SUBSYS_DEVICE, "dreamcast_asic", VERBOSITY_DEBUG, "[ dreamcast_asic: Bad address ]\n");
 		r = 0;
 		exit(1);	// TODO?
 	}

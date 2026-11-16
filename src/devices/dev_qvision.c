@@ -61,6 +61,7 @@
  *  the video interrupt.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1455,17 +1456,15 @@ void dev_qvision_init(struct machine *machine, struct memory *mem,
 		FILE *f = fopen(rom_file, "rb");
 		size_t n;
 		if (f == NULL) {
-			perror(rom_file);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "qvision", "%s: %s", rom_file, strerror(errno));
 		}
 		n = fread(d->rom, 1, sizeof(d->rom), f);
 		fclose(f);
 		if (n == QV_ROM_WINDOW)
 			memcpy(d->rom + QV_ROM_WINDOW, d->rom, QV_ROM_WINDOW);
 		else if (n != QV_ROM_SIZE) {
-			fatal("%s: a QVision option ROM image should be 32 or "
-			    "64 KB, not %i bytes\n", rom_file, (int) n);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "qvision", "%s: a QVision option ROM image should be 32 or "
+			    "64 KB, not %i bytes", rom_file, (int) n);
 		}
 		d->have_rom = 1;
 	}

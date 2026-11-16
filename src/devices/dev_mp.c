@@ -101,9 +101,8 @@ DEVICE_ACCESS(mp)
 			d->cpus[which_cpu]->cd.ppc.gpr[1] = d->stack_addr;
 			break;
 		default:
-			fatal("dev_mp(): DEV_MP_STARTUPCPU: not for this"
+			fatal_error(SUBSYS_DEVICE, "mp", "dev_mp(): DEV_MP_STARTUPCPU: not for this"
 			    " arch yet!\n");
-			exit(1);
 		}
 		d->cpus[which_cpu]->running = true;
 		/*  debug("[ dev_mp: starting up cpu%i at 0x%llx ]\n", 
@@ -237,7 +236,7 @@ DEVICE_ACCESS(mp)
 		break;
 
 	default:
-		fatal("[ dev_mp: unimplemented relative addr 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "mp", VERBOSITY_DEBUG, "[ dev_mp: unimplemented relative addr 0x%x ]",
 		    relative_addr);
 	}
 

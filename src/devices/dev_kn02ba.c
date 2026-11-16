@@ -107,13 +107,12 @@ DEVICE_ACCESS(kn02ba_mer)
 
 	default:
 		if (writeflag == MEM_READ) {
-			fatal("[ kn02ba_mer: read from offset 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "kn02ba", VERBOSITY_DEBUG, "[ kn02ba_mer: read from offset 0x%08lx ]",
 			    (long)relative_addr);
 		} else {
-			fatal("[ kn02ba_mer: write to offset 0x%08lx: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "kn02ba", VERBOSITY_DEBUG, "[ kn02ba_mer: write to offset 0x%08lx: 0x%08x ]",
 			    (long)relative_addr, (int)idata);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)
@@ -148,13 +147,12 @@ DEVICE_ACCESS(kn02ba_msr)
 
 	default:
 		if (writeflag == MEM_READ) {
-			fatal("[ kn02ba_msr: read from offset 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "kn02ba", VERBOSITY_DEBUG, "[ kn02ba_msr: read from offset 0x%08lx ]",
 			    (long)relative_addr);
 		} else {
-			fatal("[ kn02ba_msr: write to offset 0x%08lx: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "kn02ba", VERBOSITY_DEBUG, "[ kn02ba_msr: write to offset 0x%08lx: 0x%08x ]",
 			    (long)relative_addr, (int)idata);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

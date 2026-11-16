@@ -97,8 +97,7 @@ static void fbctrl_command(struct cpu *cpu, struct fbctrl_data *d)
 
 	/*  TODO: Block copy and fill.  */
 
-	default:fatal("fbctrl_command: Unimplemented command %i.\n", cmd);
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "fbctrl", "fbctrl_command: Unimplemented command %i.", cmd);
 	}
 }
 
@@ -119,7 +118,7 @@ DEVICE_ACCESS(fbctrl)
 		else {
 			d->current_port = idata;
 			if (idata >= DEV_FBCTRL_NPORTS)
-				fatal("[ WARNING: fbctrl port number is out"
+				debugmsg(SUBSYS_DEVICE, "fbctrl", VERBOSITY_WARNING, "[ WARNING: fbctrl port number is out"
 				    " of range! ]\n");
 		}
 		break;
@@ -127,8 +126,7 @@ DEVICE_ACCESS(fbctrl)
 	case DEV_FBCTRL_DATA:
 		if (d->current_port < 0 || d->current_port
 		    >= DEV_FBCTRL_NPORTS) {
-			fatal("[ fbctrl port number is out of range! ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "fbctrl", VERBOSITY_DEBUG, "[ fbctrl port number is out of range! ]\n");
 		}
 
 		if (writeflag == MEM_READ)
@@ -142,9 +140,8 @@ DEVICE_ACCESS(fbctrl)
 		break;
 
 	default:
-		fatal("[ dev_fbctrl: unimplemented relative addr 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "fbctrl", VERBOSITY_DEBUG, "[ dev_fbctrl: unimplemented relative addr 0x%x ]",
 		    (int)relative_addr);
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

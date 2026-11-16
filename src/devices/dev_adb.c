@@ -164,9 +164,8 @@ static void adb_process_cmd(struct cpu *cpu, struct adb_data *d)
 	debug(" ]\n");
 
 	if (d->cur_output_offset < 2) {
-		fatal("[ adb: WEIRD output length: %i ]\n",
+		debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_WARNING, "[ adb: WEIRD output length: %i ]",
 		    d->cur_output_offset);
-		exit(1);
 	}
 
 	switch (d->output_buf[0]) {
@@ -180,7 +179,7 @@ static void adb_process_cmd(struct cpu *cpu, struct adb_data *d)
 			/*  ADBTALK:  */
 			reg = d->output_buf[1] & 3;
 			dev = d->output_buf[1] >> 4;
-			fatal("dev=%i reg=%i\n", dev, reg);
+			fatal_error(SUBSYS_DEVICE, "adb", "dev=%i reg=%i", dev, reg);
 			/*  Default values: nothing here  */
 			d->input_buf[0] = 0x00;
 			d->input_buf[1] = 0x00;
@@ -199,19 +198,16 @@ static void adb_process_cmd(struct cpu *cpu, struct adb_data *d)
 			int new_dev_pos = d->output_buf[2] & 15;
 			/*  ADBLISTEN:  */
 			if ((d->output_buf[1] >> 4) != d->kbd_dev) {
-				fatal("[ adb: ADBLISTEN not to kbd ]\n");
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: ADBLISTEN not to kbd ]\n");
 			}
 			if (d->output_buf[3] != 0xfe ||
 			    (d->output_buf[2] & 0xf0) != 0x60) {
-				fatal("[ adb: unknown ADBLISTEN ]\n");
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: unknown ADBLISTEN ]\n");
 			}
 			/*  Move device.  */
 			d->kbd_dev = new_dev_pos;
 		} else {
-			fatal("[ adb: unknown ADB command? ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: unknown ADB command? ]\n");
 		}
 		break;
 
@@ -237,17 +233,14 @@ static void adb_process_cmd(struct cpu *cpu, struct adb_data *d)
 		} else if (d->cur_output_offset == 2 &&
 		    d->output_buf[1] == 0x11) {
 			/*  Reboot.  */
-			fatal("[ adb: reboot. TODO: make this nicer ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: reboot. TODO: make this nicer ]\n");
 		} else {
-			fatal("[ adb: UNIMPLEMENTED PRAM/RTC command ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: UNIMPLEMENTED PRAM/RTC command ]\n");
 		}
 		break;
 
-	default:fatal("[ adb: UNKNOWN command type 0x%02x ]\n",
+	default:debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: UNKNOWN command type 0x%02x ]",
 		    d->output_buf[0]);
-		exit(1);
 	}
 
 	d->reg[vBufB >> VIA_REG_SHIFT] &= ~BUFB_nINTR;
@@ -287,7 +280,7 @@ static void adb_transfer(struct cpu *cpu, struct adb_data *d, int state_change)
 
 	case DIR_INPUT:
 		if (d->cur_input_offset >= d->cur_input_length)
-			fatal("[ adb: INPUT beyond end of data? ]\n");
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: INPUT beyond end of data? ]\n");
 		else
 			c = d->input_buf[d->cur_input_offset ++];
 		debug("input 0x%02x", c);
@@ -321,15 +314,15 @@ DEVICE_ACCESS(adb)
 
 #ifdef ADB_DEBUG
 	if ((relative_addr & ((1 << VIA_REG_SHIFT) - 1)) != 0)
-		fatal("[ adb: %s non-via register? offset 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: %s non-via register? offset 0x%x ]",
 		    writeflag == MEM_READ? "read from" : "write to",
 		    (int)relative_addr);
 	else if (writeflag == MEM_READ)
-		fatal("[ adb: read from %s: 0x%02x ]\n",
+		debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: read from %s: 0x%02x ]",
 		    via_regname[relative_addr >> VIA_REG_SHIFT],
 		    (int)d->reg[relative_addr >> VIA_REG_SHIFT]);
 	else
-		fatal("[ adb: write to %s: 0x%02x ]\n", via_regname[
+		debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: write to %s: 0x%02x ]", via_regname[
 		    relative_addr >> VIA_REG_SHIFT], (int)idata);
 #endif
 
@@ -372,8 +365,8 @@ DEVICE_ACCESS(adb)
 				d->tip = 0;
 			}
 			if (idata != 0)
-				fatal("[ adb: WARNING! UNIMPLEMENTED bits in"
-				    " vBufB: 0x%02x ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_WARNING, "[ adb: WARNING! UNIMPLEMENTED bits in"
+				    " vBufB: 0x%02x ]", (int)idata);
 			if (old_tip != d->tip)
 				adb_transfer(cpu, d, 1);
 			else if (old_ack != d->ack)
@@ -408,23 +401,22 @@ DEVICE_ACCESS(adb)
 		if (writeflag == MEM_WRITE) {
 			d->int_enable = idata & 0x80? 1 : 0;
 			if (idata != 0x04 && idata != 0x84)
-				fatal("[ adb: WARNING! vIER value 0x%x is"
-				    " UNKNOWN ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_WARNING, "[ adb: WARNING! vIER value 0x%x is"
+				    " UNKNOWN ]", (int)idata);
 		}
 		break;
 
 	default:if ((relative_addr & ((1 << VIA_REG_SHIFT) - 1)) != 0)
-			fatal("[ adb: %s non-via register? offset 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: %s non-via register? offset 0x%x ]",
 			    writeflag == MEM_READ? "read from" : "write to",
 			    (int)relative_addr);
 		else if (writeflag == MEM_READ)
-			fatal("[ adb: READ from UNIMPLEMENTED %s ]\n",
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: READ from UNIMPLEMENTED %s ]",
 			    via_regname[relative_addr >> VIA_REG_SHIFT]);
 		else
-			fatal("[ adb: WRITE to UNIMPLEMENTED %s: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: WRITE to UNIMPLEMENTED %s: 0x%x ]",
 			    via_regname[relative_addr >> VIA_REG_SHIFT],
 			    (int)idata);
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

@@ -84,12 +84,12 @@ DEVICE_ACCESS(palmbus)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ palmbus: unimplemented write to address 0x%x"
-			    ", data=0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "palmbus", VERBOSITY_DEBUG, "[ palmbus: unimplemented write to address 0x%x"
+			    ", data=0x%02x ]",
 			    (int)relative_addr, (int)idata);
 		} else {
-			fatal("[ palmbus: unimplemented read from address 0x%x "
-			    "]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "palmbus", VERBOSITY_DEBUG, "[ palmbus: unimplemented read from address 0x%x "
+			    "]", (int)relative_addr);
 		}
 		/*  exit(1);  */
 	}

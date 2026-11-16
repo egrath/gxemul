@@ -600,7 +600,7 @@ DEVICE_ACCESS(px)
 	/*  N10 sram:  */
 	if (relative_addr >= 0x200000 && relative_addr < 0x280000) {
 		if (d->type == DEV_PX_TYPE_PX)
-			fatal("WARNING: the vdac should be at this "
+			debugmsg(SUBSYS_DEVICE, "px", VERBOSITY_WARNING, "WARNING: the vdac should be at this "
 			    "address. overlap problems?\n");
 
 		if (writeflag == MEM_WRITE) {
@@ -779,20 +779,18 @@ void dev_px_init(struct machine *machine, struct memory *mem,
 		d->xconfig = d->yconfig = 1;	/*  5x2  */
 		break;
 	default:
-		fatal("dev_px_init(): unimplemented px_type\n");
+		fatal_error(SUBSYS_DEVICE, "px", "dev_px_init(): unimplemented px_type\n");
 	}
 
 	d->fb_mem = memory_new(PX_XSIZE * PX_YSIZE * d->bitdepth / 8);
 	if (d->fb_mem == NULL) {
-		fprintf(stderr, "dev_px_init(): out of memory (1)\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "px",  "dev_px_init(): out of memory (1)\n");
 	}
 
 	d->vfb_data = dev_fb_init(machine, d->fb_mem, 0, VFB_GENERIC,
 	    PX_XSIZE, PX_YSIZE, PX_XSIZE, PX_YSIZE, d->bitdepth, d->px_name);
 	if (d->vfb_data == NULL) {
-		fprintf(stderr, "dev_px_init(): out of memory (2)\n");
-		exit(2);
+		fatal_error(SUBSYS_DEVICE, "px",  "dev_px_init(): out of memory (2)\n");
 	}
 
 	switch (d->type) {
@@ -807,7 +805,7 @@ void dev_px_init(struct machine *machine, struct memory *mem,
 		    d->vfb_data, d->bitdepth, irq_path, BT459_PX);
 		break;
 	default:
-		fatal("dev_px_init(): unimplemented px_type\n");
+		fatal_error(SUBSYS_DEVICE, "px", "dev_px_init(): unimplemented px_type\n");
 	}
 
 	memory_device_register(mem, "px", baseaddr, DEV_PX_LENGTH,

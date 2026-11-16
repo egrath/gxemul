@@ -149,10 +149,9 @@ DEVICE_ACCESS(mb8696x)
 		if (writeflag == MEM_WRITE) {
 			if (idata & ~(FE_B16_DOUT | FE_B16_DIN |
 			    FE_B16_SELECT | FE_B16_CLOCK)) {
-				fatal("mb8696x: UNIMPLEMENTED bits when "
-				    "writing to FE_BMPR16: 0x%02x\n",
+				fatal_error(SUBSYS_DEVICE, "mb8696x", "mb8696x: UNIMPLEMENTED bits when "
+				    "writing to FE_BMPR16: 0x%02x",
 				    (int)idata);
-				exit(1);
 			}
 
 			/*  Dropped out of select state?  */
@@ -183,10 +182,9 @@ DEVICE_ACCESS(mb8696x)
 						/*  printf("COMMAND=%08x\n",
 						    d->eeprom_command);  */
 						if (!(d->eeprom_command&0x80)) {
-							fatal("WRITES to the "
+							fatal_error(SUBSYS_DEVICE, "mb8696x", "WRITES to the "
 							    "EEPROM are not yet"
 							    " implemented.\n");
-							exit(1);
 						}
 						/*  This is a read command.  */
 						d->eeprom_bit_count = 0;
@@ -203,7 +201,7 @@ DEVICE_ACCESS(mb8696x)
 					d->eeprom_data <<= 1;
 					d->eeprom_bit_count ++;
 					if (d->eeprom_bit_count > 16)
-						fatal("[ WARNING: more than 16"
+						debugmsg(SUBSYS_DEVICE, "mb8696x", VERBOSITY_WARNING, "[ WARNING: more than 16"
 						    " bits of EEPROM data "
 						    "read? ]\n");
 					break;
@@ -218,10 +216,9 @@ DEVICE_ACCESS(mb8696x)
 		/*  EEPROM data  */
 		if (writeflag == MEM_WRITE) {
 			if (idata & ~FE_B17_DATA) {
-				fatal("mb8696x: UNIMPLEMENTED bits when "
-				    "writing to FE_BMPR17: 0x%02x\n",
+				fatal_error(SUBSYS_DEVICE, "mb8696x", "mb8696x: UNIMPLEMENTED bits when "
+				    "writing to FE_BMPR17: 0x%02x",
 				    (int)idata);
-				exit(1);
 			}
 			(*reg_ptr) = idata;
 		}
@@ -235,11 +232,11 @@ DEVICE_ACCESS(mb8696x)
 			if ((d->reg[FE_DLCR7] & FE_D7_RBS) == FE_D7_RBS_BMPR)
 				bank = " (bank BMPR)";
 			if (writeflag == MEM_READ) {
-				fatal("[ mb8696x: read from UNIMPLEMENTED reg "
-				    "%i%s ]\n", (int)relative_addr, bank);
+				debugmsg(SUBSYS_DEVICE, "mb8696x", VERBOSITY_DEBUG, "[ mb8696x: read from UNIMPLEMENTED reg "
+				    "%i%s ]", (int)relative_addr, bank);
 			} else {
-				fatal("[ mb8696x: write to UNIMPLEMENTED reg "
-				    "%i%s: 0x%02x ]\n", (int)relative_addr,
+				debugmsg(SUBSYS_DEVICE, "mb8696x", VERBOSITY_DEBUG, "[ mb8696x: write to UNIMPLEMENTED reg "
+				    "%i%s: 0x%02x ]", (int)relative_addr,
 				    bank, (int)idata);
 			}
 

@@ -444,11 +444,11 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 		d->cur_rx_offset = 0;
 	}
 
-	/*  fatal("{ dec21143_rx: base = 0x%08x }\n", (int)addr);  */
+	/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "{ dec21143_rx: base = 0x%08x }", (int)addr);  */
 
 	if (!dec21143_dma(cpu, d, addr, descr, sizeof(uint32_t),
 	    MEM_READ)) {
-		fatal("[ dec21143_rx: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_rx: memory_rw failed! ]\n");
 		return 0;
 	}
 
@@ -464,7 +464,7 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 
 	if (!dec21143_dma(cpu, d, addr + sizeof(uint32_t),
 	    descr + sizeof(uint32_t), sizeof(uint32_t) * 3, MEM_READ)) {
-		fatal("[ dec21143_rx: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_rx: memory_rw failed! ]\n");
 		return 0;
 	}
 
@@ -538,7 +538,7 @@ int dec21143_rx(struct cpu *cpu, struct dec21143_data *d)
 
 	if (!dec21143_dma(cpu, d, addr, descr,
 	    sizeof(uint32_t) * writeback_len, MEM_WRITE)) {
-		fatal("[ dec21143_rx: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_rx: memory_rw failed! ]\n");
 		return 0;
 	}
 
@@ -670,7 +670,7 @@ static void dec21143_process_setup_packet(struct cpu *cpu,
 
 	if (!dec21143_dma(cpu, d, bufaddr, cp, TULIP_SETUP_PACKET_LEN,
 	    MEM_READ)) {
-		fatal("[ dec21143_process_setup_packet: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_process_setup_packet: memory_rw failed! ]\n");
 		return;
 	}
 
@@ -726,13 +726,13 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 
 	if (!dec21143_dma(cpu, d, addr, descr, sizeof(uint32_t),
 	    MEM_READ)) {
-		fatal("[ dec21143_tx: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_tx: memory_rw failed! ]\n");
 		return 0;
 	}
 
 	tdes0 = load_le32(&descr[0]);
 
-	/*  fatal("{ dec21143_tx: base=0x%08x, tdes0=0x%08x }\n",
+	/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "{ dec21143_tx: base=0x%08x, tdes0=0x%08x }",
 	    (int)addr, (int)tdes0);  */
 
 	/*  Only process packets owned by the 21143:  */
@@ -748,7 +748,7 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 
 	if (!dec21143_dma(cpu, d, addr + sizeof(uint32_t),
 	    descr + sizeof(uint32_t), sizeof(uint32_t) * 3, MEM_READ)) {
-		fatal("[ dec21143_tx: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_tx: memory_rw failed! ]\n");
 		return 0;
 	}
 
@@ -784,10 +784,10 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 		/*
 		 *  Setup Packet.
 		 */
-		/*  fatal("{ TX: setup packet }\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "{ TX: setup packet }\n");  */
 		if (bufsize != TULIP_SETUP_PACKET_LEN)
-			fatal("[ dec21143: setup packet len = %i, should be"
-			    " %d! ]\n", (int)bufsize, TULIP_SETUP_PACKET_LEN);
+			debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: setup packet len = %i, should be"
+			    " %d! ]", (int)bufsize, TULIP_SETUP_PACKET_LEN);
 		else
 			dec21143_process_setup_packet(cpu, d, tdes1, bufaddr);
 		if (tdes1 & TDCTL_Tx_IC)
@@ -799,7 +799,7 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 		/*
 		 *  Data Packet.
 		 */
-		/*  fatal("{ TX: data packet: ");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "{ TX: data packet: ");  */
 		if (tdes1 & TDCTL_Tx_FS) {
 			/*  First segment: a new frame.  */
 			free(d->cur_tx_buf);
@@ -811,8 +811,8 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *)
 			    realloc(d->cur_tx_buf, d->cur_tx_buf_len + bufsize + 1));
 		} else if (bufsize != 0) {
-			fatal("[ dec21143: WARNING! tx: middle "
-			    "segment, but no first segment?! ]\n");
+			debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_WARNING, "[ dec21143: WARNING! tx: middle "
+			    "segment, but no first segment?! ]");
 			CHECK_ALLOCATION(d->cur_tx_buf = (unsigned char *)
 			    malloc(bufsize + 1));
 			d->cur_tx_buf_len = 0;
@@ -838,7 +838,7 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 			} else {
 				static int warn = 0;
 				if (!warn)
-					fatal("[ dec21143: WARNING! Not "
+					debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_WARNING, "[ dec21143: WARNING! Not "
 					    "connected to a network! ]\n");
 				warn = 1;
 			}
@@ -869,7 +869,7 @@ int dec21143_tx(struct cpu *cpu, struct dec21143_data *d)
 
 	if (!dec21143_dma(cpu, d, addr, descr, sizeof(uint32_t) * 4,
 	    MEM_WRITE)) {
-		fatal("[ dec21143_tx: memory_rw failed! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143_tx: memory_rw failed! ]\n");
 		return 0;
 	}
 
@@ -954,10 +954,10 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 	if (idata & MIIROM_MDC && oldreg & MIIROM_MDC)
 		return;
 
-	/*  fatal("[ mii_access(): 0x%08x ]\n", (int)idata);  */
+	/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): 0x%08x ]", (int)idata);  */
 
 	if (idata & MIIROM_BR) {
-		fatal("[ mii_access(): MIIROM_BR: TODO ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): MIIROM_BR: TODO ]\n");
 		return;
 	}
 
@@ -966,7 +966,7 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 	if (d->mii_state >= MII_STATE_START_WAIT &&
 	    d->mii_state <= MII_STATE_READ_PHYADDR_REGADDR &&
 	    idata & MIIROM_MIIDIR)
-		fatal("[ mii_access(): bad dir? ]\n");
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): bad dir? ]\n");
 
 	switch (d->mii_state) {
 
@@ -976,7 +976,7 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 			return;
 		if (idata & MIIROM_MIIDIR)
 			return;
-		/*  fatal("[ mii_access(): got a 0 delimiter ]\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): got a 0 delimiter ]\n");  */
 		d->mii_state = MII_STATE_START_WAIT;
 		d->mii_opcode = 0;
 		d->mii_phyaddr = 0;
@@ -991,7 +991,7 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 			d->mii_state = MII_STATE_RESET;
 			return;
 		}
-		/*  fatal("[ mii_access(): got a 1 delimiter ]\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): got a 1 delimiter ]\n");  */
 		d->mii_state = MII_STATE_READ_OP;
 		d->mii_bit = 0;
 		break;
@@ -999,11 +999,11 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 	case MII_STATE_READ_OP:
 		if (d->mii_bit == 0) {
 			d->mii_opcode = obit << 1;
-			/*  fatal("[ mii_access(): got first opcode bit "
-			    "(%i) ]\n", obit);  */
+			/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): got first opcode bit "
+			    "(%i) ]", obit);  */
 		} else {
 			d->mii_opcode |= obit;
-			/*  fatal("[ mii_access(): got opcode = %i ]\n",
+			/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): got opcode = %i ]",
 			    d->mii_opcode);  */
 			d->mii_state = MII_STATE_READ_PHYADDR_REGADDR;
 		}
@@ -1011,16 +1011,16 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 		break;
 
 	case MII_STATE_READ_PHYADDR_REGADDR:
-		/*  fatal("[ mii_access(): got phy/reg addr bit nr %i (%i)"
-		    " ]\n", d->mii_bit - 2, obit);  */
+		/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): got phy/reg addr bit nr %i (%i)"
+		    " ]", d->mii_bit - 2, obit);  */
 		if (d->mii_bit <= 6)
 			d->mii_phyaddr |= obit << (6-d->mii_bit);
 		else
 			d->mii_regaddr |= obit << (11-d->mii_bit);
 		d->mii_bit ++;
 		if (d->mii_bit >= 12) {
-			/*  fatal("[ mii_access(): phyaddr=0x%x regaddr=0x"
-			    "%x ]\n", d->mii_phyaddr, d->mii_regaddr);  */
+			/*  debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): phyaddr=0x%x regaddr=0x"
+			    "%x ]", d->mii_phyaddr, d->mii_regaddr);  */
 			d->mii_state = MII_STATE_A;
 		}
 		break;
@@ -1047,7 +1047,7 @@ static void mii_access(struct cpu *cpu, struct dec21143_data *d,
 		switch (d->mii_opcode) {
 		case MII_COMMAND_WRITE:
 			if (idata & MIIROM_MIIDIR)
-				fatal("[ mii_access(): write: bad dir? ]\n");
+				debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ mii_access(): write: bad dir? ]\n");
 			obit = obit? (0x8000 >> (d->mii_bit - 14)) : 0;
 			tmp = d->mii_phy_reg[(d->mii_phyaddr << 5) +
 			    d->mii_regaddr] | obit;
@@ -1163,8 +1163,8 @@ static void srom_access(struct cpu *cpu, struct dec21143_data *d,
 				    (d->srom_curbit - ROM_WIDTH - 3))? 1 : 0;
 			}
 			break;
-		default:fatal("[ dec21243: unimplemented SROM/EEPROM "
-			    "opcode %i ]\n", d->srom_opcode);
+		default:debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21243: unimplemented SROM/EEPROM "
+			    "opcode %i ]", d->srom_opcode);
 		}
 		d->reg[CSR_MIIROM / 8] &= ~MIIROM_SROMDO;
 		if (obit)
@@ -1253,7 +1253,7 @@ DEVICE_ACCESS(dec21143)
 			}
 		}
 	} else
-		fatal("[ dec21143: WARNING! unaligned access (0x%x) ]\n",
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_WARNING, "[ dec21143: WARNING! unaligned access (0x%x) ]",
 		    (int)relative_addr);
 
 	switch (relative_addr) {
@@ -1270,7 +1270,7 @@ DEVICE_ACCESS(dec21143)
 
 	case CSR_TXPOLL:	/*  csr1  */
 		if (writeflag == MEM_READ)
-			fatal("[ dec21143: UNIMPLEMENTED READ from "
+			debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: UNIMPLEMENTED READ from "
 			    "txpoll ]\n");
 		d->tx_idling = d->tx_idling_threshold;
 		dev_dec21143_tick(cpu, extra);
@@ -1278,7 +1278,7 @@ DEVICE_ACCESS(dec21143)
 
 	case CSR_RXPOLL:	/*  csr2  */
 		if (writeflag == MEM_READ)
-			fatal("[ dec21143: UNIMPLEMENTED READ from "
+			debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: UNIMPLEMENTED READ from "
 			    "rxpoll ]\n");
 		dev_dec21143_tick(cpu, extra);
 		break;
@@ -1288,8 +1288,8 @@ DEVICE_ACCESS(dec21143)
 			debugmsg(d->subsys, "dec21143", VERBOSITY_DEBUG,
 			    "setting RXLIST to 0x%x\n", (int)idata);
 			if (idata & 0x3)
-				fatal("[ dec21143: WARNING! RXLIST not aligned"
-				    "? (0x%llx) ]\n", (long long)idata);
+				debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_WARNING, "[ dec21143: WARNING! RXLIST not aligned"
+				    "? (0x%llx) ]", (long long)idata);
 			idata &= ~0x3;
 			d->cur_rx_addr = idata;
 		}
@@ -1300,8 +1300,8 @@ DEVICE_ACCESS(dec21143)
 			debugmsg(d->subsys, "dec21143", VERBOSITY_DEBUG,
 			    "setting TXLIST to 0x%x\n", (int)idata);
 			if (idata & 0x3)
-				fatal("[ dec21143: WARNING! TXLIST not aligned"
-				    "? (0x%llx) ]\n", (long long)idata);
+				debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_WARNING, "[ dec21143: WARNING! TXLIST not aligned"
+				    "? (0x%llx) ]", (long long)idata);
 			idata &= ~0x3;
 			d->cur_tx_addr = idata;
 		}
@@ -1347,8 +1347,8 @@ DEVICE_ACCESS(dec21143)
 				d->tx_idling = d->tx_idling_threshold;
 			}
 			if (idata != 0) {
-				fatal("[ dec21143: UNIMPLEMENTED OPMODE bits"
-				    ": 0x%08x ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: UNIMPLEMENTED OPMODE bits"
+				    ": 0x%08x ]", (int)idata);
 			}
 			dec21143_update_rx_mode(d);
 			dev_dec21143_tick(cpu, extra);
@@ -1392,11 +1392,11 @@ DEVICE_ACCESS(dec21143)
 		break;
 
 	default:if (writeflag == MEM_READ)
-			fatal("[ dec21143: read from unimplemented 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: read from unimplemented 0x%02x ]",
 			    (int)relative_addr);
 		else
-			fatal("[ dec21143: write to unimplemented 0x%02x: "
-			    "0x%02x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: write to unimplemented 0x%02x: "
+			    "0x%02x ]", (int)relative_addr, (int)idata);
 	}
 
 	if (writeflag == MEM_READ)
@@ -1615,7 +1615,7 @@ DEVINIT(dec21143)
 		break;
 
 	default:
-		fatal("[ dec21143: default DMA mask for unhandled machine %d\n",
+		debugmsg(SUBSYS_DEVICE, "dec21143", VERBOSITY_DEBUG, "[ dec21143: default DMA mask for unhandled machine %d",
 		      devinit->machine->machine_type);
 		d->xxx_dma_to_phys_mask = 0xffffffff;
 	}

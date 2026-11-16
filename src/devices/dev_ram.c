@@ -67,11 +67,11 @@ DEVICE_ACCESS(ram)
 	struct ram_data *d = (struct ram_data *) extra;
 
 	if (cpu->running && d->trace && writeflag == MEM_WRITE) {
-		fatal("[ %s: write %i byte%s from 0x%x:",
+		debugmsg(SUBSYS_DEVICE, "ram", VERBOSITY_DEBUG, "[ %s: write %i byte%s from 0x%x:",
 		    d->name, (int)len, len==1? "":"s", (int)relative_addr);
 		for (size_t i=0; i<len; i++)
-			fatal(" %02x", data[i]);
-		fatal(" ]\n");
+			fatal_error(SUBSYS_DEVICE, "ram", " %02x", data[i]);
+		fatal_error(SUBSYS_DEVICE, "ram", " ]\n");
 	}
 
 	switch (d->mode) {
@@ -96,11 +96,11 @@ DEVICE_ACCESS(ram)
 			}
 
 			if (cpu->running && d->trace && writeflag == MEM_READ) {
-				fatal("[ %s: read %i byte%s from 0x%x:",
+				debugmsg(SUBSYS_DEVICE, "ram", VERBOSITY_DEBUG, "[ %s: read %i byte%s from 0x%x:",
 				    d->name, (int)len, len==1? "":"s", (int)relative_addr);
 				for (size_t i=0; i<len; i++)
-					fatal(" %02x", data[i]);
-				fatal(" ]\n");
+					fatal_error(SUBSYS_DEVICE, "ram", " %02x", data[i]);
+				fatal_error(SUBSYS_DEVICE, "ram", " ]\n");
 			}
 
 			return result;
@@ -120,18 +120,17 @@ DEVICE_ACCESS(ram)
 			memcpy(data, &d->data[relative_addr], len);
 
 			if (cpu->running && d->trace) {
-				fatal("[ %s: read %i byte%s from 0x%x:",
+				debugmsg(SUBSYS_DEVICE, "ram", VERBOSITY_DEBUG, "[ %s: read %i byte%s from 0x%x:",
 				    d->name, (int)len, len==1? "":"s", (int)relative_addr);
 				for (size_t i=0; i<len; i++)
-					fatal(" %02x", data[i]);
-				fatal(" ]\n");
+					fatal_error(SUBSYS_DEVICE, "ram", " %02x", data[i]);
+				fatal_error(SUBSYS_DEVICE, "ram", " ]\n");
 			}
 		}
 		break;
 
 	default:
-		fatal("dev_ram_access(): unknown mode %i\n", d->mode);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "ram", "dev_ram_access(): unknown mode %i", d->mode);
 	}
 
 	return 1;
@@ -227,8 +226,7 @@ void dev_ram_init(struct machine *machine, uint64_t baseaddr, uint64_t length,
 		break;
 
 	default:
-		fatal("dev_ram_access(): %s: unknown mode %i\n", d->name, d->mode);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "ram", "dev_ram_access(): %s: unknown mode %i", d->name, d->mode);
 	}
 }
 

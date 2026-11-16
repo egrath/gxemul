@@ -77,7 +77,7 @@ DEVICE_ACCESS(ohci)
 	case OHCI_COMMAND_STATUS:
 		name = "COMMAND_STATUS";
 		if (idata == 0x2) {
-			fatal("Hm... OHCI COMMAND STATUS\n");
+			fatal_error(SUBSYS_DEVICE, "ohci", "Hm... OHCI COMMAND STATUS\n");
 			INTERRUPT_ASSERT(d->irq);
 		}
 		break;

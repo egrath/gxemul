@@ -95,10 +95,10 @@ DEVICE_ACCESS(dreamcast_rtc)
 
 	default:
 		if (writeflag == MEM_READ) {
-			fatal("[ dreamcast_rtc: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dreamcast_rtc", VERBOSITY_DEBUG, "[ dreamcast_rtc: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ dreamcast_rtc: write to addr 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dreamcast_rtc", VERBOSITY_DEBUG, "[ dreamcast_rtc: write to addr 0x%x: 0x%x ]",
 			    (int)relative_addr, (int)idata);
 		}
 	}

@@ -74,8 +74,7 @@ DEVICE_TICK(sgi_ip30)
 	if (d->imask0 & ((int64_t)1<<50)) {
 		/*  TODO: Only interrupt if reg 0x20000 (the counter)
 			has passed the compare (0x30000).  */
-fatal("IP30 legacy interrupt rewrite: TODO\n");
-abort();
+debugmsg(SUBSYS_DEVICE, "sgi_ip30", VERBOSITY_DEBUG, "IP30 legacy interrupt rewrite: TODO\n");
 //		cpu_interrupt(cpu, 8+1 + 50);
 	}
 }
@@ -123,16 +122,14 @@ DEVICE_ACCESS(sgi_ip30)
 	case 0x10020:	/*  Set ISR, according to Linux/IP30  */
 		d->isr = idata;
 		/*  Recalculate CPU interrupt assertions:  */
-fatal("IP30 legacy interrupt rewrite: TODO\n");
-abort();
+debugmsg(SUBSYS_DEVICE, "sgi_ip30", VERBOSITY_DEBUG, "IP30 legacy interrupt rewrite: TODO\n");
 //		cpu_interrupt(cpu, 8);
 		break;
 
 	case 0x10028:	/*  Clear ISR, according to Linux/IP30  */
 		d->isr &= ~idata;
 		/*  Recalculate CPU interrupt assertions:  */
-fatal("IP30 legacy interrupt rewrite: TODO\n");
-abort();
+debugmsg(SUBSYS_DEVICE, "sgi_ip30", VERBOSITY_DEBUG, "IP30 legacy interrupt rewrite: TODO\n");
 //		cpu_interrupt(cpu, 8);
 		break;
 
@@ -141,8 +138,7 @@ abort();
 			/*  Clear-on-write  (TODO: is this correct?)  */
 			d->isr &= ~idata;
 			/*  Recalculate CPU interrupt assertions:  */
-fatal("IP30 legacy interrupt rewrite: TODO\n");
-abort();
+debugmsg(SUBSYS_DEVICE, "sgi_ip30", VERBOSITY_DEBUG, "IP30 legacy interrupt rewrite: TODO\n");
 //			cpu_interrupt(cpu, 8);
 		} else {
 			odata = d->isr;
@@ -197,7 +193,7 @@ DEVICE_ACCESS(sgi_ip30_2)
 	    according to Linux/IP30  */
 
 	case 0x114 + 0x40 * (12 - 8):
-		fatal("[ IP30: asdvasdvnb ]\n");
+		debugmsg(SUBSYS_DEVICE, "sgi_ip30", VERBOSITY_DEBUG, "[ IP30: asdvasdvnb ]\n");
 		odata = 0x80000000;
 		break;
 

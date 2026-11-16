@@ -314,8 +314,8 @@ static void nvram_write(struct mc_data *d)
 	}
 	f = fopen(d->nvram_file, "wb");
 	if (f == NULL || fwrite(buf, 1, len, f) != len) {
-		fprintf(stderr, "[ mc146818: could not write the NVRAM to "
-		    "%s ]\n", d->nvram_file);
+		debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG,  "[ mc146818: could not write the NVRAM to "
+		    "%s ]", d->nvram_file);
 		d->nvram_file = NULL;
 	} else {
 		memcpy(d->nvram_saved, saved, nvram_len(d));
@@ -367,8 +367,8 @@ static void nvram_read(struct mc_data *d)
 		for (i = 0; i < nvram_len(d); i++)
 			d->nvram_saved[i] = d->reg[4 * nvram_reg(i)];
 	} else
-		fprintf(stderr, "[ mc146818: %s is too short to be an NVRAM; "
-		    "ignored ]\n", d->nvram_file);
+		debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG,  "[ mc146818: %s is too short to be an NVRAM; "
+		    "ignored ]", d->nvram_file);
 	fclose(f);
 }
 
@@ -469,13 +469,13 @@ DEVICE_ACCESS(mc146818_jazz)
 #ifdef MC146818_DEBUG
 	if (writeflag == MEM_WRITE) {
 		int i;
-		fatal("[ mc146818_jazz: write to addr=0x%04x: ",
+		debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG, "[ mc146818_jazz: write to addr=0x%04x: ",
 		    (int)relative_addr);
 		for (i=0; i<len; i++)
-			fatal("%02x ", data[i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "mc146818", "%02x ", data[i]);
+		fatal_error(SUBSYS_DEVICE, "mc146818", "]\n");
 	} else
-		fatal("[ mc146818_jazz: read from addr=0x%04x ]\n",
+		debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG, "[ mc146818_jazz: read from addr=0x%04x ]",
 		    (int)relative_addr);
 #endif
 
@@ -665,7 +665,7 @@ DEVICE_ACCESS(mc146818)
 		} else if (relative_addr == 0x00)
 			relative_addr = d->last_addr * 4;
 		else {
-			fatal("[ mc146818: not accessed as an "
+			debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG, "[ mc146818: not accessed as an "
 			    "MC146818_ARC_NEC device! ]\n");
 		}
 		break;
@@ -701,11 +701,11 @@ DEVICE_ACCESS(mc146818)
 
 #ifdef MC146818_DEBUG
 	if (writeflag == MEM_WRITE) {
-		fatal("[ mc146818: write to addr=0x%04x (len %i): ",
+		debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG, "[ mc146818: write to addr=0x%04x (len %i): ",
 		    (int)relative_addr, (int)len);
 		for (i=0; i<len; i++)
-			fatal("0x%02x ", data[i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "mc146818", "0x%02x ", data[i]);
+		fatal_error(SUBSYS_DEVICE, "mc146818", "]\n");
 	}
 #endif
 
@@ -842,7 +842,7 @@ DEVICE_ACCESS(mc146818)
 				int j;
 
 				/*  Used on SGI to power off the machine.  */
-				fatal("[ md146818: power off ]\n");
+				debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG, "[ md146818: power off ]\n");
 				for (j=0; j<cpu->machine->ncpus; j++)
 					cpu->machine->cpus[j]->running = false;
 			}
@@ -945,11 +945,11 @@ DEVICE_ACCESS(mc146818)
 
 #ifdef MC146818_DEBUG
 	if (writeflag == MEM_READ) {
-		fatal("[ mc146818: read from addr=0x%04x (len %i): ",
+		debugmsg(SUBSYS_DEVICE, "mc146818", VERBOSITY_DEBUG, "[ mc146818: read from addr=0x%04x (len %i): ",
 		    (int)relative_addr, (int)len);
 		for (i=0; i<len; i++)
-			fatal("0x%02x ", data[i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "mc146818", "0x%02x ", data[i]);
+		fatal_error(SUBSYS_DEVICE, "mc146818", "]\n");
 	}
 #endif
 

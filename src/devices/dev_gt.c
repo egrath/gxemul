@@ -119,7 +119,7 @@ DEVICE_ACCESS(gt)
 			    (int)relative_addr, (int)odata);
 		} else {
 			d->decode[relative_addr / 8] = idata;
-			fatal("[ gt: write to offset 0x%x: 0x%x (TODO) ]\n",
+			debugmsg(SUBSYS_DEVICE, "gt", VERBOSITY_DEBUG, "[ gt: write to offset 0x%x: 0x%x (TODO) ]",
 			    (int)relative_addr, (int)idata);
 		}
 		break;
@@ -270,8 +270,7 @@ struct pci_data *dev_gt_init(struct machine *machine, struct memory *mem,
 		isa_portbase = 0x18000000ULL;
 		isa_membase = 0x10000000ULL;
 		break;
-	default:fatal("dev_gt_init(): unimplemented GT type (%i).\n", type);
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "gt", "dev_gt_init(): unimplemented GT type (%i).", type);
 	}
 
 

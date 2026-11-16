@@ -432,7 +432,6 @@ DEVICE_ACCESS(mb89352)
 						    VERBOSITY_ERROR,
 					    	    "Transfer command: unimplemented phase %i",
 					    	    d->phase);
-				    		exit(1);
 					}
 
 					if (!(d->phase & 1))

@@ -383,7 +383,7 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 			 */
 			if (d->xferp->data_in == NULL ||
 			    d->incoming_data_addr >= (int)d->xferp->data_in_len) {
-				fatal("[ asc: no incoming data? ]\n");
+				debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "[ asc: no incoming data? ]\n");
 				res = 0;
 			} else {
 				ch = d->xferp->data_in[d->incoming_data_addr++];
@@ -395,7 +395,7 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 		} else {
 			/*  Copy from the incoming data into dma memory:  */
 			if (d->xferp->data_in == NULL) {
-				fatal("no incoming DMA data?\n");
+				fatal_error(SUBSYS_DEVICE, "asc", "no incoming DMA data?\n");
 				res = 0;
 			} else {
 				size_t lenIn = d->xferp->data_in_len;
@@ -406,8 +406,8 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 				size_t count = lenIn2;
 
                                 if (lenIn < lenIn2 && !d->live_phase) {
-                                        fatal("{ asc: data in, lenIn=%i lenIn2=%i "
-					    "}\n", lenIn, lenIn2);
+                                        debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "{ asc: data in, lenIn=%i lenIn2=%i "
+					    "}", lenIn, lenIn2);
                                 }
 
 				/*  TODO: check lenIn2 in a similar way?  */
@@ -458,8 +458,8 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 					    (int)d->xferp->data_in_len);
 
 					all_done = 0;
-					/*  fatal("{ asc: multi-transfer"
-					    " data_in, lenIn=%i lenIn2=%i }\n",
+					/*  debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "{ asc: multi-transfer"
+					    " data_in, lenIn=%i lenIn2=%i }",
 					    (int)lenIn, (int)lenIn2);  */
 
 					d->xferp->data_in_len -= lenIn2;
@@ -494,7 +494,7 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 	} else if (d->cur_phase == PHASE_DATA_OUT) {
 		/*  Data going from the controller to an external device:  */
 		if (!dmaflag) {
-fatal("TODO.......asdgasin\n");
+debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "TODO.......asdgasin\n");
 		} else {
 			/*  Copy data from DMA to data_out:  */
 			int len2 = d->reg_wo[NCR_TCL] +
@@ -515,7 +515,7 @@ fatal("TODO.......asdgasin\n");
 			/*  TODO: Make sure that len2 doesn't go outside
 			    of the dma memory?  */
 
-			/*  fatal("    data out offset=%5i len=%5i\n",
+			/*  fatal_error(SUBSYS_DEVICE, "asc", "    data out offset=%5i len=%5i",
 			    d->xferp->data_out_offset, len2);  */
 
 			if (d->xferp->data_out_offset + len2 >
@@ -568,7 +568,7 @@ fatal("TODO.......asdgasin\n");
 				    (int)len, (int)len2);
 				if (d->xferp->data_out_offset >
 				    d->xferp->data_out_len)
-					fatal("[ asc data_out dma: too much?"
+					debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "[ asc data_out dma: too much?"
 					    " ]\n");
 				else
 					all_done = 0;
@@ -598,8 +598,8 @@ fatal("TODO.......asdgasin\n");
 			int newlen;
 
 			if (oldlen != 1) {
-				fatal(" (PHASE OUT MSG len == %i, "
-				    "should be 1)\n", oldlen);
+				fatal_error(SUBSYS_DEVICE, "asc", " (PHASE OUT MSG len == %i, "
+				    "should be 1)", oldlen);
 			}
 
 			newlen = oldlen + d->n_bytes_in_fifo;
@@ -625,19 +625,19 @@ fatal("TODO.......asdgasin\n");
 			    d->xferp->msg_out[3] == 0x01 &&
 			    d->xferp->msg_out[4] == 0x32 &&
 			    d->xferp->msg_out[5] == 0x0f) {
-				fatal(" !! Mach/PMAX hack !! ");
+				fatal_error(SUBSYS_DEVICE, "asc", " !! Mach/PMAX hack !! ");
 				all_done = 0;
 				d->cur_phase = PHASE_MSG_IN;
 			}
 #endif
 		} else {
 			/*  Copy data from DMA to msg_out:  */
-			fatal("[ DMA MSG OUT: xxx TODO! ]");
+			debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "[ DMA MSG OUT: xxx TODO! ]");
 			/*  TODO  */
 			res = 0;
 		}
 	} else if (d->cur_phase == PHASE_MSG_IN) {
-		fatal("[ MACH HACK! ]");
+		debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "[ MACH HACK! ]");
 		/*  Super-ugly hack for Mach/PMAX:  TODO: make nicer  */
 		dev_asc_fifo_write(d, 0x07);
 		d->cur_phase = PHASE_COMMAND;
@@ -647,8 +647,8 @@ fatal("TODO.......asdgasin\n");
 		    d->reg_wo[NCR_SELID] & 7, dmaflag, 0);
 		return res;
 	} else {
-		fatal("!!! TODO: unknown/unimplemented phase "
-		    "in transfer: %i\n", d->cur_phase);
+		debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "!!! TODO: unknown/unimplemented phase "
+		    "in transfer: %i", d->cur_phase);
 	}
 
 	/*  Redo the command if data was just sent using DATA_OUT:  */
@@ -963,7 +963,7 @@ DEVICE_ACCESS(asc)
 	/*  Debug stuff useful when trying to make dev_asc compatible
 	    with the 'arc' emulation mode, which is different from
 	    the DECstation mode.  */
-	fatal("[ asc: writeflag=%i addr=%08x idata=%016llx ]\n",
+	debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "[ asc: writeflag=%i addr=%08x idata=%016llx ]",
 	    writeflag, (int)relative_addr, (long long)idata);
 #endif
 

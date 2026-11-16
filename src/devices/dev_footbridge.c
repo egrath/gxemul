@@ -193,7 +193,7 @@ DEVICE_ACCESS(footbridge_isa)
 
 	if (writeflag == MEM_WRITE) {
 		idata = memory_readmax64(cpu, data, len);
-		fatal("[ footbridge_isa: WARNING/TODO: write! idata = 0x%016" PRIx64" ]\n", idata);
+		debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_WARNING, "[ footbridge_isa: WARNING/TODO: write! idata = 0x%016" PRIx64" ]", idata);
 	}
 
 	x = cpu->machine->isa_pic_data.last_int;
@@ -223,7 +223,6 @@ DEVICE_ACCESS(footbridge_reset)
 		if (idata & 0x40) {
 			debug("[ footbridge_reset: GP16: Halting. ]\n");
 			cpu->running = 0;
-exit(1);
 		}
 	}
 
@@ -250,9 +249,8 @@ DEVICE_ACCESS(footbridge_pci)
 	bus_pci_setaddr(cpu, d->pcibus, bus, dev, func, reg);
 
 	if (bus == 255) {
-		fatal("[ footbridge DEBUG ERROR: bus 255 unlikely,"
-		    " pc (might not be updated) = 0x%08x ]\n", (int)cpu->pc);
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge DEBUG ERROR: bus 255 unlikely,"
+		    " pc (might not be updated) = 0x%08x ]", (int)cpu->pc);
 	}
 
 	debug("[ footbridge pci: %s bus %i, device %i, function %i, register "
@@ -308,8 +306,8 @@ DEVICE_ACCESS(footbridge)
 	case PCI_ADDRESS_EXTENSION:
 		/*  TODO: Written to by Linux.  */
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ footbridge: TODO: write to PCI_ADDRESS_"
-			    "EXTENSION: 0x%llx ]\n", (long long)idata);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge: TODO: write to PCI_ADDRESS_"
+			    "EXTENSION: 0x%llx ]", (long long)idata);
 		break;
 
 	case SA_CONTROL:
@@ -335,8 +333,7 @@ DEVICE_ACCESS(footbridge)
 		if (writeflag == MEM_READ)
 			odata = d->irq_status & d->irq_enable;
 		else {
-			fatal("[ WARNING: footbridge write to irq status? ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_WARNING, "[ WARNING: footbridge write to irq status? ]\n");
 		}
 		break;
 
@@ -344,8 +341,7 @@ DEVICE_ACCESS(footbridge)
 		if (writeflag == MEM_READ)
 			odata = d->irq_status;
 		else {
-			fatal("[ footbridge write to irq_raw_status ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge write to irq_raw_status ]\n");
 		}
 		break;
 
@@ -358,9 +354,8 @@ DEVICE_ACCESS(footbridge)
 				INTERRUPT_DEASSERT(d->irq);
 		} else {
 			odata = d->irq_enable;
-			fatal("[ WARNING: footbridge read from "
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_WARNING, "[ WARNING: footbridge read from "
 			    "ENABLE SET? ]\n");
-			exit(1);
 		}
 		break;
 
@@ -373,9 +368,8 @@ DEVICE_ACCESS(footbridge)
 				INTERRUPT_DEASSERT(d->irq);
 		} else {
 			odata = d->irq_enable;
-			fatal("[ WARNING: footbridge read from "
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_WARNING, "[ WARNING: footbridge read from "
 			    "ENABLE CLEAR? ]\n");
-			exit(1);
 		}
 		break;
 
@@ -383,8 +377,7 @@ DEVICE_ACCESS(footbridge)
 		if (writeflag == MEM_READ)
 			odata = d->fiq_status & d->fiq_enable;
 		else {
-			fatal("[ WARNING: footbridge write to fiq status? ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_WARNING, "[ WARNING: footbridge write to fiq status? ]\n");
 		}
 		break;
 
@@ -392,8 +385,7 @@ DEVICE_ACCESS(footbridge)
 		if (writeflag == MEM_READ)
 			odata = d->fiq_status;
 		else {
-			fatal("[ footbridge write to fiq_raw_status ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge write to fiq_raw_status ]\n");
 		}
 		break;
 
@@ -434,9 +426,8 @@ DEVICE_ACCESS(footbridge)
 			d->timer_control[timer_nr] = idata;
 			if (idata & TIMER_FCLK_16 &&
 			    idata & TIMER_FCLK_256) {
-				fatal("TODO: footbridge timer: "
+				debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "TODO: footbridge timer: "
 				    "both 16 and 256?\n");
-				exit(1);
 			}
 			if (idata & TIMER_ENABLE) {
 				reload_timer_value(cpu, d, timer_nr);
@@ -461,8 +452,7 @@ DEVICE_ACCESS(footbridge)
 
 	case SDRAM_BA_MASK:
 		if (writeflag == MEM_READ) {
-			fatal("[ footbridge read from sdram_ba_mask ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge read from sdram_ba_mask ]\n");
 		} else {
 			switch (idata) {
 			case SDRAM_MASK_256KB:
@@ -478,28 +468,27 @@ DEVICE_ACCESS(footbridge)
 			case SDRAM_MASK_256MB:
 				break;
 			default:
-				fatal("[ footbridge write to sdram_ba_mask "
-				    "%#llx ]\n", (long long)idata);
+				debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge write to sdram_ba_mask "
+				    "%#llx ]", (long long)idata);
 				break;
 			}
 		}
 		break;
 	case SDRAM_BA_OFFSET:
 		if (writeflag == MEM_READ) {
-			fatal("[ footbridge read from sdram_ba_offset ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge read from sdram_ba_offset ]\n");
 		} else {
 			if (idata != 0)
-				fatal("[ footbridge write to sdram_ba_offset "
-				    "%#llx ]\n", (long long)idata);
+				debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge write to sdram_ba_offset "
+				    "%#llx ]", (long long)idata);
 		}
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ footbridge: read from 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge: read from 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ footbridge: write to 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "footbridge", VERBOSITY_DEBUG, "[ footbridge: write to 0x%x: 0x%llx ]",
 			    (int)relative_addr, (long long)idata);
 		}
 	}
@@ -567,8 +556,7 @@ DEVINIT(footbridge)
 	case MACHINE_NETWINDER:
 		snprintf(irq_path_isa, sizeof(irq_path_isa), "%s.11", irq_path);
 		break;
-	default:fatal("footbridge unimpl machine type\n");
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "footbridge", "footbridge unimpl machine type\n");
 	}
 
 	/*  A PCI bus:  */
@@ -603,8 +591,7 @@ DEVINIT(footbridge)
 		    "footbridge_reset", 0x7c000338, 1,
 		    dev_footbridge_reset_access, d, DM_DEFAULT, NULL);
 		break;
-	default:fatal("footbridge: unimplemented machine type.\n");
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "footbridge", "footbridge: unimplemented machine type.\n");
 	}
 
 	/*  PCI configuration space:  */

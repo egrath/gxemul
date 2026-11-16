@@ -188,9 +188,8 @@ static void sh4_timer_tick(struct timer *t, void *extra)
 	/*  Fake RAM refresh:  */
 	d->bsc_rfcr ++;
 	if (d->bsc_rtcsr & (RTCSR_CMIE | RTCSR_OVIE)) {
-		fatal("sh4: RTCSR_CMIE | RTCSR_OVIE: TODO\n");
+		debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "sh4: RTCSR_CMIE | RTCSR_OVIE: TODO");
 		/*  TODO: Implement refresh interrupts etc.  */
-		exit(1);
 	}
 
 	/*  Timer interrupts:  */
@@ -344,39 +343,36 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 	case CHCR_TS_2BYTE: transmit_size = 2; break;
 	case CHCR_TS_4BYTE: transmit_size = 4; break;
 	case CHCR_TS_32BYTE: transmit_size = 32; break;
-	default: fatal("Unimplemented transmit size?! CHCR[%i] = 0x%08x\n",
+	default: fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented transmit size?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
-	exit(1);
 	}
 
 	switch (chcr & CHCR_DM) {
 	case CHCR_DM_FIXED:       dst_delta = 0; break;
 	case CHCR_DM_INCREMENTED: dst_delta = 1; break;
 	case CHCR_DM_DECREMENTED: dst_delta = -1; break;
-	default: fatal("Unimplemented destination delta?! CHCR[%i] = 0x%08x\n",
+	default: fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented destination delta?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
-	exit(1);
 	}
 
 	switch (chcr & CHCR_SM) {
 	case CHCR_SM_FIXED:       src_delta = 0; break;
 	case CHCR_SM_INCREMENTED: src_delta = 1; break;
 	case CHCR_SM_DECREMENTED: src_delta = -1; break;
-	default: fatal("Unimplemented source delta?! CHCR[%i] = 0x%08x\n",
+	default: fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented source delta?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
-	exit(1);
 	}
 
 	src_delta *= transmit_size;
 	dst_delta *= transmit_size;
 
 #ifdef SH4_DEBUG
-	fatal("|SH4 DMA transfer, channel %i\n", channel);
-	fatal("|Source addr:      0x%08x (delta %i)\n", (int) sar, src_delta);
-	fatal("|Destination addr: 0x%08x (delta %i)\n", (int) dar, dst_delta);
-	fatal("|Count:            0x%08x\n", (int) count);
-	fatal("|Transmit size:    0x%08x\n", (int) transmit_size);
-	fatal("|Interrupt:        %s\n", cause_interrupt? "yes" : "no");
+	fatal_error(SUBSYS_DEVICE, "sh4", "|SH4 DMA transfer, channel %i", channel);
+	fatal_error(SUBSYS_DEVICE, "sh4", "|Source addr:      0x%08x (delta %i)", (int) sar, src_delta);
+	fatal_error(SUBSYS_DEVICE, "sh4", "|Destination addr: 0x%08x (delta %i)", (int) dar, dst_delta);
+	fatal_error(SUBSYS_DEVICE, "sh4", "|Count:            0x%08x", (int) count);
+	fatal_error(SUBSYS_DEVICE, "sh4", "|Transmit size:    0x%08x", (int) transmit_size);
+	fatal_error(SUBSYS_DEVICE, "sh4", "|Interrupt:        %s", cause_interrupt? "yes" : "no");
 #else
 	/*  TODO: The transfer below ignores the source and destination
 	    address modes.  */
@@ -399,14 +395,12 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 		    external device to do the transfer itself!  */
 		break;
 
-	default:fatal("Unimplemented SH4 RS DMAC: 0x%08x\n",
+	default:fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented SH4 RS DMAC: 0x%08x",
 		    (int) (chcr & CHCR_RS));
-		exit(1);
 	}
 
 	if (cause_interrupt) {
-		fatal("TODO: sh4 dmac interrupt!\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "TODO: sh4 dmac interrupt!\n");
 	}
 }
 
@@ -427,13 +421,12 @@ static void sh4_sci_cmd(struct sh4_data *d, struct cpu *cpu)
 {
 	uint8_t cmd = d->sci_curbyte;
 	int writeflag = cmd & 0x40? 0 : 1;
-	int address_transfer;
+	int address_transfer = 0;
 
-	/*  fatal("[ CMD BYTE %02x ]\n", cmd);  */
+	/*  debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ CMD BYTE %02x ]", cmd);  */
 
 	if (!(cmd & 0x80)) {
-		fatal("SCI cmd bit 7 not set? TODO\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "SCI cmd bit 7 not set? TODO\n");
 	}
 
 	if ((cmd & 0x30) == 0x20)
@@ -441,8 +434,7 @@ static void sh4_sci_cmd(struct sh4_data *d, struct cpu *cpu)
 	else if ((cmd & 0x30) == 0x10)
 		address_transfer = 0;
 	else {
-		fatal("SCI: Neither data nor address transfer? TODO\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "SCI: Neither data nor address transfer? TODO\n");
 	}
 
 	if (address_transfer)
@@ -593,8 +585,7 @@ DEVICE_ACCESS(sh4_itlb_da1)
 	int e = (relative_addr & SH4_ITLB_E_MASK) >> SH4_ITLB_E_SHIFT;
 
 	if (relative_addr & 0x800000) {
-		fatal("sh4_itlb_da1: TODO: da2 area\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "sh4_itlb_da1: TODO: da2 area\n");
 	}
 
 	if (writeflag == MEM_WRITE) {
@@ -753,8 +744,7 @@ DEVICE_ACCESS(sh4_utlb_da1)
 	int e = (relative_addr & SH4_UTLB_E_MASK) >> SH4_UTLB_E_SHIFT;
 
 	if (relative_addr & 0x800000) {
-		fatal("sh4_utlb_da1: TODO: da2 area\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "sh4_utlb_da1: TODO: da2 area\n");
 	}
 
 	if (writeflag == MEM_WRITE) {
@@ -811,8 +801,7 @@ DEVICE_ACCESS(sh4_pcic)
 
 	case SH4_PCICONF0:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ sh4_pcic: TODO: Write to SH4_PCICONF0? ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ sh4_pcic: TODO: Write to SH4_PCICONF0? ]\n");
 		} else {
 			if (strcmp(cpu->cd.sh.cpu_type.name, "SH7751") == 0) {
 				odata = PCI_ID_CODE(PCI_VENDOR_HITACHI,
@@ -822,9 +811,8 @@ DEVICE_ACCESS(sh4_pcic)
 				odata = PCI_ID_CODE(PCI_VENDOR_HITACHI,
 				    PCI_PRODUCT_HITACHI_SH7751R);
 			} else {
-				fatal("sh4_pcic: TODO: PCICONF0 read for"
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "sh4_pcic: TODO: PCICONF0 read for"
 				    " unimplemented CPU type?\n");
-				exit(1);
 			}
 		}
 		break;
@@ -844,72 +832,64 @@ DEVICE_ACCESS(sh4_pcic)
 	case SH4_PCICONF5:
 		/*  Hardcoded to what OpenBSD/landisk uses:  */
 		if (writeflag == MEM_WRITE && idata != 0xac000000) {
-			fatal("sh4_pcic: SH4_PCICONF5 unknown value"
-			    " 0x%" PRIx32"\n", (uint32_t) idata);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: SH4_PCICONF5 unknown value"
+			    " 0x%" PRIx32"", (uint32_t) idata);
 		}
 		break;
 
 	case SH4_PCICONF6:
 		/*  Hardcoded to what OpenBSD/landisk uses:  */
 		if (writeflag == MEM_WRITE && idata != 0x8c000000) {
-			fatal("sh4_pcic: SH4_PCICONF6 unknown value"
-			    " 0x%" PRIx32"\n", (uint32_t) idata);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: SH4_PCICONF6 unknown value"
+			    " 0x%" PRIx32"", (uint32_t) idata);
 		}
 		break;
 
 	case SH4_PCILSR0:
 		/*  Hardcoded to what OpenBSD/landisk uses:  */
 		if (writeflag == MEM_WRITE && idata != ((64 - 1) << 20)) {
-			fatal("sh4_pcic: SH4_PCILSR0 unknown value"
-			    " 0x%" PRIx32"\n", (uint32_t) idata);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: SH4_PCILSR0 unknown value"
+			    " 0x%" PRIx32"", (uint32_t) idata);
 		}
 		break;
 
 	case SH4_PCILAR0:
 		/*  Hardcoded to what OpenBSD/landisk uses:  */
 		if (writeflag == MEM_WRITE && idata != 0xac000000) {
-			fatal("sh4_pcic: SH4_PCILAR0 unknown value"
-			    " 0x%" PRIx32"\n", (uint32_t) idata);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: SH4_PCILAR0 unknown value"
+			    " 0x%" PRIx32"", (uint32_t) idata);
 		}
 		break;
 
 	case SH4_PCILSR1:
 		/*  Hardcoded to what OpenBSD/landisk uses:  */
 		if (writeflag == MEM_WRITE && idata != ((64 - 1) << 20)) {
-			fatal("sh4_pcic: SH4_PCILSR1 unknown value"
-			    " 0x%" PRIx32"\n", (uint32_t) idata);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: SH4_PCILSR1 unknown value"
+			    " 0x%" PRIx32"", (uint32_t) idata);
 		}
 		break;
 
 	case SH4_PCILAR1:
 		/*  Hardcoded to what OpenBSD/landisk uses:  */
 		if (writeflag == MEM_WRITE && idata != 0xac000000) {
-			fatal("sh4_pcic: SH4_PCILAR1 unknown value"
-			    " 0x%" PRIx32"\n", (uint32_t) idata);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: SH4_PCILAR1 unknown value"
+			    " 0x%" PRIx32"", (uint32_t) idata);
 		}
 		break;
 
 	case SH4_PCIMBR:
 		if (writeflag == MEM_WRITE && idata != SH4_PCIC_MEM) {
-			fatal("sh4_pcic: PCIMBR set to 0x%" PRIx32", not"
-			    " 0x%" PRIx32"? TODO\n", (uint32_t) idata,
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: PCIMBR set to 0x%" PRIx32", not"
+			    " 0x%" PRIx32"? TODO", (uint32_t) idata,
 			    (uint32_t) SH4_PCIC_MEM);
-			exit(1);
 		}
 		break;
 
 	case SH4_PCIIOBR:
 		if (writeflag == MEM_WRITE && idata != SH4_PCIC_IO) {
-			fatal("sh4_pcic: PCIIOBR set to 0x%" PRIx32", not"
-			    " 0x%" PRIx32"? TODO\n", (uint32_t) idata,
+			fatal_error(SUBSYS_DEVICE, "sh4", "sh4_pcic: PCIIOBR set to 0x%" PRIx32", not"
+			    " 0x%" PRIx32"? TODO", (uint32_t) idata,
 			    (uint32_t) SH4_PCIC_IO);
-			exit(1);
 		}
 		break;
 
@@ -931,13 +911,12 @@ DEVICE_ACCESS(sh4_pcic)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ sh4_pcic: read from addr 0x%x: TODO ]\n",
+			debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ sh4_pcic: read from addr 0x%x: TODO ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ sh4_pcic: write to addr 0x%x: 0x%x: TODO ]\n",
+			debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ sh4_pcic: write to addr 0x%x: 0x%x: TODO ]",
 			    (int)relative_addr, (int)idata);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)
@@ -1148,7 +1127,7 @@ DEVICE_ACCESS(sh4)
 		if (writeflag == MEM_WRITE) {
 			d->tocr = idata;
 			if (idata & TOCR_TCOE)
-				fatal("[ sh4 timer: TCOE not yet "
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ sh4 timer: TCOE not yet "
 				    "implemented ]\n");
 		} else {
 			odata = d->tocr;
@@ -1216,9 +1195,8 @@ DEVICE_ACCESS(sh4)
 			odata = d->tcr[timer_nr];
 		} else {
 			if (cpu->cd.sh.pclock == 0) {
-				fatal("INTERNAL ERROR: pclock must be set"
+				fatal_error(SUBSYS_DEVICE, "sh4", "INTERNAL ERROR: pclock must be set"
 				    " for this machine. Aborting.\n");
-				exit(1);
 			}
 
 			switch (idata & 3) {
@@ -1241,10 +1219,9 @@ DEVICE_ACCESS(sh4)
 
 			if (idata & (TCR_ICPF | TCR_ICPE1 | TCR_ICPE0 |
 			    TCR_CKEG1 | TCR_CKEG0 | TCR_TPSC2)) {
-				fatal("Unimplemented SH4 timer control"
-				    " bits: 0x%08" PRIx32". Aborting.\n",
+				fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented SH4 timer control"
+				    " bits: 0x%08" PRIx32". Aborting.",
 				    (int) idata);
-				exit(1);
 			}
 
 			INTERRUPT_DEASSERT(d->timer_irq[timer_nr]);
@@ -1325,10 +1302,9 @@ DEVICE_ACCESS(sh4)
 			odata = cpu->cd.sh.dmac_tcr[dma_channel] & 0x00ffffff;
 		else {
 			if (idata & ~0x00ffffff) {
-				fatal("[ SH4 DMA: Attempt to set top 8 "
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ SH4 DMA: Attempt to set top 8 "
 				    "bits of the count register? 0x%08"
-				    PRIx32" ]\n", (uint32_t) idata);
-				exit(1);
+				    PRIx32" ]", (uint32_t) idata);
 			}
 
 			cpu->cd.sh.dmac_tcr[dma_channel] = idata;
@@ -1389,8 +1365,7 @@ DEVICE_ACCESS(sh4)
 
 	case SH4_BCR2:
 		if (len != sizeof(uint16_t)) {
-			fatal("Non-16-bit SH4_BCR2 access?\n");
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "Non-16-bit SH4_BCR2 access?\n");
 		}
 		if (writeflag == MEM_WRITE)
 			d->bsc_bcr2 = idata & 0x3ffd;
@@ -1400,8 +1375,7 @@ DEVICE_ACCESS(sh4)
 
 	case SH4_BCR3:
 		if (len != sizeof(uint16_t)) {
-			fatal("Non-16-bit SH4_BCR3 access?\n");
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sh4", "Non-16-bit SH4_BCR3 access?\n");
 		}
 		if (writeflag == MEM_WRITE)
 			d->bsc_bcr3 = idata;
@@ -1566,9 +1540,8 @@ DEVICE_ACCESS(sh4)
 	case SH4_ICR:
 		if (writeflag == MEM_WRITE) {
 			if (idata & 0x80) {
-				fatal("SH4 INTC: IRLM not yet "
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "SH4 INTC: IRLM not yet "
 				    "supported. TODO\n");
-				exit(1);
 			}
 		}
 		break;
@@ -1707,7 +1680,7 @@ DEVICE_ACCESS(sh4)
 			/*  Add to TX fifo:  */
 			if (d->scif_tx_fifo_cursize >=
 			    sizeof(d->scif_tx_fifo)) {
-				fatal("[ SCIF TX fifo overrun! ]\n");
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ SCIF TX fifo overrun! ]\n");
 				d->scif_tx_fifo_cursize = 0;
 			}
 
@@ -1752,7 +1725,7 @@ DEVICE_ACCESS(sh4)
 		{
 			int chars_avail = console_charavail(d->scif_console_handle);
 			if (chars_avail > 255) {
-				fatal("[ SH4: Too many chars avail; dropping some ]\n");
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ SH4: Too many chars avail; dropping some ]\n");
 				chars_avail = 255;
 			}
 			
@@ -1838,8 +1811,7 @@ DEVICE_ACCESS(sh4)
 		else {
 			d->rtc_rcr1 = idata;
 			if (idata & 0x18) {
-				fatal("SH4: TODO: RTC interrupt enable\n");
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "SH4: TODO: RTC interrupt enable\n");
 			}
 		}
 		break;
@@ -1860,15 +1832,15 @@ DEVICE_ACCESS(sh4)
 	/*************************************************/
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ sh4: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ sh4: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ sh4: write to addr 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "sh4", VERBOSITY_DEBUG, "[ sh4: write to addr 0x%x: 0x%x ]",
 			    (int)relative_addr, (int)idata);
 		}
 
 #ifdef SH4_DEBUG
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sh4", "SH4_DEBUG stop");
 #endif
 	}
 
@@ -2019,20 +1991,17 @@ DEVINIT(sh4)
 	snprintf(tmp, sizeof(tmp), "machine[0].cpu[0].irq[0x%x]",
 	    SH_INTEVT_TMU0_TUNI0);
 	if (!interrupt_handler_lookup(tmp, &d->timer_irq[0])) {
-		fatal("Could not find interrupt '%s'.\n", tmp);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sh4", "Could not find interrupt '%s'.", tmp);
 	}
 	snprintf(tmp, sizeof(tmp), "machine[0].cpu[0].irq[0x%x]",
 	    SH_INTEVT_TMU1_TUNI1);
 	if (!interrupt_handler_lookup(tmp, &d->timer_irq[1])) {
-		fatal("Could not find interrupt '%s'.\n", tmp);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sh4", "Could not find interrupt '%s'.", tmp);
 	}
 	snprintf(tmp, sizeof(tmp), "machine[0].cpu[0].irq[0x%x]",
 	    SH_INTEVT_TMU2_TUNI2);
 	if (!interrupt_handler_lookup(tmp, &d->timer_irq[2])) {
-		fatal("Could not find interrupt '%s'.\n", tmp);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sh4", "Could not find interrupt '%s'.", tmp);
 	}
 
 

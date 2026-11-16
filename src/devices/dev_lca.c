@@ -69,8 +69,7 @@ struct lca_data {
  */
 void lca_interrupt_assert(struct interrupt *interrupt)
 {
-	fatal("lca_interrupt_assert: TODO\n");
-	exit(1);
+	debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "lca_interrupt_assert: TODO\n");
 }
 
 
@@ -81,15 +80,14 @@ void lca_interrupt_assert(struct interrupt *interrupt)
  */
 void lca_interrupt_deassert(struct interrupt *interrupt)
 {
-	fatal("lca_interrupt_deassert: TODO\n");
-	exit(1);
+	debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "lca_interrupt_deassert: TODO\n");
 }
 
 
 DEVICE_ACCESS(lca_pci_conf)
 {
 	uint64_t idata = 0, odata = 0;
-	int tag, bus, dev, func, reg;
+	int tag, bus, dev = 0, func, reg;
 	struct lca_data *d = (struct lca_data *) extra;
 
 	if (writeflag == MEM_WRITE)
@@ -125,13 +123,11 @@ DEVICE_ACCESS(lca_pci_conf)
 			if (tag & (0x800 << dev))
 				break;
 		if (dev >= 21) {
-			/*  fatal("[ LCA: No bus 0 device? TODO ]\n");
-			exit(1);  */
+			/*  debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "[ LCA: No bus 0 device? TODO ]\n");  */
 			dev = 0;
 		}
 	} else {
-		fatal("TODO. Non-zero bus.\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO. Non-zero bus.\n");
 	}
 
 	func = (tag >> 8) & 7;
@@ -158,9 +154,8 @@ DEVICE_ACCESS(lca_isa)
 
 	ofs = relative_addr & 3;
 	if (ofs > len) {
-		fatal("[ ofs=%i len=%i in lca_isa access function. "
-		    "aborting ]\n", ofs, len);
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "[ ofs=%i len=%i in lca_isa access function. "
+		    "aborting ]", ofs, len);
 	}
 
 	if (writeflag == MEM_WRITE) {
@@ -201,9 +196,8 @@ DEVICE_ACCESS(lca_ioc)
 			/*  Only bit 0 is implemented so far, the PCI bus 0 vs
 			    bus non-0 selection bit.  */
 			if (idata & ~1) {
-				fatal("TODO: Write to unimplemented bit of"
-				    " IOC_CONF: 0x%x\n", (int)idata);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO: Write to unimplemented bit of"
+				    " IOC_CONF: 0x%x", (int)idata);
 			}
 		}
 		break;
@@ -220,10 +214,9 @@ DEVICE_ACCESS(lca_ioc)
 			d->tlb_enable = idata;
 			/*  TODO: Actually implement this.  */
 			if (idata & ~IOC_TB_ENA_TEN) {
-				fatal("TODO: LCA_IOC_TB_ENA value "
+				debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO: LCA_IOC_TB_ENA value "
 				    " (0x%" PRIx64") has unimplemented "
-				    "bits.\n", (uint64_t)idata);
-				exit(1);
+				    "bits.", (uint64_t)idata);
 			}
 		}
 		break;
@@ -235,10 +228,9 @@ DEVICE_ACCESS(lca_ioc)
 			d->window_base_0 = idata;
 			/*  TODO: Actually implement this.  */
 			if (idata != 0ULL && idata != 0x300800000ULL) {
-				fatal("TODO: LCA_IOC_W_BASE0 value differs"
+				debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO: LCA_IOC_W_BASE0 value differs"
 				    " (0x%" PRIx64") from the only implemented"
-				    " values\n", (uint64_t)idata);
-				exit(1);
+				    " values", (uint64_t)idata);
 			}
 		}
 		break;
@@ -250,10 +242,9 @@ DEVICE_ACCESS(lca_ioc)
 			d->window_mask_0 = idata;
 			/*  TODO: Actually implement this.  */
 			if (idata != 0x700000ULL) {
-				fatal("TODO: LCA_IOC_W_MASK0 value differs"
+				debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO: LCA_IOC_W_MASK0 value differs"
 				    " (0x%" PRIx64") from the only implemented"
-				    " value\n", (uint64_t)idata);
-				exit(1);
+				    " value", (uint64_t)idata);
 			}
 		}
 		break;
@@ -274,10 +265,9 @@ DEVICE_ACCESS(lca_ioc)
 			d->window_base_1 = idata;
 			/*  TODO: Actually implement this.  */
 			if (idata != 0x240000000ULL) {
-				fatal("TODO: LCA_IOC_W_BASE1 value differs"
+				debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO: LCA_IOC_W_BASE1 value differs"
 				    " (0x%" PRIx64") from the only implemented"
-				    " value\n", (uint64_t)idata);
-				exit(1);
+				    " value", (uint64_t)idata);
 			}
 		}
 		break;
@@ -289,10 +279,9 @@ DEVICE_ACCESS(lca_ioc)
 			d->window_mask_1 = idata;
 			/*  TODO: Actually implement this.  */
 			if (idata != 0x3ff00000ULL) {
-				fatal("TODO: LCA_IOC_W_MASK1 value differs"
+				debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "TODO: LCA_IOC_W_MASK1 value differs"
 				    " (0x%" PRIx64") from the only implemented"
-				    " value\n", (uint64_t)idata);
-				exit(1);
+				    " value", (uint64_t)idata);
 			}
 		}
 		break;
@@ -306,13 +295,12 @@ DEVICE_ACCESS(lca_ioc)
 		}
 		break;
 
-	default:fatal("[ lca_ioc: unimplemented %s to offset 0x%x",
+	default:debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "[ lca_ioc: unimplemented %s to offset 0x%x",
 		    writeflag == MEM_WRITE? "write" : "read", (int)
 		    relative_addr);
 		if (writeflag == MEM_WRITE)
-			fatal(": 0x%x", (int)idata);
-		fatal(" ]\n");
-		exit(1);
+			fatal_error(SUBSYS_DEVICE, "lca", ": 0x%x", (int)idata);
+		fatal_error(SUBSYS_DEVICE, "lca", " ]\n");
 	}
 
 	if (writeflag == MEM_READ)

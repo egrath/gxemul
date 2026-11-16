@@ -152,13 +152,13 @@ static void jensen_flash_save(struct jensen_data *d)
 
 	f = fopen(d->flash_file, "wb");
 	if (f == NULL) {
-		fatal("[ jensen: could not write the Flash to %s ]\n",
+		debugmsg(SUBSYS_DEVICE, "jensen", VERBOSITY_DEBUG, "[ jensen: could not write the Flash to %s ]",
 		    d->flash_file);
 		d->flash_file = NULL;
 		return;
 	}
 	if (fwrite(d->rom, 1, d->rom_size, f) != d->rom_size)
-		fatal("[ jensen: short write to %s ]\n", d->flash_file);
+		debugmsg(SUBSYS_DEVICE, "jensen", VERBOSITY_DEBUG, "[ jensen: short write to %s ]", d->flash_file);
 	fclose(f);
 	d->flash_dirty = 0;
 }
@@ -910,8 +910,8 @@ void dev_jensen_set_rom(struct jensen_data *d, const unsigned char *image,
 				goto done;
 			}
 			free(buf);
-			fatal("[ jensen: %s has the wrong size; using the "
-			    "ROM image instead ]\n", d->flash_file);
+			debugmsg(SUBSYS_DEVICE, "jensen", VERBOSITY_DEBUG, "[ jensen: %s has the wrong size; using the "
+			    "ROM image instead ]", d->flash_file);
 		}
 	}
 

@@ -250,16 +250,16 @@ DEVICE_ACCESS(ps2_gif)
 			 */
 
 			/*
-			fatal("[ gif write to addr 0x%x (len=%i):",
+			debugmsg(SUBSYS_DEVICE, "ps2_gif", VERBOSITY_DEBUG, "[ gif write to addr 0x%x (len=%i):",
 			    (int)relative_addr, (int)len);
 			for (i=0; i<len; i++) {
-				fatal(" %02x", data[i]);
+				fatal_error(SUBSYS_DEVICE, "ps2_gif", " %02x", data[i]);
 				if ((i & 7) == 7)
-					fatal(",");
+					fatal_error(SUBSYS_DEVICE, "ps2_gif", ",");
 				if ((i & 31) == 31)
-					fatal("\n");
+					fatal_error(SUBSYS_DEVICE, "ps2_gif", "\n");
 			}
-			fatal(" ]\n");
+			fatal_error(SUBSYS_DEVICE, "ps2_gif", " ]\n");
 			*/
 
 			for (y=0; y<ysize; y++) {
@@ -377,12 +377,12 @@ DEVICE_ACCESS(ps2_gif)
 					    MEM_WRITE, d->vfb_data);
 				}
 		} else {		/*  Unknown command:  */
-			fatal("[ gif write to addr 0x%x (len=%i):",
+			debugmsg(SUBSYS_DEVICE, "ps2_gif", VERBOSITY_DEBUG, "[ gif write to addr 0x%x (len=%i):",
 			    (int)relative_addr, len);
 			for (i=0; i<len; i++)
-				fatal(" %02x", data[i]);
-			fatal(" ]\n");
-/*			fatal("Unknown gif command.\n");
+				fatal_error(SUBSYS_DEVICE, "ps2_gif", " %02x", data[i]);
+			fatal_error(SUBSYS_DEVICE, "ps2_gif", " ]\n");
+/*			fatal_error(SUBSYS_DEVICE, "ps2_gif", "Unknown gif command.\n");
 			cpu->running = 0;
 */		}
 	}
@@ -412,8 +412,7 @@ DEVINIT(ps2_gif)
 	    PS2_FB_ADDR, VFB_PLAYSTATION2,
 	    d->xsize, d->ysize, d->xsize, d->ysize, 24, "Playstation 2");
 	if (d->vfb_data == NULL) {
-		fprintf(stderr, "could not initialize fb, out of memory\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "ps2_gif",  "could not initialize fb, out of memory\n");
 	}
 
 #if 0

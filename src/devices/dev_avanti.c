@@ -207,7 +207,7 @@ static void avanti_nvram_save(struct avanti_data *d)
 	f = fopen(d->nvram_file, "wb");
 	if (f == NULL || fwrite(d->nvram, 1, AVANTI_NVRAM_SIZE, f) !=
 	    AVANTI_NVRAM_SIZE)
-		fatal("[ avanti: could not write %s ]\n", d->nvram_file);
+		debugmsg(SUBSYS_DEVICE, "avanti", VERBOSITY_DEBUG, "[ avanti: could not write %s ]", d->nvram_file);
 	if (f != NULL)
 		fclose(f);
 	d->nvram_dirty = 0;
@@ -224,13 +224,13 @@ static void avanti_flash_save(struct avanti_data *d)
 
 	f = fopen(d->flash_file, "wb");
 	if (f == NULL) {
-		fatal("[ avanti: could not write the flash to %s ]\n",
+		debugmsg(SUBSYS_DEVICE, "avanti", VERBOSITY_DEBUG, "[ avanti: could not write the flash to %s ]",
 		    d->flash_file);
 		d->flash_file = NULL;
 		return;
 	}
 	if (fwrite(d->flash, 1, AVANTI_FLASH_SIZE, f) != AVANTI_FLASH_SIZE)
-		fatal("[ avanti: short write to %s ]\n", d->flash_file);
+		debugmsg(SUBSYS_DEVICE, "avanti", VERBOSITY_DEBUG, "[ avanti: short write to %s ]", d->flash_file);
 	fclose(f);
 	d->flash_dirty = 0;
 }
@@ -606,8 +606,8 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
 			    AVANTI_FLASH_SIZE)
 				memcpy(d->flash, buf, AVANTI_FLASH_SIZE);
 			else
-				fatal("[ avanti: %s has the wrong size; using "
-				    "the ROM image instead ]\n", d->flash_file);
+				debugmsg(SUBSYS_DEVICE, "avanti", VERBOSITY_DEBUG, "[ avanti: %s has the wrong size; using "
+				    "the ROM image instead ]", d->flash_file);
 			free(buf);
 			fclose(f);
 		}
@@ -620,7 +620,7 @@ void dev_avanti_set_rom(struct avanti_data *d, const unsigned char *flash,
 		if (f != NULL) {
 			if (fread(d->nvram, 1, AVANTI_NVRAM_SIZE, f) !=
 			    AVANTI_NVRAM_SIZE)
-				fatal("[ avanti: %s has the wrong size ]\n",
+				debugmsg(SUBSYS_DEVICE, "avanti", VERBOSITY_DEBUG, "[ avanti: %s has the wrong size ]",
 				    d->nvram_file);
 			fclose(f);
 		}

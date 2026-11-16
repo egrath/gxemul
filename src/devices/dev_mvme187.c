@@ -1615,8 +1615,8 @@ struct mvme187_data *dev_mvme187_init(struct machine *machine)
 	for (msiz = 0; msiz < 5 && (4 << msiz) < ram_mb; msiz++)
 		;
 	if ((4 << msiz) != ram_mb)
-		fatal("WARNING: MVME187 memory should be 4, 8, 16, 32, 64 "
-		    "or 128 MB (not %i MB)\n", ram_mb);
+		debugmsg(SUBSYS_DEVICE, "mvme187", VERBOSITY_WARNING, "WARNING: MVME187 memory should be 4, 8, 16, 32, 64 "
+		    "or 128 MB (not %i MB)", ram_mb);
 	d->n_memc = 1;
 	d->ram_size = (uint64_t) ram_mb << 20;
 	CHECK_ALLOCATION(d->par_bad = (uint8_t **) calloc(

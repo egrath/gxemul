@@ -136,7 +136,7 @@ static void wdc_addtoinbuf(struct wdc_data *d, int c)
 
 	d->inbuf_head = (d->inbuf_head + 1) % WDC_INBUF_SIZE;
 	if (d->inbuf_head == d->inbuf_tail)
-		fatal("[ wdc_addtoinbuf(): WARNING! wdc inbuf overrun!"
+		debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_WARNING, "[ wdc_addtoinbuf(): WARNING! wdc inbuf overrun!"
 		    " Increase WDC_MAX_SECTORS. ]\n");
 }
 
@@ -151,7 +151,7 @@ static uint64_t wdc_get_inbuf(struct wdc_data *d)
 	int c = d->inbuf[d->inbuf_tail];
 
 	if (d->inbuf_head == d->inbuf_tail) {
-		fatal("[ wdc: WARNING! someone is reading too much from the "
+		debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_WARNING, "[ wdc: WARNING! someone is reading too much from the "
 		    "wdc inbuf! ]\n");
 		return (uint64_t) -1;
 	}
@@ -531,8 +531,8 @@ void wdc_command(struct cpu *cpu, struct wdc_data *d, int idata)
 
 	default:/*  TODO  */
 		d->error |= WDCE_ABRT;
-		fatal("[ wdc: WARNING! Unimplemented command 0x%02x (drive %i,"
-		    " head %i, cyl %i, sector %i, nsecs %i) ]\n",
+		debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_WARNING, "[ wdc: WARNING! Unimplemented command 0x%02x (drive %i,"
+		    " head %i, cyl %i, sector %i, nsecs %i) ]",
 		    d->cur_command, d->drive, d->head, d->cyl_hi*256+d->cyl_lo,
 		    d->sector, d->seccnt);
 	}
@@ -555,7 +555,7 @@ DEVICE_ACCESS(wdc)
 			idata = memory_readmax64(cpu, data, len);
 		else {
 			if (len != 1)
-				fatal("[ wdc: WARNING! non-8-bit access on WRITE! ]\n");
+				debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_WARNING, "[ wdc: WARNING! non-8-bit access on WRITE! ]\n");
 			idata = data[0];
 		}
 	}
@@ -636,8 +636,8 @@ DEVICE_ACCESS(wdc)
 			}
 			if (!d->write_in_progress &&
 			    !d->atapi_cmd_in_progress) {
-				fatal("[ wdc: write to DATA, but not "
-				    "expecting any? (len=%i): 0x%08lx ]\n",
+				debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_DEBUG, "[ wdc: write to DATA, but not "
+				    "expecting any? (len=%i): 0x%08lx ]",
 				    (int)len, (long)idata);
 			}
 
@@ -652,9 +652,8 @@ DEVICE_ACCESS(wdc)
 					wdc_addtoinbuf(d, (idata >> 8) & 0xff);
 					break;
 				case 1:	wdc_addtoinbuf(d, idata); break;
-				default:fatal("wdc: unimplemented write "
-					    "len %i\n", len);
-					exit(1);
+				default:fatal_error(SUBSYS_DEVICE, "wdc", "wdc: unimplemented write "
+					    "len %i", len);
 				}
 			} else {
 				switch (len) {
@@ -667,9 +666,8 @@ DEVICE_ACCESS(wdc)
 					wdc_addtoinbuf(d, idata & 0xff);
 					break;
 				case 1:	wdc_addtoinbuf(d, idata); break;
-				default:fatal("wdc: unimplemented write "
-					    "len %i\n", len);
-					exit(1);
+				default:fatal_error(SUBSYS_DEVICE, "wdc", "wdc: unimplemented write "
+					    "len %i", len);
 				}
 			}
 
@@ -707,8 +705,7 @@ DEVICE_ACCESS(wdc)
 				    d->atapi_st);
 
 				if (res == 0) {
-					fatal("WDC: ATAPI scsi error?\n");
-					exit(1);
+					fatal_error(SUBSYS_DEVICE, "wdc", "WDC: ATAPI scsi error?\n");
 				}
 
 				d->atapi_len = 0;
@@ -728,9 +725,8 @@ DEVICE_ACCESS(wdc)
 						    PHASE_COMPLETED;
 					}
 				} else {
-					fatal("wdc atapi Dataout? TODO\n");
+					debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_DEBUG, "wdc atapi Dataout? TODO");
 					d->atapi_phase = PHASE_DATAOUT;
-					exit(1);
 				}
 
 				d->int_assert = 1;
@@ -908,7 +904,7 @@ ret:
 			memory_writemax64(cpu, data, len, odata);
 		else {
 			if (len != 1)
-				fatal("[ wdc: WARNING! non-8-bit access on READ! ]\n");
+				debugmsg(SUBSYS_DEVICE, "wdc", VERBOSITY_WARNING, "[ wdc: WARNING! non-8-bit access on READ! ]\n");
 			data[0] = odata;
 		}
 	}

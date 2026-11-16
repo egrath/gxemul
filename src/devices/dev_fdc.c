@@ -78,14 +78,14 @@ DEVICE_ACCESS(fdc)
 	case 0x04:
 		break;
 	default:if (writeflag==MEM_READ) {
-			fatal("[ fdc: read from reg %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "fdc", VERBOSITY_DEBUG, "[ fdc: read from reg %i ]",
 			    (int)relative_addr);
 			odata = d->reg[relative_addr];
 		} else {
-			fatal("[ fdc: write to reg %i:", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "fdc", VERBOSITY_DEBUG, "[ fdc: write to reg %i:", (int)relative_addr);
 			for (i=0; i<len; i++)
-				fatal(" %02x", data[i]);
-			fatal(" ]\n");
+				fatal_error(SUBSYS_DEVICE, "fdc", " %02x", data[i]);
+			fatal_error(SUBSYS_DEVICE, "fdc", " ]\n");
 			d->reg[relative_addr] = idata;
 		}
 	}
@@ -833,7 +833,7 @@ static void fdc_execute(struct fdc82077_data *d)
 		break;
 
 	default:
-		fatal("[ fdc: unimplemented command 0x%02x ]\n", d->cmd[0]);
+		debugmsg(SUBSYS_DEVICE, "fdc", VERBOSITY_DEBUG, "[ fdc: unimplemented command 0x%02x ]", d->cmd[0]);
 		res[0] = ST0_INVALID;
 		fdc_result(d, res, 1);
 	}

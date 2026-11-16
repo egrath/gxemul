@@ -150,7 +150,7 @@ void crime_update_crime_time(struct crime_data* d)
 	int64_t delta = microseconds - d->last_microseconds;
 
 	if (delta < 0) {
-		fatal("[ crime_update_crime_time: host system time went backwards? ]\n");
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ crime_update_crime_time: host system time went backwards? ]\n");
 		d->last_microseconds = microseconds;
 		delta = 0;
 	}
@@ -236,8 +236,7 @@ DEVICE_ACCESS(crime)
 	 *  bank #0."
 	 */
 	if (cpu->machine->physical_ram_in_mb > 1024) {
-		fatal("[ sgi_crime: SGI O2 can not have more than 1024 MB RAM ]\n");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ sgi_crime: SGI O2 can not have more than 1024 MB RAM ]\n");
 	}
 
 	int mb_per_bank;
@@ -247,10 +246,9 @@ DEVICE_ACCESS(crime)
 		mb_per_bank = 128;
 
 	if (cpu->machine->physical_ram_in_mb % mb_per_bank) {
-		fatal("[ sgi_crime: for up to 256 MB RAM, RAM size needs to be divisible "
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ sgi_crime: for up to 256 MB RAM, RAM size needs to be divisible "
 			"by 32 MB. for larger RAM sizes (up to 1024 MB), it needs to be "
 			"divisible by 128 MB. ]\n");
-		exit(1);
 	}
 
 	int flag_for_128MB = mb_per_bank == 128 ? 0x100 : 0x000;
@@ -288,8 +286,7 @@ DEVICE_ACCESS(crime)
 				odata = (int32_t)(odata >> 32);
 		}
 	} else {
-		fatal("crime access len = %i!\n", len);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sgi_ip32", "crime access len = %i!", len);
 	}
 
 	switch (relative_addr) {
@@ -348,8 +345,8 @@ DEVICE_ACCESS(crime)
 			idata &= ~CRIME_CONTROL_ENDIANESS;
 
 			if (idata != 0)
-				fatal("[ CRIME_CONTROL: unimplemented "
-				    "control 0x%016llx ]\n", (long long)idata);
+				debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ CRIME_CONTROL: unimplemented "
+				    "control 0x%016llx ]", (long long)idata);
 		}
 		break;
 
@@ -603,11 +600,11 @@ DEVICE_ACCESS(mace)
 	case MACE_ISA_INT_STATUS:	/*  Current interrupt assertions  */
 		/*  don't dump debug info for these  */
 		if (writeflag == MEM_WRITE) {
-			fatal("[ NOTE/TODO: WRITE to mace intr: "
+			debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ NOTE/TODO: WRITE to mace intr: "
 			    "reladdr=0x%x data=", (int)relative_addr);
 			for (i=0; i<len; i++)
-				fatal(" %02x", data[i]);
-			fatal(" (len=%i) ]\n", len);
+				fatal_error(SUBSYS_DEVICE, "sgi_ip32", " %02x", data[i]);
+			fatal_error(SUBSYS_DEVICE, "sgi_ip32", " (len=%i) ]", len);
 		}
 		break;
 	case MACE_ISA_INT_MASK:		/*  Current interrupt mask  */
@@ -696,12 +693,12 @@ DEVICE_ACCESS(macepci)
 	int res = 1, bus, dev, func, pcireg;
 
 	if (len != 4)
-		fatal("[ macepci: unimplemented len %i ]\n", len);
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: unimplemented len %i ]", len);
 
 	if (writeflag == MEM_WRITE) {
 		idata = memory_readmax64(cpu, data, len);
 #ifdef MACEPCI_DEBUG
-		fatal("[ macepci: write to address 0x%x, data=0x%02x (len %i) ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: write to address 0x%x, data=0x%02x (len %i) ]",
 		    (int)relative_addr, (int)idata, len);
 #endif
 	}
@@ -753,12 +750,12 @@ DEVICE_ACCESS(macepci)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ macepci: unimplemented write to address "
-			    "0x%x, data=0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: unimplemented write to address "
+			    "0x%x, data=0x%02x ]",
 			    (int)relative_addr, (int)idata);
 		} else {
-			fatal("[ macepci: unimplemented read from address "
-			    "0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: unimplemented read from address "
+			    "0x%x ]", (int)relative_addr);
 
 			/*  My real O2 returns 0xffffffff for all unimplemented
 				registers.  */
@@ -769,7 +766,7 @@ DEVICE_ACCESS(macepci)
 	if (writeflag == MEM_READ) {
 		memory_writemax64(cpu, data, len, odata);
 #ifdef MACEPCI_DEBUG
-		fatal("[ macepci: read from address 0x%x, data=0x%02x (len %i) ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: read from address 0x%x, data=0x%02x (len %i) ]",
 		    (int)relative_addr, (int)odata, len);
 #endif
 	}

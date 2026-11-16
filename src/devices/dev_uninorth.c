@@ -71,8 +71,8 @@ DEVICE_ACCESS(uninorth_addr)
 				if (idata & (1 << dev))
 					break;
 			if (dev == 32)
-				fatal("[ dev_uninorth_addr_access: no dev? "
-				    "idata=0x%08x ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "uninorth", VERBOSITY_DEBUG, "[ dev_uninorth_addr_access: no dev? "
+				    "idata=0x%08x ]", (int)idata);
 
 			func = (idata >> 8) & 7;
 			reg = idata & 0xff;

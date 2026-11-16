@@ -60,9 +60,9 @@ DEVICE_ACCESS(8259)
 
 #ifdef DEV_8259_DEBUG
 	if (writeflag == MEM_READ)
-		fatal("[ 8259: read from 0x%x ]\n", (int)relative_addr);
+		debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: read from 0x%x ]", (int)relative_addr);
 	else
-		fatal("[ 8259: write to 0x%x: 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: write to 0x%x: 0x%x ]",
 		    (int)relative_addr, (int)idata);
 #endif
 
@@ -72,15 +72,15 @@ DEVICE_ACCESS(8259)
 			if ((idata & 0x10) == 0x10) {
 				/*  Bit 3: 0=edge, 1=level  */
 				if (idata & 0x08)
-					fatal("[ 8259: TODO: Level "
+					debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: TODO: Level "
 					    "triggered (MCA bus) ]\n");
 				if (idata & 0x04)
-					fatal("[ 8259: WARNING: Bit 2 set ]\n");
+					debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_WARNING, "[ 8259: WARNING: Bit 2 set ]\n");
 				/*  Bit 1: 0=cascade, 1=single  */
 				/*  Bit 0: 1=4th init byte  */
 				/*  This happens on non-x86 systems:
 				    if (!(idata & 0x01))
-					fatal("[ 8259: WARNING: Bit 0 NOT set!"
+					debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_WARNING, "[ 8259: WARNING: Bit 0 NOT set!"
 					    "!! ]\n");  */
 				d->init_state = 1;
 				break;
@@ -89,7 +89,7 @@ DEVICE_ACCESS(8259)
 			/*  TODO: Is it ok to abort init state when there
 			    is a non-init command?  */
 			if (d->init_state)
-				fatal("[ 8259: WARNING: Was in init-state, but"
+				debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_WARNING, "[ 8259: WARNING: Was in init-state, but"
 				    " it was aborted? ]\n");
 			d->init_state = 0;
 
@@ -175,8 +175,8 @@ DEVICE_ACCESS(8259)
 			 *  TODO: The "default" label should really do
 			 *  something like this:
 			 *
-			 *	fatal("[ 8259: unimplemented command 0x%02x"
-			 *	    " while reading ]\n", d->current_command);
+			 *	debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: unimplemented command 0x%02x"
+			 *	    " while reading ]", d->current_command);
 			 *	cpu->running = 0;
 			 *
 			 *  but Linux seems to read from the secondary PIC
@@ -192,7 +192,7 @@ DEVICE_ACCESS(8259)
 				d->irq_base = idata & 0xf8;
 				/*  This happens on non-x86 machines:
 				    if (idata & 7)
-					fatal("[ 8259: WARNING! Lowest"
+					debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_WARNING, "[ 8259: WARNING! Lowest"
 					    " bits in Init Cmd 1 are"
 					    " non-zero! ]\n");  */
 				d->init_state = 2;
@@ -207,7 +207,7 @@ DEVICE_ACCESS(8259)
 					    "n Init Cmd 4 is set! ]\n");
 				}
 				if (!(idata & 0x01))
-					fatal("[ 8259: WARNING! Bit 0 "
+					debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_WARNING, "[ 8259: WARNING! Bit 0 "
 					    "in Init Cmd 4 is not"
 					    " set! ]\n");
 				d->init_state = 0;
@@ -233,12 +233,12 @@ DEVICE_ACCESS(8259)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ 8259: unimplemented write to address 0x%x"
-			    " data=0x%02x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: unimplemented write to address 0x%x"
+			    " data=0x%02x ]", (int)relative_addr, (int)idata);
 			cpu->running = 0;
 		} else {
-			fatal("[ 8259: unimplemented read from address 0x%x "
-			    "]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: unimplemented read from address 0x%x "
+			    "]", (int)relative_addr);
 			cpu->running = 0;
 		}
 	}

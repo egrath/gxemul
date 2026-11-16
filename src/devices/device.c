@@ -139,8 +139,7 @@ void (*pci_lookup_initf(const char *name))(struct machine *machine,
 	int i;
 
 	if (name == NULL) {
-		fprintf(stderr, "pci_lookup_initf(): name = NULL\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "device",  "pci_lookup_initf(): name = NULL\n");
 	}
 
 	for (i=0; i<n_pci_entries; i++)
@@ -164,8 +163,7 @@ struct device_entry *device_lookup(char *name)
 	int hi, lo;
 
 	if (name == NULL) {
-		fprintf(stderr, "device_lookup(): NULL ptr\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "device",  "device_lookup(): NULL ptr\n");
 	}
 
 	if (!device_entries_sorted)
@@ -213,7 +211,7 @@ int device_unregister(char *name)
 	struct device_entry *p = device_lookup(name);
 
 	if (p == NULL) {
-		fatal("device_unregister(): no such device (\"%s\")\n", name);
+		fatal_error(SUBSYS_DEVICE, "device", "device_unregister(): no such device (\"%s\")", name);
 		return 0;
 	}
 
@@ -283,7 +281,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 
 	p = device_lookup(devinit.name);
 	if (p == NULL) {
-		fatal("no such device (\"%s\")\n", devinit.name);
+		fatal_error(SUBSYS_DEVICE, "device", "no such device (\"%s\")", devinit.name);
 		if (device_exit_on_error)
 			exit(1);
 		else
@@ -306,7 +304,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 		while (*s3 != '=' && *s3 != '\0')
 			s3 ++;
 		if (s3 == s2) {
-			fatal("weird param: %s\n", s2);
+			fatal_error(SUBSYS_DEVICE, "device", "weird param: %s", s2);
 			if (device_exit_on_error)
 				exit(1);
 			else
@@ -330,8 +328,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 			case 1:	devinit.pci_little_endian =
 				    MEM_PCI_LITTLE_ENDIAN;
 				break;
-			default:fatal("Bad pci_little_endian value.\n");
-				exit(1);
+			default:fatal_error(SUBSYS_DEVICE, "device", "Bad pci_little_endian value.\n");
 			}
 		} else if (strncmp(s2, "irq=", 4) == 0) {
 			snprintf(devinit.interrupt_path, interrupt_path_len, "%s", s3);
@@ -356,7 +353,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 				len2 -= 2, h++;
 			snprintf(devinit.name2, len2 + 1, "%s", h);
 		} else {
-			fatal("unknown param: %s\n", s2);
+			fatal_error(SUBSYS_DEVICE, "device", "unknown param: %s", s2);
 			if (device_exit_on_error)
 				exit(1);
 			else
@@ -382,7 +379,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 	devinit.return_ptr = NULL;
 
 	if (!p->initf(&devinit)) {
-		fatal("error adding device (\"%s\")\n", name_and_params);
+		fatal_error(SUBSYS_DEVICE, "device", "error adding device (\"%s\")", name_and_params);
 		if (device_exit_on_error)
 			exit(1);
 		else

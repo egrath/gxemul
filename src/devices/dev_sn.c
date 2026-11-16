@@ -76,12 +76,12 @@ DEVICE_ACCESS(sn)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ sn: unimplemented write to address 0x%x"
-			    " (regnr %i), data=0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "sn", VERBOSITY_DEBUG, "[ sn: unimplemented write to address 0x%x"
+			    " (regnr %i), data=0x%02x ]",
 			    (int)relative_addr, regnr, (int)idata);
 		} else {
-			fatal("[ sn: unimplemented read from address 0x%x "
-			    "(regnr %i) ]\n", (int)relative_addr, regnr);
+			debugmsg(SUBSYS_DEVICE, "sn", VERBOSITY_DEBUG, "[ sn: unimplemented read from address 0x%x "
+			    "(regnr %i) ]", (int)relative_addr, regnr);
 		}
 		/*  exit(1);  */
 	}

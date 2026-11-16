@@ -133,7 +133,7 @@ void horrible_getputpixel(int put, struct cpu* cpu, struct sgi_re_data* d,
 		// TODO... probably not correct!
 		// printf("tileptr = %08x x = %i y = %i tile_nr = %i ofs = %i\n", tileptr, x, y, tile_nr, ofs);
 		break;
-	default:fatal("unimplemented dst_mode %i for horrible_getputpixel (%s), x=%i y=%i\n",
+	default:fatal_error(SUBSYS_DEVICE, "sgi_re", "unimplemented dst_mode %i for horrible_getputpixel (%s), x=%i y=%i",
 			mode, put ? "put" : "get", x, y);
 		// exit(1);
 		*color = random();
@@ -143,7 +143,7 @@ void horrible_getputpixel(int put, struct cpu* cpu, struct sgi_re_data* d,
 	// The highest bit seems to be set for a "valid" tile pointer.
 	if (!(tileptr & 0x80000000)) {
 		//printf("dst_mode %i, tile_nr = %i,  tileptr = 0x%llx\n", dst_mode, tile_nr, (long long)tileptr);
-		//fatal("sgi gbe horrible_getputpixel: unexpected non-set high bit of tileptr?\n");
+		//fatal_error(SUBSYS_DEVICE, "sgi_re", "sgi gbe horrible_getputpixel: unexpected non-set high bit of tileptr?\n");
 		//exit(1);
 		return;
 	}
@@ -179,7 +179,7 @@ void horrible_getputpixel(int put, struct cpu* cpu, struct sgi_re_data* d,
 			buf[2] = random();
 			buf[3] = random();
 			// TODO.
-			fatal("[ put: color mode = 0x%x ]\n", color_mode);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ put: color mode = 0x%x ]", color_mode);
 		}
 
 		cpu->memory_rw(cpu, cpu->mem, tileptr + ofs,
@@ -203,7 +203,7 @@ void horrible_getputpixel(int put, struct cpu* cpu, struct sgi_re_data* d,
 			break;
 		default:// Read "raw" 32-bit value:
 			*color = (buf[3] << 24) + (buf[2] << 16) + (buf[1] << 8) + buf[0];
-			fatal("[ get: color mode = 0x%x ]\n", color_mode);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ get: color mode = 0x%x ]", color_mode);
 		}
 	}
 }
@@ -224,8 +224,7 @@ DEVICE_ACCESS(sgi_re)
 
 	if (relative_addr >= CRIME_RE_TLB_A && relative_addr < CRIME_RE_TLB_B) {
 		if (len != 8) {
-			fatal("TODO: unimplemented len=%i for CRIME_RE_TLB_A\n", len);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: unimplemented len=%i for CRIME_RE_TLB_A", len);
 		}
 
 		if (writeflag == MEM_WRITE) {
@@ -236,13 +235,11 @@ DEVICE_ACCESS(sgi_re)
 				tlbi++;
 			}
 		} else {
-			fatal("TODO: read from CRIME_RE_TLB_A\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: read from CRIME_RE_TLB_A\n");
 		}
 	} else if (relative_addr >= CRIME_RE_TLB_B && relative_addr < CRIME_RE_TLB_C) {
 		if (len != 8) {
-			fatal("TODO: unimplemented len=%i for CRIME_RE_TLB_B\n", len);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: unimplemented len=%i for CRIME_RE_TLB_B", len);
 		}
 
 		if (writeflag == MEM_WRITE) {
@@ -253,13 +250,11 @@ DEVICE_ACCESS(sgi_re)
 				tlbi++;
 			}
 		} else {
-			fatal("TODO: read from CRIME_RE_TLB_B\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: read from CRIME_RE_TLB_B\n");
 		}
 	} else if (relative_addr >= CRIME_RE_TLB_C && relative_addr < CRIME_RE_TLB_C + 0x200) {
 		if (len != 8) {
-			fatal("TODO: unimplemented len=%i for CRIME_RE_TLB_C\n", len);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: unimplemented len=%i for CRIME_RE_TLB_C", len);
 		}
 
 		if (writeflag == MEM_WRITE) {
@@ -270,13 +265,11 @@ DEVICE_ACCESS(sgi_re)
 				tlbi++;
 			}
 		} else {
-			fatal("TODO: read from CRIME_RE_TLB_C\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: read from CRIME_RE_TLB_C\n");
 		}
 	} else if (relative_addr >= CRIME_RE_TEX && relative_addr < CRIME_RE_TEX + 0xe0) {
 		if (len != 8) {
-			fatal("TODO: unimplemented len=%i for CRIME_RE_TEX\n", len);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: unimplemented len=%i for CRIME_RE_TEX", len);
 		}
 
 		if (writeflag == MEM_WRITE) {
@@ -287,13 +280,11 @@ DEVICE_ACCESS(sgi_re)
 				tlbi++;
 			}
 		} else {
-			fatal("TODO: read from CRIME_RE_TEX\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: read from CRIME_RE_TEX\n");
 		}
 	} else if (relative_addr >= CRIME_RE_LINEAR_A && relative_addr < CRIME_RE_LINEAR_A + 0x80) {
 		if (len != 8) {
-			fatal("TODO: unimplemented len=%i for CRIME_RE_LINEAR_A\n", len);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: unimplemented len=%i for CRIME_RE_LINEAR_A", len);
 		}
 
 		if (writeflag == MEM_WRITE) {
@@ -337,13 +328,11 @@ DEVICE_ACCESS(sgi_re)
 			debug("[ d->re_linear_a[%i] = 0x%08x, [%i] = 0x%08x ]\n",
 				tlbi, d->re_linear_a[tlbi], tlbi+1, d->re_linear_a[tlbi+1]);
 		} else {
-			fatal("TODO: read from CRIME_RE_LINEAR_A\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: read from CRIME_RE_LINEAR_A\n");
 		}
 	} else if (relative_addr >= CRIME_RE_LINEAR_B && relative_addr < CRIME_RE_LINEAR_B + 0x80) {
 		if (len != 8) {
-			fatal("TODO: unimplemented len=%i for CRIME_RE_LINEAR_B\n", len);
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: unimplemented len=%i for CRIME_RE_LINEAR_B", len);
 		}
 
 		if (writeflag == MEM_WRITE) {
@@ -353,18 +342,16 @@ DEVICE_ACCESS(sgi_re)
 			debug("[ d->re_linear_b[%i] = 0x%08x, [%i] = 0x%08x ]\n",
 				tlbi, d->re_linear_b[tlbi], tlbi+1, d->re_linear_b[tlbi+1]);
 		} else {
-			fatal("TODO: read from CRIME_RE_LINEAR_B\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "TODO: read from CRIME_RE_LINEAR_B\n");
 		}
 	} else {
 		if (writeflag == MEM_WRITE)
-			fatal("[ sgi_re: unimplemented write to "
-			    "address 0x%llx, data=0x%016llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_re: unimplemented write to "
+			    "address 0x%llx, data=0x%016llx ]",
 			    (long long)relative_addr, (long long)idata);
 		else
-			fatal("[ sgi_re: unimplemented read from address"
-			    " 0x%llx ]\n", (long long)relative_addr);
-		exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_re: unimplemented read from address"
+			    " 0x%llx ]", (long long)relative_addr);
 	}
 
 	if (writeflag == MEM_READ)
@@ -421,7 +408,7 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 	int nr_of_bits_in_the_middle = 32 - nr_of_bits_to_strip_to_the_left - nr_of_bits_to_strip_to_the_right;
 
 	if (stipple_mode & 0xe0e0ffff)
-		fatal("[ sgi_de: UNIMPLEMENTED stipple_mode bits: 0x%08x ]\n", stipple_mode);
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: UNIMPLEMENTED stipple_mode bits: 0x%08x ]", stipple_mode);
 
 	uint32_t x1 = (d->de_reg[(CRIME_DE_X_VERTEX_0 - 0x2000) / sizeof(uint32_t)] >> 16) & 0x7ff;
 	uint32_t y1 = d->de_reg[(CRIME_DE_X_VERTEX_0 - 0x2000) / sizeof(uint32_t)]& 0x7ff;
@@ -460,9 +447,9 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 		}
 
 		if (step_x != src_bufdepth || (step_y != 0 && step_y != 1)) {
-			fatal("[ sgi_de: unimplemented XFER addr_src=0x%x src_bufdepth=%i "
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: unimplemented XFER addr_src=0x%x src_bufdepth=%i "
 				"strd_src=0x%x step_x=0x%x step_y=0x%x "
-				"addr_dst=0x%x strd_dst=0x%x ]\n",
+				"addr_dst=0x%x strd_dst=0x%x ]",
 				addr_src, src_bufdepth, strd_src, step_x, step_y, addr_dst, strd_dst);
 
 			// exit(1);
@@ -470,11 +457,11 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 	}
 
 	if (!(drawmode & DE_DRAWMODE_PLANEMASK)) {
-		printf("!DE_DRAWMODE_PLANEMASK: TODO\n");
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_WARNING, "!DE_DRAWMODE_PLANEMASK: TODO");
 	}
 	
 	if ((drawmode & DE_DRAWMODE_BYTEMASK) != DE_DRAWMODE_BYTEMASK) {
-		printf("not all DE_DRAWMODE_BYTEMASK set: TODO\n");
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_WARNING, "not all DE_DRAWMODE_BYTEMASK set: TODO");
 	}
 	
 	// primitive rendering direction (not for Lines? and presumably
@@ -502,11 +489,11 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 	switch (op & 0xff000000) {
 	case DE_PRIM_LINE:
 		if (drawmode & DE_DRAWMODE_XFER_EN)
-			fatal("[ sgi_de: XFER_EN for LINE op? ]\n");
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: XFER_EN for LINE op? ]\n");
 
 		// The PROM uses width 32, but NetBSD documents it as "half pixels".
 		// if ((op & DE_PRIM_LINE_WIDTH_MASK) != 2)
-		//	fatal("[ sgi_de: LINE_WIDTH_MASK = %i ]\n", op & DE_PRIM_LINE_WIDTH_MASK);
+		//	debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: LINE_WIDTH_MASK = %i ]", op & DE_PRIM_LINE_WIDTH_MASK);
 
 		if (linelen == 0)
 			linelen ++;
@@ -554,11 +541,11 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 
 						if (!rop_used[rop & 255]) {
 							rop_used[rop & 255] = 1;
-							fatal("[ sgi_de: LINE: rop[0x%02x] used! ]\n", rop & 255);
+							debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: LINE: rop[0x%02x] used! ]", rop & 255);
 						}
 
 						if (rop >> 8) {
-							fatal("[ sgi_de: LINE: rop > 255: 0x%08x ]\n", rop);
+							debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: LINE: rop > 255: 0x%08x ]", rop);
 						}
 					}
 				}
@@ -620,11 +607,11 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 
 							if (!rop_used[rop & 255]) {
 								rop_used[rop & 255] = 1;
-								fatal("[ sgi_de: RECT: rop[0x%02x] used! ]\n", rop & 255);
+								debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: RECT: rop[0x%02x] used! ]", rop & 255);
 							}
 
 							if (rop >> 8) {
-								fatal("[ sgi_de: RECT: rop > 255: 0x%08x ]\n", rop);
+								debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: RECT: rop > 255: 0x%08x ]", rop);
 							}
 						}
 					}
@@ -646,10 +633,9 @@ void draw_primitive(struct cpu* cpu, struct sgi_re_data *d)
 		}
 		break;
 
-	default:fatal("[ sgi_de: UNIMPLEMENTED drawing op = 0x%08x,"
-		    " x1=%i y1=%i x2=%i y2=%i fg=0x%x bg=0x%x pattern=0x%08x ]\n",
+	default:debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: UNIMPLEMENTED drawing op = 0x%08x,"
+		    " x1=%i y1=%i x2=%i y2=%i fg=0x%x bg=0x%x pattern=0x%08x ]",
 		    op, x1, y1, x2, y2, fg, bg, pattern);
-		exit(1);
 	}
 }
 
@@ -685,8 +671,7 @@ DEVICE_ACCESS(sgi_de)
 		else
 			odata = d->de_reg[regnr];
 	} else {
-		fatal("sgi_de: len = %i not implemented\n", len);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sgi_re", "sgi_de: len = %i not implemented", len);
 	}
 
 	switch (relative_addr) {
@@ -708,7 +693,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_CLIPMODE: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_CLIPMODE: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_DRAWMODE:
@@ -722,7 +707,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK0: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK0: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_SCRMASK1:
@@ -730,7 +715,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK1: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK1: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_SCRMASK2:
@@ -738,7 +723,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK2: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK2: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_SCRMASK3:
@@ -746,7 +731,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK3: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK3: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_SCRMASK4:
@@ -754,7 +739,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK4: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_SCRMASK4: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_SCISSOR:
@@ -762,7 +747,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_SCISSOR: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_SCISSOR: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_SCISSOR + 4:
@@ -771,7 +756,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0x3fff3fff)
-			fatal("[ sgi_de: TODO: CRIME_DE_SCISSOR+4: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: CRIME_DE_SCISSOR+4: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_PRIMITIVE:
@@ -785,7 +770,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_WINOFFSET_SRC: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_WINOFFSET_SRC: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_WINOFFSET_DST:
@@ -793,7 +778,7 @@ DEVICE_ACCESS(sgi_de)
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ sgi_de: TODO: non-zero CRIME_DE_WINOFFSET_DST: 0x%016llx ]\n", idata);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: TODO: non-zero CRIME_DE_WINOFFSET_DST: 0x%016llx ]", idata);
 		break;
 
 	case CRIME_DE_X_VERTEX_0:
@@ -894,12 +879,12 @@ DEVICE_ACCESS(sgi_de)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			fatal("[ sgi_de: unimplemented write to "
-			    "address 0x%llx, data=0x%016llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: unimplemented write to "
+			    "address 0x%llx, data=0x%016llx ]",
 			    (long long)relative_addr, (long long)idata);
 		else
-			fatal("[ sgi_de: unimplemented read from address"
-			    " 0x%llx ]\n", (long long)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_de: unimplemented read from address"
+			    " 0x%llx ]", (long long)relative_addr);
 	}
 
 	if (startFlag)
@@ -956,21 +941,19 @@ void do_mte_transfer(struct cpu* cpu, struct sgi_re_data *d)
 	    bg, bytemask);
 
 	if (dst_y_step != 0 && dst_y_step != 1 && dst_y_step != -1) {
-		fatal("[ sgi_mte: TODO! unimplemented dst_y_step %i ]", dst_y_step);
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: TODO! unimplemented dst_y_step %i ]", dst_y_step);
 		// exit(1);
 	}
 
 	if (mode & MTE_MODE_STIPPLE) {
-		fatal("[ sgi_mte: unimplemented MTE_MODE_STIPPLE ]");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: unimplemented MTE_MODE_STIPPLE ]");
 	}
 
 	int src_tlb = (mode & MTE_MODE_SRC_BUF_MASK) >> MTE_SRC_TLB_SHIFT;
 	int dst_tlb = (mode & MTE_MODE_DST_BUF_MASK) >> MTE_DST_TLB_SHIFT;
 	
 	if (src > MTE_TLB_C) {
-		fatal("[ sgi_mte: unimplemented SRC ]");
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: unimplemented SRC ]");
 	}
 
 	switch (dst_tlb) {
@@ -1030,13 +1013,11 @@ void do_mte_transfer(struct cpu* cpu, struct sgi_re_data *d)
 	case MTE_TLB_LIN_B:
 		// Used by the PROM to zero-fill memory (?).
 		if (mode & MTE_MODE_COPY) {
-			fatal("[ sgi_mte: unimplemented MTE_MODE_COPY ]");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: unimplemented MTE_MODE_COPY ]");
 		}
 
 		if (depth != 8) {
-			fatal("[ sgi_mte: unimplemented MTE_DEPTH_x ]");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: unimplemented MTE_DEPTH_x ]");
 		}
 
 		debug("[ sgi_mte: LINEAR TRANSFER: mode=0x%08x dst0=0x%016llx,"
@@ -1046,8 +1027,7 @@ void do_mte_transfer(struct cpu* cpu, struct sgi_re_data *d)
 		    (long long)dstlen, dst_y_step, (int)bg, (int)bytemask);
 
 		if (bytemask != 0xffffffff) {
-			fatal("unimplemented MTE bytemask 0x%08x\n", (int)bytemask);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "sgi_re", "unimplemented MTE bytemask 0x%08x", (int)bytemask);
 		}
 
 		/*
@@ -1129,7 +1109,7 @@ void do_mte_transfer(struct cpu* cpu, struct sgi_re_data *d)
 		}
 		break;
 	default:
-		fatal("[ sgi_mte: TODO! unimplemented dst_tlb 0x%x ]", dst_tlb);
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: TODO! unimplemented dst_tlb 0x%x ]", dst_tlb);
 	}
 }
 
@@ -1168,8 +1148,7 @@ DEVICE_ACCESS(sgi_mte)
 			    d->mte_reg[regnr];
 		}
 	} else {
-		fatal("[ sgi_mte: UNIMPLEMENTED read/write len %i ]\n", len);
-		exit(1);
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: UNIMPLEMENTED read/write len %i ]", len);
 	}
 
 	switch (relative_addr) {
@@ -1187,7 +1166,7 @@ DEVICE_ACCESS(sgi_mte)
 		break;
 
 	case CRIME_MTE_STIPPLEMASK:
-		fatal("[ sgi_mte: %s CRIME_MTE_STIPPLEMASK: 0x%016llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: %s CRIME_MTE_STIPPLEMASK: 0x%016llx ]",
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		break;
@@ -1235,25 +1214,25 @@ DEVICE_ACCESS(sgi_mte)
 		break;
 
 	case CRIME_MTE_NULL:
-		fatal("[ sgi_mte: %s CRIME_MTE_NULL: 0x%016llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: %s CRIME_MTE_NULL: 0x%016llx ]",
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		break;
 
 	case CRIME_MTE_FLUSH:
-		fatal("[ sgi_mte: %s CRIME_MTE_FLUSH: 0x%016llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: %s CRIME_MTE_FLUSH: 0x%016llx ]",
 		    writeflag == MEM_WRITE ? "write to" : "read from",
 		    writeflag == MEM_WRITE ? (long long)idata : (long long)odata);
 		break;
 
 	default:
 		if (writeflag == MEM_WRITE)
-			fatal("[ sgi_mte: unimplemented write to "
-			    "address 0x%llx, data=0x%016llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: unimplemented write to "
+			    "address 0x%llx, data=0x%016llx ]",
 			    (long long)relative_addr, (long long)idata);
 		else
-			fatal("[ sgi_mte: unimplemented read from address"
-			    " 0x%llx ]\n", (long long)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "sgi_re", VERBOSITY_DEBUG, "[ sgi_mte: unimplemented read from address"
+			    " 0x%llx ]", (long long)relative_addr);
 	}
 
 	if (startFlag)

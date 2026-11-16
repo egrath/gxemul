@@ -113,7 +113,7 @@ DEVICE_ACCESS(ether)
 			d->status = 0;
 			INTERRUPT_DEASSERT(d->irq);
 		} else
-			fatal("[ ether: WARNING: write to status ]\n");
+			debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_WARNING, "[ ether: WARNING: write to status ]\n");
 		break;
 
 	case DEV_ETHER_PACKETLENGTH:
@@ -121,13 +121,13 @@ DEVICE_ACCESS(ether)
 			odata = d->packet_len;
 		else {
 			if ((int64_t)idata < 0) {
-				fatal("[ ether: ERROR: packet len too"
-				    " short (%i bytes) ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: ERROR: packet len too"
+				    " short (%i bytes) ]", (int)idata);
 				idata = (uint64_t) -1;
 			}
 			if (idata > DEV_ETHER_BUFFER_SIZE) {
-				fatal("[ ether: ERROR: packet len too"
-				    " large (%i bytes) ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: ERROR: packet len too"
+				    " large (%i bytes) ]", (int)idata);
 				idata = DEV_ETHER_BUFFER_SIZE;
 			}
 			d->packet_len = idata;
@@ -136,7 +136,7 @@ DEVICE_ACCESS(ether)
 
 	case DEV_ETHER_COMMAND:
 		if (writeflag == MEM_READ) {
-			fatal("[ ether: WARNING: read from command ]\n");
+			debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_WARNING, "[ ether: WARNING: read from command ]\n");
 			break;
 		}
 
@@ -145,7 +145,7 @@ DEVICE_ACCESS(ether)
 
 		case DEV_ETHER_COMMAND_RX:	/*  Receive:  */
 			if (cpu->machine->emul->net == NULL)
-				fatal("[ ether: RECEIVE but no net? ]\n");
+				debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: RECEIVE but no net? ]\n");
 			else {
 				d->status &= ~DEV_ETHER_STATUS_PACKET_RECEIVED;
 				if (net_ethernet_rx(cpu->machine->emul->net,
@@ -166,7 +166,7 @@ DEVICE_ACCESS(ether)
 
 		case DEV_ETHER_COMMAND_TX:	/*  Send  */
 			if (cpu->machine->emul->net == NULL)
-				fatal("[ ether: SEND but no net? ]\n");
+				debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: SEND but no net? ]\n");
 			else
 				net_ethernet_tx(cpu->machine->emul->net,
 				    &d->nic, d->buf, d->packet_len);
@@ -174,15 +174,15 @@ DEVICE_ACCESS(ether)
 			dev_ether_tick(cpu, d);
 			break;
 
-		default:fatal("[ ether: UNIMPLEMENTED command 0x"
-			    "%02x ]\n", idata);
+		default:debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: UNIMPLEMENTED command 0x"
+			    "%02x ]", idata);
 			cpu->running = 0;
 		}
 		break;
 
 	case DEV_ETHER_MAC:
 		if (writeflag == MEM_READ) {
-			fatal("[ ether: read of MAC is not allowed! ]\n");
+			debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: read of MAC is not allowed! ]\n");
 		} else {
 			// Write out the MAC address to the address given.
 			cpu->memory_rw(cpu, cpu->mem, idata, d->nic.mac_address,
@@ -191,12 +191,12 @@ DEVICE_ACCESS(ether)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ ether: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ ether: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 

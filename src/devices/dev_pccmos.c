@@ -127,7 +127,7 @@ DEVICE_ACCESS(pccmos)
 	}
 
 	if (r == 0)
-		fatal("[ pccmos: memory_rw() error! ]\n");
+		debugmsg(SUBSYS_DEVICE, "pccmos", VERBOSITY_DEBUG, "[ pccmos: memory_rw() error! ]\n");
 
 	if (writeflag == MEM_READ)
 		memory_writemax64(cpu, data, len, odata);
@@ -156,7 +156,7 @@ DEVINIT(pccmos)
 		type = MC146818_ALGOR;
 		break;
 	case MACHINE_ARC:
-		fatal("\nARC pccmos: TODO\n\n");
+		debugmsg(SUBSYS_DEVICE, "pccmos", VERBOSITY_DEBUG, "\nARC pccmos: TODO\n\n");
 		type = MC146818_ALGOR;
 		break;
 	case MACHINE_EVBMIPS:
@@ -203,9 +203,8 @@ DEVINIT(pccmos)
 	}
 	case MACHINE_IYONIX:	// TODO: not sure about exact type.
 		break;
-	default:fatal("devinit_pccmos(): unimplemented machine type"
-		    " %i\n", devinit->machine->machine_type);
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "pccmos", "devinit_pccmos(): unimplemented machine type"
+		    " %i", devinit->machine->machine_type);
 	}
 
 	memory_device_register(devinit->machine->memory, devinit->name,

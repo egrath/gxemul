@@ -131,7 +131,7 @@ DEVICE_ACCESS(cpc700_int)
 	case CPC_UIC_SRS:
 		/*  Status register set:  */
 		if (writeflag == MEM_READ) {
-			fatal("[ cpc700_int: read from CPC_UIC_SRS? ]\n");
+			debugmsg(SUBSYS_DEVICE, "cpc700", VERBOSITY_DEBUG, "[ cpc700_int: read from CPC_UIC_SRS? ]\n");
 			odata = d->sr;
 		} else {
 			d->sr = idata;
@@ -160,17 +160,17 @@ DEVICE_ACCESS(cpc700_int)
 		if (writeflag == MEM_READ) {
 			odata = d->sr & d->er;
 		} else {
-			fatal("[ cpc700_int: write to CPC_UIC_MSR? ]\n");
+			debugmsg(SUBSYS_DEVICE, "cpc700", VERBOSITY_DEBUG, "[ cpc700_int: write to CPC_UIC_MSR? ]\n");
 		}
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ cpc700_int: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "cpc700", VERBOSITY_DEBUG, "[ cpc700_int: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ cpc700_int: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "cpc700", VERBOSITY_DEBUG, "[ cpc700_int: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 
@@ -229,9 +229,8 @@ DEVINIT(cpc700)
 		    devinit->machine->memory, 0, 0, 0, "heuricon_pmppc");
 		break;
 
-	default:fatal("!\n! WARNING: cpc700 for non-implemented machine"
+	default:debugmsg(SUBSYS_DEVICE, "cpc700", VERBOSITY_WARNING, "!\n! WARNING: cpc700 for non-implemented machine"
 		    " type\n!\n");
-		exit(1);
 	}
 
 	/*  PCI configuration registers:  */

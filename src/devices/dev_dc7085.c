@@ -108,7 +108,7 @@ void add_to_rx_queue(void *e, int ch, int line_no)
 		d->cur_rx_queue_pos_write = 0;
 
 	if (d->cur_rx_queue_pos_write == d->cur_rx_queue_pos_read)
-		fatal("warning: add_to_rx_queue(): rx_queue overrun!\n");
+		fatal_error(SUBSYS_DEVICE, "dc7085", "warning: add_to_rx_queue(): rx_queue overrun!\n");
 }
 
 

@@ -90,7 +90,7 @@ DEVICE_ACCESS(disk)
 		}
 		
 		if (d->offset & (SECTOR_SIZE-1))
-			fatal("[ disk: WARNING! offset (%lli) must be %i-byte aligned ]\n",
+			debugmsg(SUBSYS_DEVICE, "disk", VERBOSITY_WARNING, "[ disk: WARNING! offset (%lli) must be %i-byte aligned ]",
 				(long long)d->offset, SECTOR_SIZE);
 		
 		break;
@@ -145,12 +145,12 @@ DEVICE_ACCESS(disk)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ disk: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "disk", VERBOSITY_DEBUG, "[ disk: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ disk: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "disk", VERBOSITY_DEBUG, "[ disk: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 

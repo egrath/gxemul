@@ -255,7 +255,7 @@ static void aha1742_complete(struct aha1742_data *d, uint32_t mboxin,
 	}
 
 	if (d->cq_len >= AHA_COMPLETION_QUEUE_LEN) {
-		fatal("[ aha1742: completion queue overflow ]\n");
+		debugmsg(SUBSYS_DEVICE, "aha1742", VERBOSITY_DEBUG, "[ aha1742: completion queue overflow ]\n");
 		return;
 	}
 
@@ -283,7 +283,7 @@ static void aha1742_execute_ecb(struct cpu *cpu, struct aha1742_data *d)
 	/* Read ECB structure from host physical memory: */
 	if (!aha1742_dma(cpu, cpu->mem, d->mboxout, ecb_buf,
 	    sizeof(ecb_buf), MEM_READ, PHYSICAL | NO_EXCEPTIONS)) {
-		fatal("[ aha1742: memory_rw() failed reading ECB at 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "aha1742", VERBOSITY_DEBUG, "[ aha1742: memory_rw() failed reading ECB at 0x%x ]",
 		    d->mboxout);
 		return;
 	}

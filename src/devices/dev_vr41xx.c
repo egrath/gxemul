@@ -240,8 +240,8 @@ static void vr41xx_keytick(struct cpu *cpu, struct vr41xx_data *d)
 					case 'B': d->d0 = 0x20; break;
 					case 'C': d->d0 = 0x1000; break;
 					case 'D': d->d0 = 0x10; break;
-					default:  fatal("[ vr41xx kiu: unimpl"
-					    "emented escape 0x%02 ]\n", ch);
+					default:  debugmsg(SUBSYS_DEVICE, "vr41xx", VERBOSITY_DEBUG, "[ vr41xx kiu: unimpl"
+					    "emented escape 0x%02 ]", ch);
 					}
 				} else {
 					switch (ch) {
@@ -249,8 +249,8 @@ static void vr41xx_keytick(struct cpu *cpu, struct vr41xx_data *d)
 					case 'B': d->d0 = 0x2000; break;
 					case 'C': d->d0 = 0x20; break;
 					case 'D': d->d0 = 0x10; break;
-					default:  fatal("[ vr41xx kiu: unimpl"
-					    "emented escape 0x%02 ]\n", ch);
+					default:  debugmsg(SUBSYS_DEVICE, "vr41xx", VERBOSITY_DEBUG, "[ vr41xx kiu: unimpl"
+					    "emented escape 0x%02 ]", ch);
 					}
 				}
 				d->escape_state = 0;
@@ -439,7 +439,7 @@ static uint64_t vr41xx_kiu(struct cpu *cpu, int ofs, uint64_t idata,
 			    (int)idata);
 			/*  TODO  */
 		} else
-			fatal("[ vr41xx KIU: unimplemented read from "
+			debugmsg(SUBSYS_DEVICE, "vr41xx", VERBOSITY_DEBUG, "[ vr41xx KIU: unimplemented read from "
 			    "KIUSCANREP ]\n");
 		break;
 	case KIUSCANS:
@@ -754,8 +754,7 @@ struct vr41xx_data *dev_vr41xx_init(struct machine *machine,
 		baseaddr = 0xf000000;
 		break;
 	default:
-		printf("Unimplemented VR cpu model\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "vr41xx", "Unimplemented VR cpu model");
 	}
 
 	if (d->cpumodel == 4121 || d->cpumodel == 4181)

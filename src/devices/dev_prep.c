@@ -56,7 +56,7 @@ DEVICE_ACCESS(prep)
 	if (writeflag == MEM_READ) {
 		odata = cpu->machine->isa_pic_data.last_int;
 	} else {
-		fatal("[ prep: write to interrupt register? idata = 0x%016" PRIx64" ]\n", idata);
+		debugmsg(SUBSYS_DEVICE, "prep", VERBOSITY_DEBUG, "[ prep: write to interrupt register? idata = 0x%016" PRIx64" ]", idata);
 	}
 
 	if (writeflag == MEM_READ)

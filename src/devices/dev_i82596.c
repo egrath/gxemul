@@ -592,8 +592,8 @@ static void channel_attention(struct i596_data *d)
 			    d->scp, scp[0], scp[1], scp[2], scp[3], d->sysbus,
 			    iscp, d->scb);
 		if ((d->sysbus & 0x06) != 0x04)
-			fatal("[ i82596: SYSBUS 0x%02x: only the linear mode "
-			    "is implemented ]\n", d->sysbus);
+			debugmsg(SUBSYS_DEVICE, "i82596", VERBOSITY_DEBUG, "[ i82596: SYSBUS 0x%02x: only the linear mode "
+			    "is implemented ]", d->sysbus);
 
 		d->initialized = true;
 		wr32(d, iscp, 0);	/*  BUSY cleared  */

@@ -389,7 +389,7 @@ static void vga_update_text(struct machine *machine, struct vga_data *d,
 	unsigned char *pal = d->fb->rgb_palette;
 
 	if (d->pixel_repx * font_width > 8*8) {
-		fatal("[ too large font ]\n");
+		debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "[ too large font ]\n");
 		return;
 	}
 
@@ -648,13 +648,13 @@ DEVICE_ACCESS(vga_graphics)
 				}
 			modified = 1;
 		} else {
-			fatal("TODO: 4 bit graphics read, mask=0x%02x\n",
+			debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "TODO: 4 bit graphics read, mask=0x%02x",
 			    d->sequencer_reg[VGA_SEQ_MAP_MASK]);
 			for (i=0; i<len; i++)
 				data[i] = random();
 		}
 		break;
-	default:fatal("dev_vga: Unimplemented graphics mode %i\n",
+	default:fatal_error(SUBSYS_DEVICE, "vga", "dev_vga: Unimplemented graphics mode %i",
 		    d->graphics_mode);
 		cpu->running = 0;
 	}
@@ -850,9 +850,8 @@ static void vga_crtc_reg_write(struct machine *machine, struct vga_data *d,
 			    2 * machine->display_md.scaleup;
 			break;
 		default:
-			fatal("TODO! video mode change hack (mode 0x%02x)\n",
+			debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "TODO! video mode change hack (mode 0x%02x)",
 			    d->crtc_reg[0xff]);
-			exit(1);
 		}
 
 		if (d->cur_mode == MODE_CHARCELL) {
@@ -893,7 +892,7 @@ static void vga_crtc_reg_write(struct machine *machine, struct vga_data *d,
 		reset_palette(d, grayscale);
 		register_reset(d);
 		break;
-	default:fatal("[ vga_crtc_reg_write: regnr=0x%02x idata=0x%02x ]\n",
+	default:debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "[ vga_crtc_reg_write: regnr=0x%02x idata=0x%02x ]",
 		    regnr, idata);
 	}
 }
@@ -914,7 +913,7 @@ static void vga_sequencer_reg_write(struct machine *machine, struct vga_data *d,
 		debugmsg(d->subsys, "vga", VERBOSITY_DEBUG,
 		    "vga_sequencer_reg_write: select %i: TODO\n", regnr);
 		break;
-	default:fatal("[ vga_sequencer_reg_write: select %i ]\n", regnr);
+	default:debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "[ vga_sequencer_reg_write: select %i ]", regnr);
 		/*  cpu->running = 0;  */
 	}
 }
@@ -936,7 +935,7 @@ static void vga_graphcontr_reg_write(struct machine *machine,
 		debugmsg(d->subsys, "vga", VERBOSITY_DEBUG,
 		    "vga_graphcontr_reg_write: select %i: TODO\n", regnr);
 		break;
-	default:fatal("[ vga_graphcontr_reg_write: select %i ]\n", regnr);
+	default:debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "[ vga_graphcontr_reg_write: select %i ]", regnr);
 		/*  cpu->running = 0;  */
 	}
 }
@@ -955,7 +954,7 @@ static void vga_attribute_reg_write(struct machine *machine, struct vga_data *d,
 		return;
 
 	switch (regnr) {
-	default:fatal("[ vga_attribute_reg_write: select %i ]\n", regnr);
+	default:debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_DEBUG, "[ vga_attribute_reg_write: select %i ]", regnr);
 		/*  cpu->running = 0;  */
 	}
 }
@@ -998,11 +997,11 @@ DEVICE_ACCESS(vga_ctrl)
 			break;
 		case VGA_ATTRIBUTE_DATA_READ:		/*  0x01  */
 			if (writeflag == MEM_WRITE)
-				fatal("[ dev_vga: WARNING: Write to "
+				debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_WARNING, "[ dev_vga: WARNING: Write to "
 				    "VGA_ATTRIBUTE_DATA_READ? ]\n");
 			else {
 				if (d->attribute_state == 0)
-					fatal("[ dev_vga: WARNING: Read from "
+					debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_WARNING, "[ dev_vga: WARNING: Read from "
 					    "VGA_ATTRIBUTE_DATA_READ, but no"
 					    " register selected? ]\n");
 				else
@@ -1057,7 +1056,7 @@ DEVICE_ACCESS(vga_ctrl)
 				d->palette_read_index = idata;
 				d->palette_read_subindex = 0;
 			} else {
-				fatal("[ dev_vga: WARNING: Read from "
+				debugmsg(SUBSYS_DEVICE, "vga", VERBOSITY_WARNING, "[ dev_vga: WARNING: Read from "
 				    "VGA_DAC_ADDR_WRITE? ]\n");
 				odata = d->palette_write_index;
 			}

@@ -149,8 +149,7 @@ DEVINIT(pmppc)
 	} else if (mem->physical_max == 256*1048576) {
 		d->config1 |= 0x11;
 	} else {
-		fatal("A PM/PPC can have 32, 64, 128, or 256 MB RAM.\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "pmppc", "A PM/PPC can have 32, 64, 128, or 256 MB RAM.\n");
 	}
 
 	memory_device_register(mem, "pmppc_board",

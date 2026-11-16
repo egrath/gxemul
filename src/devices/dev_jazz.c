@@ -159,19 +159,19 @@ size_t dev_jazz_dma_controller(void *dma_controller_data,
 	uint32_t phys_addr;
 
 #if 0
-	fatal("[ dev_jazz_dma_controller(): writeflag=%i, len=%i, data =",
+	debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ dev_jazz_dma_controller(): writeflag=%i, len=%i, data =",
 	    writeflag, (int)len);
 	for (i=0; i<len; i++)
-		fatal(" %02x", data[i]);
-	fatal(" mode=%08x enable=%08x count=%08x addr=%08x",
+		fatal_error(SUBSYS_DEVICE, "jazz", " %02x", data[i]);
+	fatal_error(SUBSYS_DEVICE, "jazz", " mode=%08x enable=%08x count=%08x addr=%08x",
 	    d->dma0_mode, d->dma0_enable, d->dma0_count, d->dma0_addr);
-	fatal(" table=%08x",
+	fatal_error(SUBSYS_DEVICE, "jazz", " table=%08x",
 	    d->dma_translation_table_base);
-	fatal(" ]\n");
+	fatal_error(SUBSYS_DEVICE, "jazz", " ]\n");
 #endif
 
 	if (!(d->dma0_enable & R4030_DMA_ENAB_RUN)) {
-		fatal("[ dev_jazz_dma_controller(): dma not enabled? ]\n");
+		debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ dev_jazz_dma_controller(): dma not enabled? ]\n");
 		/*  return 0;  */
 	}
 
@@ -179,7 +179,7 @@ size_t dev_jazz_dma_controller(void *dma_controller_data,
 	    argument to this function means write to memory.  */
 	enab_writeflag = (d->dma0_enable & R4030_DMA_ENAB_WRITE)? 0 : 1;
 	if (enab_writeflag != writeflag) {
-		fatal("[ dev_jazz_dma_controller(): wrong direction? ]\n");
+		debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ dev_jazz_dma_controller(): wrong direction? ]\n");
 		return 0;
 	}
 
@@ -199,7 +199,7 @@ size_t dev_jazz_dma_controller(void *dma_controller_data,
 		phys_addr &= ~0xfff;	/*  just in case  */
 		phys_addr += (dma_addr & 0xfff);
 
-		/*  fatal(" !!! dma_addr = %08x, phys_addr = %08x\n",
+		/*  fatal_error(SUBSYS_DEVICE, "jazz", " !!! dma_addr = %08x, phys_addr = %08x",
 		    (int)dma_addr, (int)phys_addr);  */
 
 		/*  Speed up the copying by copying 16 or 256 bytes:  */
@@ -276,8 +276,8 @@ DEVICE_ACCESS(jazz)
 	switch (relative_addr) {
 	case R4030_SYS_CONFIG:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ jazz: unimplemented write to R4030_SYS_CONFIG"
-			    ", data=0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz: unimplemented write to R4030_SYS_CONFIG"
+			    ", data=0x%08x ]", (int)idata);
 		} else {
 			/*  Reading the config register should give
 			    0x0104 or 0x0410. Why? TODO  */
@@ -400,12 +400,12 @@ printf("R4030_SYS_ISA_VECTOR: w=%i\n", writeflag);
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ jazz: unimplemented write to address 0x%x"
-			    ", data=0x%02x ]\n", (int)relative_addr,
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz: unimplemented write to address 0x%x"
+			    ", data=0x%02x ]", (int)relative_addr,
 			    (int)idata);
 		} else {
-			fatal("[ jazz: unimplemented read from address 0x%x"
-			    " ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz: unimplemented read from address 0x%x"
+			    " ]", (int)relative_addr);
 		}
 	}
 
@@ -438,12 +438,12 @@ DEVICE_ACCESS(jazz_led)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ jazz_led: unimplemented write to address 0x%x"
-			    ", data=0x%02x ]\n", (int)relative_addr,
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz_led: unimplemented write to address 0x%x"
+			    ", data=0x%02x ]", (int)relative_addr,
 			    (int)idata);
 		} else {
-			fatal("[ jazz_led: unimplemented read from address 0x%x"
-			    " ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz_led: unimplemented read from address 0x%x"
+			    " ]", (int)relative_addr);
 		}
 	}
 
@@ -492,12 +492,12 @@ DEVICE_ACCESS(jazz_a0)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ jazz_isa_a0: unimplemented write to "
-			    "address 0x%x, data=0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz_isa_a0: unimplemented write to "
+			    "address 0x%x, data=0x%02x ]",
 			    (int)relative_addr, (int)idata);
 		} else {
-			fatal("[ jazz_isa_a0: unimplemented read from "
-			    "address 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz_isa_a0: unimplemented read from "
+			    "address 0x%x ]", (int)relative_addr);
 		}
 	}
 
@@ -543,12 +543,12 @@ DEVICE_ACCESS(jazz_20)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ jazz_isa_20: unimplemented write to "
-			    "address 0x%x, data=0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz_isa_20: unimplemented write to "
+			    "address 0x%x, data=0x%02x ]",
 			    (int)relative_addr, (int)idata);
 		} else {
-			fatal("[ jazz_isa_20: unimplemented read from "
-			    "address 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazz_isa_20: unimplemented read from "
+			    "address 0x%x ]", (int)relative_addr);
 		}
 	}
 
@@ -595,12 +595,12 @@ DEVICE_ACCESS(jazz_jazzio)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			fatal("[ jazzio: unimplemented write to address 0x%x"
-			    ", data=0x%02x ]\n", (int)relative_addr,
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazzio: unimplemented write to address 0x%x"
+			    ", data=0x%02x ]", (int)relative_addr,
 			    (int)idata);
 		} else {
-			fatal("[ jazzio: unimplemented read from address 0x%x"
-			    " ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "jazz", VERBOSITY_DEBUG, "[ jazzio: unimplemented read from address 0x%x"
+			    " ]", (int)relative_addr);
 		}
 	}
 

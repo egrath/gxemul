@@ -74,7 +74,7 @@ DEVICE_ACCESS(ahc)
 		relative_addr ^= 3;
 
 	if (len != 1)
-		fatal("[ ahc: ERROR! Unimplemented len %i ]\n", len);
+		debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: ERROR! Unimplemented len %i ]", len);
 
 	if (writeflag == MEM_READ)
 		odata = d->reg[relative_addr];
@@ -86,8 +86,8 @@ DEVICE_ACCESS(ahc)
 			ok = 1; name = "SCSIID";
 			odata = 0;
 		} else {
-			fatal("[ ahc: write to SCSIOFFSET, data = 0x"
-			    "%02x: TODO ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: write to SCSIOFFSET, data = 0x"
+			    "%02x: TODO ]", (int)idata);
 		}
 		break;
 
@@ -112,8 +112,8 @@ DEVICE_ACCESS(ahc)
 		if (writeflag == MEM_READ) {
 			odata = 0;
 		} else {
-			fatal("[ ahc: write to SCSICONF, data = 0x%02x:"
-			    " TODO ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: write to SCSICONF, data = 0x%02x:"
+			    " TODO ]", (int)idata);
 		}
 		break;
 
@@ -132,7 +132,7 @@ DEVICE_ACCESS(ahc)
 	case INTSTAT:
 		ok = 1; name = "INTSTAT";
 		if (writeflag == MEM_WRITE)
-			fatal("[ ahc: write to INTSTAT? data = 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: write to INTSTAT? data = 0x%02x ]",
 			    (int)idata);
 		break;
 
@@ -143,8 +143,8 @@ DEVICE_ACCESS(ahc)
 		} else {
 			ok = 1; name = "CLRINT";
 			if (idata & ~0xf)
-				fatal("[ ahc: write to CLRINT: 0x%02x "
-				    "(TODO) ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: write to CLRINT: 0x%02x "
+				    "(TODO) ]", (int)idata);
 			/*  Clear the lowest 4 bits of intstat:  */
 			d->reg[INTSTAT] &= ~(idata & 0xf);
 		}
@@ -152,10 +152,10 @@ DEVICE_ACCESS(ahc)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			fatal("[ ahc: UNIMPLEMENTED write to address 0x%x, "
-			    "data=0x%02x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: UNIMPLEMENTED write to address 0x%x, "
+			    "data=0x%02x ]", (int)relative_addr, (int)idata);
 		else
-			fatal("[ ahc: UNIMPLEMENTED read from address 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: UNIMPLEMENTED read from address 0x%x ]",
 			    (int)relative_addr);
 	}
 

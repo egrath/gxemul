@@ -172,10 +172,10 @@ DEVICE_ACCESS(algor)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ algor: read from 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "algor", VERBOSITY_DEBUG, "[ algor: read from 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ algor: write to 0x%x: 0x%" PRIx64" ]\n",
+			debugmsg(SUBSYS_DEVICE, "algor", VERBOSITY_DEBUG, "[ algor: write to 0x%x: 0x%" PRIx64" ]",
 			    (int) relative_addr, (uint64_t) idata);
 		}
 	}
@@ -207,8 +207,7 @@ DEVINIT(algor)
 
 	d->base_addr = devinit->addr;
 	if (devinit->addr != 0x1ff00000) {
-		fatal("The Algor base address should be 0x1ff00000.\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "algor", "The Algor base address should be 0x1ff00000.\n");
 	}
 
 	/*  Connect to MIPS irq 2, 3, and 4:  */

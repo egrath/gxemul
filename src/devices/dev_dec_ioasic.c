@@ -164,7 +164,7 @@ size_t dec_ioasic_scsi_dma(void *dma_controller_data, unsigned char *data,
 		/*  At the end of a page, go on to the next one:  */
 		if (done < len && (addr & (IOASIC_DMA_BLOCKSIZE - 1)) == 0) {
 			if (d->scsi_nextptr == 0xffffffff) {
-				fatal("[ dec_ioasic: SCSI DMA overrun ]\n");
+				debugmsg(SUBSYS_DEVICE, "dec_ioasic", VERBOSITY_DEBUG, "[ dec_ioasic: SCSI DMA overrun ]\n");
 				d->intr |= IOASIC_INTR_SCSI_OVRUN;
 				break;
 			}
@@ -639,7 +639,7 @@ DEVICE_ACCESS(dec_ioasic)
 		 *  and a test pattern; one byte per word (see dev_le.c):
 		 */
 		if (writeflag == MEM_WRITE) {
-			fatal("[ dec_ioasic: attempt to write to the station's"
+			debugmsg(SUBSYS_DEVICE, "dec_ioasic", VERBOSITY_DEBUG, "[ dec_ioasic: attempt to write to the station's"
 			    " ethernet address. ignored for now. ]\n");
 		} else if (d->esar != NULL) {
 			uint32_t b = d->esar[(relative_addr -
@@ -678,12 +678,12 @@ DEVICE_ACCESS(dec_ioasic)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			fatal("[ dec_ioasic: unimplemented write to address "
-			    "0x%llx, data=0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dec_ioasic", VERBOSITY_DEBUG, "[ dec_ioasic: unimplemented write to address "
+			    "0x%llx, data=0x%08llx ]",
 			    (long long)relative_addr, (long long)idata);
 		else
-			fatal("[ dec_ioasic: unimplemented read from address "
-			    "0x%llx ]\n", (long long)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dec_ioasic", VERBOSITY_DEBUG, "[ dec_ioasic: unimplemented read from address "
+			    "0x%llx ]", (long long)relative_addr);
 		// exit(1);
 	}
 

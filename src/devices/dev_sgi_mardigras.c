@@ -155,7 +155,7 @@ void mardigras_20400(struct cpu *cpu, struct sgi_mardigras_data *d,
 		case 0x0019100400418008ULL:
 			break;
 		default:
-			fatal("[ sgi_mardigras: unknown draw mode ]\n");
+			debugmsg(SUBSYS_DEVICE, "sgi_mardigras", VERBOSITY_DEBUG, "[ sgi_mardigras: unknown draw mode ]\n");
 		}
 		return;
 	}
@@ -309,8 +309,7 @@ DEVINIT(sgi_mardigras)
 	    mardigras_xsize, mardigras_ysize,
 	    mardigras_xsize, mardigras_ysize, 24, "SGI MardiGras");
 	if (d->fb == NULL) {
-		fprintf(stderr, "dev_sgi_mardigras_init(): out of memory\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "sgi_mardigras",  "dev_sgi_mardigras_init(): out of memory\n");
 	}
 
 	memory_device_register(devinit->machine->memory, devinit->name,

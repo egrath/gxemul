@@ -28,6 +28,7 @@
  *  COMMENT: TURBOchannel bus framework, used in DECstation machines
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -154,8 +155,7 @@ static uint64_t turbochannel_load_rom(struct memory *mem, int slot_nr,
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "turbochannel", "%s: %s", filename, strerror(errno));
 	}
 
 	fseek(f, 0, SEEK_END);
@@ -165,10 +165,9 @@ static uint64_t turbochannel_load_rom(struct memory *mem, int slot_nr,
 	maplen = (uint64_t) filelen * 4;
 	if (filelen <= 0 ||
 	    baseaddr + rom_offset + maplen - 1 > endaddr) {
-		fprintf(stderr, "%s: a TURBOchannel option ROM image must"
-		    " be between 1 and %i bytes\n", filename,
+		fatal_error(SUBSYS_DEVICE, "turbochannel",  "%s: a TURBOchannel option ROM image must"
+		    " be between 1 and %i bytes", filename,
 		    (int) ((endaddr + 1 - baseaddr - rom_offset) / 4));
-		exit(1);
 	}
 
 	CHECK_ALLOCATION(rd = (struct turbochannel_rom_data *)
@@ -179,9 +178,8 @@ static uint64_t turbochannel_load_rom(struct memory *mem, int slot_nr,
 	CHECK_ALLOCATION(rd->image = (unsigned char *) malloc(filelen));
 
 	if (fread(rd->image, 1, filelen, f) != (size_t) filelen) {
-		fprintf(stderr, "%s: could not read the option ROM image\n",
+		fatal_error(SUBSYS_DEVICE, "turbochannel",  "%s: could not read the option ROM image",
 		    filename);
-		exit(1);
 	}
 	fclose(f);
 
@@ -353,8 +351,7 @@ void dev_turbochannel_init(struct machine *machine, struct memory *mem,
 	}
 
 	if (strlen(device_name) > 8) {
-		fprintf(stderr, "dev_turbochannel_init(): bad device_name\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "turbochannel",  "dev_turbochannel_init(): bad device_name\n");
 	}
 
 	CHECK_ALLOCATION(d = (struct turbochannel_data *) malloc(sizeof(struct turbochannel_data)));
@@ -444,7 +441,7 @@ void dev_turbochannel_init(struct machine *machine, struct memory *mem,
 	} else if (strcmp(device_name, "PMAG-EA")==0) {
 		/*  pxg+ in NetBSD: TODO  (not supported by the kernel
 		    I've tried)  */
-		fatal("TODO (see dev_turbochannel.c)\n");
+		debugmsg(SUBSYS_DEVICE, "turbochannel", VERBOSITY_DEBUG, "TODO (see dev_turbochannel.c)\n");
 		rom_offset = 0x3c0000;
 	} else if (strcmp(device_name, "PMAG-FA")==0) {
 		/*  "pxg+ Turbo" in NetBSD  */
@@ -476,7 +473,7 @@ void dev_turbochannel_init(struct machine *machine, struct memory *mem,
 		rom_offset = 0;
 		rom_length = 4*1048576;
 	} else {
-		fatal("warning: unknown TURBOchannel device name \"%s\"\n",
+		fatal_error(SUBSYS_DEVICE, "turbochannel", "warning: unknown TURBOchannel device name \"%s\"",
 		    device_name);
 	}
 

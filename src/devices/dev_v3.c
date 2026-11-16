@@ -166,7 +166,7 @@ DEVICE_ACCESS(v3_pci)
 			break;
 	dev -= 24;
 	if (dev == 8) {
-		fatal("[ v3_pci: NO DEVICE? ]\n");
+		debugmsg(SUBSYS_DEVICE, "v3", VERBOSITY_DEBUG, "[ v3_pci: NO DEVICE? ]\n");
 		dev = 0;
 	}
 	func = (relative_addr >> 8) & 7;
@@ -225,12 +225,12 @@ DEVICE_ACCESS(v3)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ v3: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "v3", VERBOSITY_DEBUG, "[ v3: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ v3: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "v3", VERBOSITY_DEBUG, "[ v3: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
 	}
 
@@ -266,9 +266,8 @@ DEVINIT(v3)
 		d->secondary_mask1 = 0x18;
 		break;
 
-	default:fatal("!\n! WARNING: v3 for non-implemented machine"
-		    " type %i\n!\n", devinit->machine->machine_type);
-		exit(1);
+	default:debugmsg(SUBSYS_DEVICE, "v3", VERBOSITY_WARNING, "!\n! WARNING: v3 for non-implemented machine"
+		    " type %i\n!", devinit->machine->machine_type);
 	}
 
 	/*
@@ -327,9 +326,8 @@ DEVINIT(v3)
 		bus_pci_add(devinit->machine, d->pci_data,
 		    devinit->machine->memory, 0, 2, 1, "piix3_ide");
 		break;
-	default:fatal("!\n! WARNING: v3 for non-implemented machine"
-		    " type %i\n!\n", devinit->machine->machine_type);
-		exit(1);
+	default:debugmsg(SUBSYS_DEVICE, "v3", VERBOSITY_WARNING, "!\n! WARNING: v3 for non-implemented machine"
+		    " type %i\n!", devinit->machine->machine_type);
 	}
 
 	/*  PCI configuration space:  */

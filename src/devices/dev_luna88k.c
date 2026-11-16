@@ -156,7 +156,7 @@ static void add_to_sio_queue(struct luna88k_data* d, int n, uint8_t c)
 		d->sio_queue_tail[n] = 0;
 
 	if (d->sio_queue_tail[n] == d->sio_queue_head[n])
-		fatal("[ luna88k: add_to_sio_queue overrun; increase SIO_QUEUE_SIZE ]\n");
+		debugmsg(SUBSYS_DEVICE, "luna88k", VERBOSITY_DEBUG, "[ luna88k: add_to_sio_queue overrun; increase SIO_QUEUE_SIZE ]\n");
 }
 
 static void reassert_interrupts(struct luna88k_data *d)
@@ -570,7 +570,7 @@ DEVICE_ACCESS(luna88k)
 			odata >>= ((3 - (addr & 3)) * 8);
 			memory_writemax64(cpu, data, len, odata);
 		} else {
-			fatal("TODO: luna88k byte write to fuse\n");
+			debugmsg(SUBSYS_DEVICE, "luna88k", VERBOSITY_DEBUG, "TODO: luna88k byte write to fuse\n");
 		}
 		return 1;
 	}
@@ -768,7 +768,7 @@ DEVICE_ACCESS(luna88k)
 						d->mouse_enable = 1;
 						break;
 					default:
-						fatal("[ luna88k: sio write to dev 1 (keyboard/mouse): 0x%02x ]\n", (int)idata);
+						debugmsg(SUBSYS_DEVICE, "luna88k", VERBOSITY_DEBUG, "[ luna88k: sio write to dev 1 (keyboard/mouse): 0x%02x ]", (int)idata);
 					}
 				}
 
@@ -812,8 +812,7 @@ DEVICE_ACCESS(luna88k)
 		cpunr = (addr - INT_ST_MASK0) / 4;
 		if (writeflag == MEM_WRITE) {
 			if ((idata & 0x03ffffff) != 0x00000000) {
-				fatal("[ TODO: luna88k interrupts, idata = 0x%08x, what to do with low bits? ]\n", (uint32_t)idata);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "luna88k", VERBOSITY_DEBUG, "[ TODO: luna88k interrupts, idata = 0x%08x, what to do with low bits? ]", (uint32_t)idata);
 			}
 
 			d->interrupt_enable[cpunr] = idata;
@@ -994,8 +993,7 @@ DEVINIT(luna88k)
 	devinit->machine->main_console_handle = d->console_handle;
 
 	if (devinit->machine->ncpus > 4) {
-		printf("LUNA 88K can't have more than 4 CPUs.\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "luna88k", "LUNA 88K can't have more than 4 CPUs.");
 	}
 
 	add_cmmu_for_cpu(devinit, 0, CMMU_I0, CMMU_D0);

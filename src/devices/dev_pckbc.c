@@ -141,7 +141,7 @@ void pckbc_add_code(struct pckbc_data *d, int code, int port)
 	/*  Add at the head, read at the tail:  */
 	d->head[port] = (d->head[port]+1) % MAX_8042_QUEUELEN;
 	if (d->head[port] == d->tail[port])
-		fatal("[ pckbc: queue overrun, port %i! ]\n", port);
+		debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: queue overrun, port %i! ]", port);
 
 	d->key_queue[port][d->head[port]] = code;
 }
@@ -155,7 +155,7 @@ void pckbc_add_code(struct pckbc_data *d, int code, int port)
 int pckbc_get_code(struct pckbc_data *d, int port)
 {
 	if (d->head[port] == d->tail[port])
-		fatal("[ pckbc: queue empty, port %i! ]\n", port);
+		debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: queue empty, port %i! ]", port);
 	else
 		d->tail[port] = (d->tail[port]+1) % MAX_8042_QUEUELEN;
 
@@ -861,7 +861,7 @@ void pckbc_reassert_interrupts(struct pckbc_data *d)
 
 		if (pending && ints_enabled && d->rx_int_enable[port_nr]) {
 			if (!d->currently_asserted[port_nr]) {
-				// fatal("[ pckbc: interrupt port %i ]\n", port_nr);
+				// debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: interrupt port %i ]", port_nr);
 				if (port_nr == 0)
 					INTERRUPT_ASSERT(d->irq_keyboard);
 				else
@@ -871,7 +871,7 @@ void pckbc_reassert_interrupts(struct pckbc_data *d)
 			d->currently_asserted[port_nr] = 1;
 		} else {
 			if (d->currently_asserted[port_nr]) {
-				// fatal("[ pckbc: DEASSERT interrupt port %i ]\n", port_nr);
+				// debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: DEASSERT interrupt port %i ]", port_nr);
 				if (port_nr == 0)
 					INTERRUPT_DEASSERT(d->irq_keyboard);
 				else
@@ -968,7 +968,7 @@ static void dev_pckbc_command(struct pckbc_data *d, int port_nr)
 #if 0
 	// Mouse port debugging:
 	if (port_nr == 1)
-		fatal("[ pckbc: (port %i) command 0x%02x ]\n", port_nr, cmd);
+		debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: (port %i) command 0x%02x ]", port_nr, cmd);
 #endif
 
 	if (d->state[port_nr] == STATE_WAITING_FOR_TRANSLTABLE) {
@@ -981,14 +981,14 @@ static void dev_pckbc_command(struct pckbc_data *d, int port_nr)
 			//  resulting in a scancode byte 43, 41 or 3f from the
 			//  keyboard." according to
 			// https://www.win.tue.nl/~aeb/linux/kbd/scancodes-10.html#scancodesets
-			fatal("[ pckbc: TODO: return current translation table ]\n");
+			debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: TODO: return current translation table ]\n");
 			break;
 		case 1:	// Fall-through.
 		case 2:	// Fall-through.
 		case 3:	d->translation_table = cmd;
 			break;
-		default:fatal("[ pckbc: (port %i) translation table "
-			    "0x%02x is NOT YET IMPLEMENTED ]\n",
+		default:debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: (port %i) translation table "
+			    "0x%02x is NOT YET IMPLEMENTED ]",
 			    port_nr, cmd);
 		}
 
@@ -1186,10 +1186,10 @@ DEVICE_ACCESS(pckbc)
 
 #ifdef PCKBC_DEBUG
 	if (writeflag == MEM_WRITE)
-		fatal("[ pckbc: write to addr 0x%x: 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: write to addr 0x%x: 0x%x ]",
 		    (int)relative_addr, (int)idata);
 	else
-		fatal("[ pckbc: read from addr 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: read from addr 0x%x ]",
 		    (int)relative_addr);
 #endif
 
@@ -1273,10 +1273,10 @@ DEVICE_ACCESS(pckbc)
 			    (int)odata);  */
 		} else {
 			if (port_nr == 1) {
-				fatal("[ pckbc: write to DATA:");
+				debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: write to DATA:");
 				for (i=0; i<len; i++)
-					fatal(" %02x", data[i]);
-				fatal(" ]\n");
+					fatal_error(SUBSYS_DEVICE, "pckbc", " %02x", data[i]);
+				fatal_error(SUBSYS_DEVICE, "pckbc", " ]\n");
 			}
 			
 			switch (d->state[port_nr]) {
@@ -1397,7 +1397,7 @@ DEVICE_ACCESS(pckbc)
 				d->state[port_nr] = STATE_WAITING_FOR_AUX;
 				break;
 			default:
-				fatal("[ pckbc: unknown CONTROL 0x%x ]\n",
+				debugmsg(SUBSYS_DEVICE, "pckbc", VERBOSITY_DEBUG, "[ pckbc: unknown CONTROL 0x%x ]",
 				    (int)idata);
 				d->state[port_nr] = STATE_NORMAL;
 			}

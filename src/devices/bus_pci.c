@@ -80,7 +80,7 @@ void bus_pci_decompose_1(uint32_t t, int *bus, int *dev, int *func, int *reg)
 
 	/*  Warn about unaligned register access:  */
 	if (t & 3)
-		fatal("[ bus_pci_decompose_1: WARNING: reg = 0x%02x ]\n",
+		debugmsg(SUBSYS_DEVICE, "bus_pci", VERBOSITY_WARNING, "[ bus_pci_decompose_1: WARNING: reg = 0x%02x ]",
 		    t & 0xff);
 }
 
@@ -116,8 +116,8 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 			else
 				*data = 0;
 		} else {
-			fatal("[ bus_pci_data_access(): write to non-existant"
-			    " device, bus %i func %i device %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "bus_pci", VERBOSITY_DEBUG, "[ bus_pci_data_access(): write to non-existant"
+			    " device, bus %i func %i device %i ]",
 			    pci_data->cur_bus, pci_data->cur_func,
 			    pci_data->cur_device);
 		}
@@ -180,8 +180,8 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 			    detection of PCI devices fails:  */
 			if (pci_data->cur_reg == PCI_COMMAND_STATUS_REG
 			    && !((*data) & PCI_COMMAND_IO_ENABLE)) {
-				fatal("\n[ NetBSD PCI detection stuff not"
-				    " yet implemented for device '%s' ]\n",
+				fatal_error(SUBSYS_DEVICE, "bus_pci", "\n[ NetBSD PCI detection stuff not"
+				    " yet implemented for device '%s' ]",
 				    dev->name);
 			}
 		}
@@ -259,8 +259,7 @@ void bus_pci_setaddr(struct cpu *cpu, struct pci_data *pci_data,
 	int bus, int device, int function, int reg)
 {
 	if (cpu == NULL || pci_data == NULL) {
-		fatal("bus_pci_setaddr(): NULL ptr\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "bus_pci", "bus_pci_setaddr(): NULL ptr\n");
 	}
 
 	pci_data->cur_bus = bus;
@@ -284,8 +283,7 @@ void bus_pci_add(struct machine *machine, struct pci_data *pci_data,
 	void (*init)(struct machine *, struct memory *, struct pci_device *);
 
 	if (pci_data == NULL) {
-		fatal("bus_pci_add(): pci_data == NULL!\n");
-		abort();
+		fatal_error(SUBSYS_DEVICE, "bus_pci", "bus_pci_add(): pci_data == NULL!\n");
 	}
 
 	/*  Find the PCI device:  */
@@ -296,9 +294,8 @@ void bus_pci_add(struct machine *machine, struct pci_data *pci_data,
 	while (pd != NULL) {
 		if (pd->bus == bus && pd->device == device &&
 		    pd->function == function) {
-			fatal("bus_pci_add(): (bus %i, device %i, function"
-			    " %i) already in use\n", bus, device, function);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "bus_pci", "bus_pci_add(): (bus %i, device %i, function"
+			    " %i) already in use", bus, device, function);
 		}
 		pd = pd->next;
 	}
@@ -332,8 +329,7 @@ void bus_pci_add(struct machine *machine, struct pci_data *pci_data,
 		    0 : 0x00100000 - 1);
 
 	if (init == NULL) {
-		fatal("No init function for PCI device \"%s\"?\n", name);
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "bus_pci", "No init function for PCI device \"%s\"?", name);
 	}
 
 	/*  Call the PCI device' init function:  */
@@ -562,8 +558,7 @@ PCIINIT(ali_m1543)
 		    BUS_ISA_PCKBC_FORCE_USE | BUS_ISA_PCKBC_NONPCSTYLE,
 		    0x7c000000, 0x80000000);
 		break;
-	default:fatal("ali_m1543 init: unimplemented machine type\n");
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "ali_m1543 init: unimplemented machine type\n");
 	}
 }
 
@@ -583,8 +578,7 @@ PCIINIT(ali_m5229)
 		snprintf(irqstr, sizeof(irqstr), "%s.10.isa",
 		    pd->pcibus->irq_path);
 		break;
-	default:fatal("ali_m5229 init: unimplemented machine type\n");
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "ali_m5229 init: unimplemented machine type\n");
 	}
 
 	if (diskimage_exist(machine, 0, DISKIMAGE_IDE) ||
@@ -723,9 +717,8 @@ PCIINIT(pcn)
 		irq = (1 << 8) + 10;	/*  TODO  */
 		break;
 
-	default:fatal("pcn in non-implemented machine type %i\n",
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "pcn in non-implemented machine type %i",
 		    machine->machine_type);
-		exit(1);
 	}
 
 	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x01100000 | irq);
@@ -772,9 +765,8 @@ PCIINIT(i31244)
 		/*  S-PCI-X slot uses PCI IRQ A, int 29  */
 		irq = (1 << 8) + 29;
 		break;
-	default:fatal("i31244 in non-implemented machine type %i\n",
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "i31244 in non-implemented machine type %i",
 		    machine->machine_type);
-		exit(1);
 	}
 
 	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x01100000 | irq);
@@ -915,9 +907,8 @@ PCIINIT(sym53c810)
 		snprintf(irqstr, sizeof(irqstr), "%s.pirq.3",
 		    pd->pcibus->irq_path_pci);
 		break;
-	default:fatal("sym53c810 for this machine has not been "
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "sym53c810 for this machine has not been "
 		    "implemented yet\n");
-		exit(1);
 	}
 
 	pd->extra = dev_sym53c810_init(machine, mem, pd->pcibus, irqstr);
@@ -1266,8 +1257,7 @@ PCIINIT(symphony_83c553)
 		bus_isa_init(machine, pd->pcibus->irq_path_isa,
 		    0, 0x7c000000, 0x80000000);
 		break;
-	default:fatal("symphony_83c553 init: unimplemented machine type\n");
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "symphony_83c553 init: unimplemented machine type\n");
 	}
 }
 
@@ -1380,9 +1370,8 @@ PCIINIT(rtl8139c)
 		irq = 5;
 		pci_int_line = 0x105;
 		break;
-	default:fatal("rtl8139c for this machine has not been "
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "rtl8139c for this machine has not been "
 		    "implemented yet\n");
-		exit(1);
 	}
 
 	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x28140000 | pci_int_line);
@@ -1474,8 +1463,7 @@ PCIINIT(dec21040)
 	char irqstr[300];
 
 	if (machine->machine_type != MACHINE_AVANTI) {
-		fatal("dec21040 for this machine has not been implemented\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "bus_pci", "dec21040 for this machine has not been implemented\n");
 	}
 
 	PCI_SET_DATA(PCI_ID_REG, PCI_ID_CODE(PCI_VENDOR_DEC,
@@ -1680,9 +1668,8 @@ PCIINIT(dec21030)
 	case MACHINE_ARC:
 		base = 0x100000000ULL;
 		break;
-	default:fatal("dec21030 in non-implemented machine type %i\n",
+	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "dec21030 in non-implemented machine type %i",
 		    machine->machine_type);
-		exit(1);
 	}
 
 	snprintf(tmpstr, sizeof(tmpstr), "dec21030 addr=0x%llx",

@@ -94,9 +94,8 @@ static void eeprom_clk(struct rtl8139c_data *d)
 			d->eeprom_cur_data = d->eeprom_reg[addr % EEPROM_SIZE];
 			break;
 
-		default:fatal("[ rtl8139c eeprom: only the read command has"
+		default:debugmsg(SUBSYS_DEVICE, "rtl8139c", VERBOSITY_DEBUG, "[ rtl8139c eeprom: only the read command has"
 			    " been implemented. sorry. ]\n");
-			exit(1);
 		}
 	}
 
@@ -170,22 +169,20 @@ DEVICE_ACCESS(rtl8139c)
 		    a 0x01 to this address, in re_reset().  */
 		if (writeflag == MEM_WRITE) {
 			if (idata != 0x01) {
-				fatal("rtl8139c: unimplemented write to"
+				fatal_error(SUBSYS_DEVICE, "rtl8139c", "rtl8139c: unimplemented write to"
 				    " register 0x82.\n");
-				exit(1);
 			}
 		}
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ rtl8139c: unimplemented write to "
-			    "offset 0x%x: data=0x%x ]\n", (int)
+			debugmsg(SUBSYS_DEVICE, "rtl8139c", VERBOSITY_DEBUG, "[ rtl8139c: unimplemented write to "
+			    "offset 0x%x: data=0x%x ]", (int)
 			    relative_addr, (int)idata);
 		} else {
-			fatal("[ rtl8139c: unimplemented read from "
-			    "offset 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "rtl8139c", VERBOSITY_DEBUG, "[ rtl8139c: unimplemented read from "
+			    "offset 0x%x ]", (int)relative_addr);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

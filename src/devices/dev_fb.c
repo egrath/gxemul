@@ -125,13 +125,12 @@ void dev_fb_resize(struct vfb_data *d, int new_xsize, int new_ysize)
 	size_t size;
 
 	if (d == NULL) {
-		fatal("dev_fb_resize(): d == NULL\n");
+		fatal_error(SUBSYS_DEVICE, "fb", "dev_fb_resize(): d == NULL\n");
 		return;
 	}
 
 	if (new_xsize < 10 || new_ysize < 10) {
-		fatal("dev_fb_resize(): size too small.\n");
-		exit(1);
+		fatal_error(SUBSYS_DEVICE, "fb", "dev_fb_resize(): size too small.\n");
 	}
 
 	new_bytes_per_line = new_xsize * d->bit_depth / 8;
@@ -270,9 +269,8 @@ void framebuffer_blockcopyfill(struct vfb_data *d, int fillflag, int fill_r,
 				} else if (d->bit_depth == 8) {
 					memset(buf, fill_r, linelen);
 				} else {
-					fatal("Unimplemented bit-depth (%i)"
-					    " for fb fill\n", d->bit_depth);
-					exit(1);
+					fatal_error(SUBSYS_DEVICE, "fb", "Unimplemented bit-depth (%i)"
+					    " for fb fill", d->bit_depth);
 				}
 			}
 
@@ -477,17 +475,17 @@ DEVICE_ACCESS(fb)
 
 #ifdef FB_DEBUG
 	if (writeflag == MEM_WRITE) { if (data[0]) {
-		fatal("[ dev_fb: write  to addr=%08lx, data = ",
+		debugmsg(SUBSYS_DEVICE, "fb", VERBOSITY_DEBUG, "[ dev_fb: write  to addr=%08lx, data = ",
 		    (long)relative_addr);
 		for (i=0; i<len; i++)
-			fatal("%02x ", data[i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "fb", "%02x ", data[i]);
+		fatal_error(SUBSYS_DEVICE, "fb", "]\n");
 	} else {
-		fatal("[ dev_fb: read from addr=%08lx, data = ",
+		debugmsg(SUBSYS_DEVICE, "fb", VERBOSITY_DEBUG, "[ dev_fb: read from addr=%08lx, data = ",
 		    (long)relative_addr);
 		for (i=0; i<len; i++)
-			fatal("%02x ", d->framebuffer[relative_addr + i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "fb", "%02x ", d->framebuffer[relative_addr + i]);
+		fatal_error(SUBSYS_DEVICE, "fb", "]\n");
 	}
 #endif
 

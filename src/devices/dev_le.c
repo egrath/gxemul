@@ -904,10 +904,10 @@ DEVICE_ACCESS(le_sram)
 
 #ifdef LE_DEBUG
 	if (writeflag == MEM_WRITE) {
-		fatal("[ le_sram: write to addr 0x%06x: ", (int)relative_addr);
+		debugmsg(SUBSYS_DEVICE, "le", VERBOSITY_DEBUG, "[ le_sram: write to addr 0x%06x: ", (int)relative_addr);
 		for (i=0; i<len; i++)
-			fatal("%02x ", data[i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "le", "%02x ", data[i]);
+		fatal_error(SUBSYS_DEVICE, "le", "]\n");
 	}
 #endif
 
@@ -955,10 +955,10 @@ DEVICE_ACCESS(le)
 
 #ifdef LE_DEBUG
 	if (writeflag == MEM_WRITE) {
-		fatal("[ le: write to addr 0x%06x: ", (int)relative_addr);
+		debugmsg(SUBSYS_DEVICE, "le", VERBOSITY_DEBUG, "[ le: write to addr 0x%06x: ", (int)relative_addr);
 		for (i=0; i<len; i++)
-			fatal("%02x ", data[i]);
-		fatal("]\n");
+			fatal_error(SUBSYS_DEVICE, "le", "%02x ", data[i]);
+		fatal_error(SUBSYS_DEVICE, "le", "]\n");
 	}
 #endif
 
@@ -971,11 +971,11 @@ DEVICE_ACCESS(le)
 		if (writeflag == MEM_READ) {
 			odata = (a << 24) + (a << 16) + (a << 8) + a;
 		} else {
-			fatal("[ le: WRITE to ethernet addr (%08lx):",
+			debugmsg(SUBSYS_DEVICE, "le", VERBOSITY_DEBUG, "[ le: WRITE to ethernet addr (%08lx):",
 			    (long)relative_addr);
 			for (i=0; i<len; i++)
-				fatal(" %02x", data[i]);
-			fatal(" ]\n");
+				fatal_error(SUBSYS_DEVICE, "le", " %02x", data[i]);
+			fatal_error(SUBSYS_DEVICE, "le", " ]\n");
 		}
 
 		retval = 13;	/*  13 cycles  */

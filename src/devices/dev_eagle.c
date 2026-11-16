@@ -177,14 +177,12 @@ DEVINIT(eagle)
 			bus_pci_add(devinit->machine, d->pci_data,
 			    devinit->machine->memory, 0, 11, 0, "i82378zb");
 			break;
-		default:fatal("unimplemented machine subtype for "
+		default:fatal_error(SUBSYS_DEVICE, "eagle", "unimplemented machine subtype for "
 			    "eagle/mvmeppc\n");
-			exit(1);
 		}
 		break;
 
-	default:fatal("unimplemented machine type for eagle\n");
-		exit(1);
+	default:fatal_error(SUBSYS_DEVICE, "eagle", "unimplemented machine type for eagle\n");
 	}
 
 	devinit->return_ptr = d->pci_data;

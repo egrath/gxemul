@@ -375,13 +375,12 @@ DEVICE_ACCESS(i80321)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ i80321: read from 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "i80321", VERBOSITY_DEBUG, "[ i80321: read from 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ i80321: write to 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "i80321", VERBOSITY_DEBUG, "[ i80321: write to 0x%x: 0x%llx ]",
 			    (int)relative_addr, (long long)idata);
 		}
-		exit(1);
 	}
 
 	if (n != NULL) {

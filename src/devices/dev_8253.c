@@ -358,13 +358,12 @@ DEVICE_ACCESS(8253)
 		break;
 
 	default:if (writeflag == MEM_WRITE) {
-			fatal("[ 8253: unimplemented write to address 0x%x"
-			    " data=0x%02x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "8253", VERBOSITY_DEBUG, "[ 8253: unimplemented write to address 0x%x"
+			    " data=0x%02x ]", (int)relative_addr, (int)idata);
 		} else {
-			fatal("[ 8253: unimplemented read from address 0x%x "
-			    "]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "8253", VERBOSITY_DEBUG, "[ 8253: unimplemented read from address 0x%x "
+			    "]", (int)relative_addr);
 		}
-		exit(1);
 	}
 
 	if (writeflag == MEM_READ)

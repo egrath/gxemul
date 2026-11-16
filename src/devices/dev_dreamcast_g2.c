@@ -155,8 +155,7 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 			debug("[ dreamcast_g2_extdma: write to channel %i:"
 			    " CHAN_ENABLE = 0x%08x ]\n", channel, (int) idata);
 			if (idata != 0) {
-				fatal("EXTDMA_CTRL_CHAN_ENABLE: todo\n");
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_g2", "EXTDMA_CTRL_CHAN_ENABLE: todo\n");
 			}
 		}
 		break;
@@ -166,8 +165,7 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 			debug("[ dreamcast_g2_extdma: write to channel %i:"
 			    " XFER_ENABLE = 0x%08x ]\n", channel, (int) idata);
 			if (idata != 0) {
-				fatal("EXTDMA_CTRL_XFER_ENABLE: todo\n");
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_g2", "EXTDMA_CTRL_XFER_ENABLE: todo\n");
 			}
 		}
 		break;
@@ -177,10 +175,9 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 			debug("[ dreamcast_g2_extdma: write to channel %i:"
 			    " STATUS = 0x%08x ]\n", channel, (int) idata);
 			if (idata != 0) {
-				fatal("[ dreamcast_g2_extdma: write to channel %i:"
-				    " STATUS = 0x%08x: TODO (start transfer?) ]\n",
+				debugmsg(SUBSYS_DEVICE, "dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
+				    " STATUS = 0x%08x: TODO (start transfer?) ]",
 				    channel, (int) idata);
-				exit(1);
 			}
 		}
 		break;
@@ -205,22 +202,19 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 		if (writeflag == MEM_WRITE) {
 			if (idata != EXTDMA_MAGIC_VALUE	&&
 			    idata != EXTDMA_MAGIC_VALUE_ROM) {
-				fatal("Unimplemented g2 extdma magic "
-				    "vaule 0x%x\n", (int) idata);
-				exit(1);
+				fatal_error(SUBSYS_DEVICE, "dreamcast_g2", "Unimplemented g2 extdma magic "
+				    "vaule 0x%x", (int) idata);
 			}
 		}
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ dreamcast_g2_extdma: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: read from addr 0x%x ]",
 			    (int)relative_addr);
 		} else {
-			fatal("[ dreamcast_g2_extdma: write to addr 0x%x: "
-			    "0x%x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to addr 0x%x: "
+			    "0x%x ]", (int)relative_addr, (int)idata);
 		}
-
-		exit(1);
 	}
 
 	/*  Default write:  */
@@ -251,8 +245,7 @@ DEVICE_ACCESS(dreamcast_g2_misc)
 	case 0x64:
 		/*  Writing 0x1fffff to 0x5f74e4 resets a disabled GD-ROM drive?  */
 		if (writeflag != MEM_WRITE || idata != 0x1fffff) {
-			fatal("[ dreamcast_g2_misc: unimplemented 0xe4 ]\n");
-			exit(1);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_misc: unimplemented 0xe4 ]\n");
 		}
 		break;
 

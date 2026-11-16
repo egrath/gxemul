@@ -115,7 +115,7 @@ static void check_cpu_masks(struct cpu *cpu, struct bebox_data *d)
 	d->cpu1_int_mask &= 0x7fffffff;
 	if ((d->cpu0_int_mask | d->cpu1_int_mask) !=
 	    (d->cpu0_int_mask ^ d->cpu1_int_mask))
-		fatal("check_cpu_masks(): BeBox cpu int masks collide!\n");
+		fatal_error(SUBSYS_DEVICE, "bebox", "check_cpu_masks(): BeBox cpu int masks collide!\n");
 }
 
 
@@ -174,17 +174,17 @@ DEVICE_ACCESS(bebox)
 			if (cpu->cpu_id == 1)
 				odata |= 0x02000000;
 		} else {
-			fatal("[ bebox: unimplemented write to 0x3f0:"
-			    " 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "bebox", VERBOSITY_DEBUG, "[ bebox: unimplemented write to 0x3f0:"
+			    " 0x%08x ]", (int)idata);
 		}
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			fatal("[ bebox: unimplemented read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "bebox", VERBOSITY_DEBUG, "[ bebox: unimplemented read from 0x%08lx ]",
 			    (long)relative_addr);
 		} else {
-			fatal("[ bebox: unimplemented write to 0x%08lx: 0x"
-			    "%08x ]\n", (long)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "bebox", VERBOSITY_DEBUG, "[ bebox: unimplemented write to 0x%08lx: 0x"
+			    "%08x ]", (long)relative_addr, (int)idata);
 		}
 	}
 
@@ -208,9 +208,8 @@ DEVINIT(bebox)
 	/*  Connect to the two BeBox CPUs:  */
 	for (i=0; i<2; i++) {
 		if (i >= machine->ncpus) {
-			fatal("FATAL ERROR: The machine seem to be "
-			    "lacking cpu nr %i (0-based)\n", i);
-			exit(1);
+			fatal_error(SUBSYS_DEVICE, "bebox", "FATAL ERROR: The machine seem to be "
+			    "lacking cpu nr %i (0-based)", i);
 		}
 
 		snprintf(n, sizeof(n), "%s.cpu[%i]", machine->path, i);

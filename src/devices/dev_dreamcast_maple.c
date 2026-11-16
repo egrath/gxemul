@@ -142,7 +142,7 @@ DEVICE_TICK(maple)
 		d->char_queue[d->char_queue_head] = key;
 		d->char_queue_head = (d->char_queue_head + 1) % MAX_CHARS;
 		if (d->char_queue_head == d->char_queue_tail)
-			fatal("[ dreamcast_maple: KEYBOARD QUEUE OVERRUN! ]\n");
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: KEYBOARD QUEUE OVERRUN! ]\n");
 
 		/*
 		 *  NOTE/TODO:
@@ -213,7 +213,7 @@ DEVICE_TICK(maple)
 			d->controller_queue_head =
 			    (d->controller_queue_head + 1) % MAX_CONTROLLER_DATA;
 			if (d->controller_queue_head == d->controller_queue_tail)
-				fatal("[ dreamcast_maple: CONTROLLER QUEUE "
+				debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: CONTROLLER QUEUE "
 				    "OVERRUN! ]\n");
 		}
 	}
@@ -394,8 +394,8 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 	 *   Comstedt's Maple demo program.
 	 */
 	if (addr & 0x1f) {
-		fatal("[ dreamcast_maple: dmaaddr 0x%08" PRIx32" is NOT"
-		    " 32-byte aligned; aborting ]\n", addr);
+		debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: dmaaddr 0x%08" PRIx32" is NOT"
+		    " 32-byte aligned; aborting ]", addr);
 		return;
 	}
 
@@ -419,11 +419,10 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 		// int datalen = buf[0] * sizeof(uint32_t);
 
 		if (buf[1] & 2) {
-			fatal("[ dreamcast_maple: TODO: GUN bit. ]\n");
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: TODO: GUN bit. ]");
 			/*  TODO: Set some bits in A05F80C4 to indicate
 			    which raster position a lightgun is pointing
 			    at!  */
-			exit(1);
 		}
 		port = buf[2];
 		last_message = buf[3] & 0x80;
@@ -431,8 +430,8 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 		    + (buf[7] << 24);
 
 		if (receive_addr & 0xe000001f)
-			fatal("[ dreamcast_maple: WARNING! receive address 0x"
-			    "%08" PRIx32" isn't valid! ]\n", receive_addr);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_WARNING, "[ dreamcast_maple: WARNING! receive address 0x"
+			    "%08" PRIx32" isn't valid! ]", receive_addr);
 
 		/*  Read the command word for this message:  */
 		cpu->memory_rw(cpu, cpu->mem, addr, (unsigned char *) (void *) &buf, 4, MEM_READ,
@@ -454,13 +453,12 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 		case 0x04: unit = 3; break;
 		case 0x08: unit = 4; break;
 		case 0x10: unit = 5; break;
-		default: fatal("[ dreamcast_maple: ERROR! multiple "
-			    "units? Not yet implemented. to = 0x%02x ]\n", to);
-			exit(1);
+		default: debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: ERROR! multiple "
+			    "units? Not yet implemented. to = 0x%02x ]", to);
 		}
 
-		/*  fatal("[ dreamcast_maple: cmd=0x%02x, port=%c, unit=%i"
-		    ", datalen=%i words. receive_addr=0x%08x ]\n",
+		/*  debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: cmd=0x%02x, port=%c, unit=%i"
+		    ", datalen=%i words. receive_addr=0x%08x ]",
 		    cmd, port+'A', unit, datalen_cmd, receive_addr);  */
 
 		/*
@@ -514,18 +512,16 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 				maple_getcond_keyboard_response(
 				    d, cpu, port, receive_addr);
 			} else {
-				fatal("[ dreamcast_maple: WARNING: GETCOND: "
-				    "UNIMPLEMENTED 0x%08" PRIx32" ]\n", cond);
-				exit(1);
+				debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_WARNING, "[ dreamcast_maple: WARNING: GETCOND: "
+				    "UNIMPLEMENTED 0x%08" PRIx32" ]", cond);
 			}
 			break;
 
 		case MAPLE_COMMAND_BWRITE:
-			fatal("[ dreamcast_maple: BWRITE: TODO ]\n");
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: BWRITE: TODO ]\n");
 			break;
 
-		default:fatal("[ dreamcast_maple: command %i: TODO ]\n", cmd);
-			exit(1);
+		default:debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: command %i: TODO ]", cmd);
 		}
 
 		addr += datalen_cmd * 4;
@@ -559,16 +555,15 @@ DEVICE_ACCESS(dreamcast_maple)
 			/* debug("[ dreamcast_maple: dmaaddr set to 0x%08x"
 			    " ]\n", d->dmaaddr);  */
 		} else {
-			fatal("[ dreamcast_maple: TODO: read from dmaaddr ]\n");
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: TODO: read from dmaaddr ]");
 			odata = d->dmaaddr;
-			exit(1);
 		}
 		break;
 
 	case 0x10:	/*  MAPLE_RESET2  */
 		if (writeflag == MEM_WRITE && idata != 0)
-			fatal("[ dreamcast_maple: UNIMPLEMENTED reset2 value"
-			    " 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: UNIMPLEMENTED reset2 value"
+			    " 0x%08x ]", (int)idata);
 		break;
 
 	case 0x14:	/*  MAPLE_ENABLE  */
@@ -584,8 +579,8 @@ DEVICE_ACCESS(dreamcast_maple)
 			case 0:	break;
 			case 1:	maple_do_dma_xfer(cpu, d);
 				break;
-			default:fatal("[ dreamcast_maple: UNIMPLEMENTED "
-				    "state value %i ]\n", (int)idata);
+			default:debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: UNIMPLEMENTED "
+				    "state value %i ]", (int)idata);
 			}
 		} else {
 			/*  Always return 0 to indicate DMA xfer complete.  */
@@ -608,8 +603,8 @@ DEVICE_ACCESS(dreamcast_maple)
 	case 0x8c:	/*  MAPLE_RESET  */
 		if (writeflag == MEM_WRITE) {
 			if (idata != 0x6155404f && idata != 0x61557f00)
-				fatal("[ dreamcast_maple: UNIMPLEMENTED reset "
-				    "value 0x%08x ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: UNIMPLEMENTED reset "
+				    "value 0x%08x ]", (int)idata);
 			d->enable = 0;
 		}
 		break;
@@ -618,18 +613,18 @@ DEVICE_ACCESS(dreamcast_maple)
 		if (writeflag == MEM_WRITE) {
 			// The Dreamcast PROM writes 1 here.
 			if (idata != 1) {
-				fatal("[ dreamcast_maple: UNIMPLEMENTED 0xe8 "
-				    "value 0x%08x ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: UNIMPLEMENTED 0xe8 "
+				    "value 0x%08x ]", (int)idata);
 			}
 		}
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			fatal("[ dreamcast_maple: UNIMPLEMENTED read from "
-			    "addr 0x%x ]\n", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: UNIMPLEMENTED read from "
+			    "addr 0x%x ]", (int)relative_addr);
 		} else {
-			fatal("[ dreamcast_maple: UNIMPLEMENTED write to addr "
-			    "0x%x: 0x%x ]\n", (int)relative_addr, (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: UNIMPLEMENTED write to addr "
+			    "0x%x: 0x%x ]", (int)relative_addr, (int)idata);
 		}
 	}
 
