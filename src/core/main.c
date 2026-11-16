@@ -361,7 +361,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		case 'E':
 			config_options_used = true;
 			if (using_switch_E ++ > 0) {
-				fprintf(stderr, "-E already used.\n");
+				fatal_error(SUBSYS_STARTUP, "main", "-E already used.");
 				exit(1);
 			}
 			type = optarg;
@@ -370,7 +370,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		case 'e':
 			config_options_used = true;
 			if (using_switch_e ++ > 0) {
-				fprintf(stderr, "-e already used.\n");
+				fatal_error(SUBSYS_STARTUP, "main", "-e already used.");
 				exit(1);
 			}
 			subtype = optarg;
@@ -406,8 +406,8 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		case 'k':
 			dyntrans_cache_size = atoi(optarg) * 1048576;
 			if (dyntrans_cache_size < 1) {
-				fprintf(stderr, "The dyntrans cache size must"
-				    " be at least 1 MB.\n");
+				fatal_error(SUBSYS_STARTUP, "main", "The dyntrans cache size must"
+				    " be at least 1 MB.");
 				exit(1);
 			}
 			break;
@@ -504,7 +504,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 				m->display_md.scaledown = 1;
 			}
 			if (m->display_md.scaledown < 1) {
-				fprintf(stderr, "Invalid scaledown value.\n");
+				fatal_error(SUBSYS_STARTUP, "main", "Invalid scaledown value.");
 				exit(1);
 			}
 			machine_specific_options_used = true;
@@ -526,8 +526,8 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			machine_specific_options_used = true;
 			break;
 		default:
-			fprintf(stderr, "Run  %s -h  for help on command "
-			    "line options.\n", progname);
+			fatal_error(SUBSYS_STARTUP, "main", "Run  %s -h  for help on command "
+			    "line options.", progname);
 			exit(1);
 		}
 	}
@@ -543,10 +543,10 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 	    machine_config_is_config_file(extra_argv[0]))) {
 		const char *cfg = (config_file != NULL) ? config_file : extra_argv[0];
 		if (config_options_used) {
-			fprintf(stderr, "Options which describe the machine "
+			fatal_error(SUBSYS_STARTUP, "main", "Options which describe the machine "
 			    "(such as -E, -e, -d, -M, or -X) can't be used with\na "
 			    "machine configuration file; change the file "
-			    "instead (%s --edit %s).\n", progname, cfg);
+			    "instead (%s --edit %s).", progname, cfg);
 			exit(1);
 		}
 		if (config_file == NULL) {
@@ -555,9 +555,8 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			extra_argv++;
 		}
 		if (extra_argc > 0) {
-			fprintf(stderr, "unexpected extra argument \"%s\" after "
-			    "machine configuration file \"%s\"\n",
-			    extra_argv[0], config_file);
+			fatal_error(SUBSYS_STARTUP, "main", "unexpected extra argument \"%s\" after "
+			    "machine configuration file \"%s\"", extra_argv[0], config_file);
 			exit(1);
 		}
 		return 0;
@@ -565,7 +564,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 
 	// If -V is used, -q is ignored.
 	if (single_step && quiet_mode) {
-		fprintf(stderr, "ignoring -q, because -V is used\n");
+		fatal_error(SUBSYS_STARTUP, "main", "ignoring -q, because -V is used");
 		quiet_mode = 0;
 	}
 
@@ -582,8 +581,8 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 	}
 
 	if (m->machine_type == MACHINE_NONE && machine_specific_options_used) {
-		fprintf(stderr, "Machine specific options used directly on "
-		    "the command line, but no machine\nemulation specified?\n");
+		fatal_error(SUBSYS_STARTUP, "main", "Machine specific options used directly on "
+		    "the command line, but no machine\nemulation specified?");
 		exit(1);
 	}
 
@@ -591,15 +590,15 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 	/*  -i and -r are pretty verbose:  */
 
 	if (m->instruction_trace && !verbose) {
-		fprintf(stderr, "Implicitly %sturning on -v, because"
-		    " of -i\n", quiet_mode? "turning off -q and " : "");
+		fatal_error(SUBSYS_STARTUP, "main", "Implicitly %sturning on -v, because"
+		    " of -i", quiet_mode? "turning off -q and " : "");
 		verbose = 1;
 		quiet_mode = 0;
 	}
 
 	if (m->register_dump && !verbose) {
-		fprintf(stderr, "Implicitly %sturning on -v, because"
-		    " of -r\n", quiet_mode? "turning off -q and " : "");
+		fatal_error(SUBSYS_STARTUP, "main", "Implicitly %sturning on -v, because"
+		    " of -r", quiet_mode? "turning off -q and " : "");
 		verbose = 1;
 		quiet_mode = 0;
 	}
@@ -622,7 +621,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			return 0;
 		} else {
 			usage(false);
-			fprintf(stderr, "\nNo filename given. Aborting.\n");
+			fatal_error(SUBSYS_STARTUP, "main", "\nNo filename given. Aborting.");
 			exit(1);
 		}
 	} else if (m->boot_kernel_filename[0] == '\0') {
@@ -647,7 +646,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 	}
 
 	if (m->n_gfx_cards < 0 || m->n_gfx_cards > 3) {
-		fprintf(stderr, "Bad number of gfx cards (-Z).\n");
+		fatal_error(SUBSYS_STARTUP, "main", "Bad number of gfx cards (-Z).");
 		exit(1);
 	}
 
@@ -709,13 +708,12 @@ static int export_machine(int argc, char *argv[])
 	int n, r;
 
 	if (argc != 4) {
-		fprintf(stderr, "Usage: %s --export machine.json folder\n",
-		    progname);
-		return 1;
+		fatal_error(SUBSYS_STARTUP, "main", "Usage: %s --export machine.json folder", progname);
+			return 1;
 	}
 	c = machine_config_load(argv[2], &err);
 	if (c == NULL) {
-		fprintf(stderr, "%s\n", err);
+		fatal_error(SUBSYS_STARTUP, "main", "%s", err);
 		free(err);
 		return 1;
 	}
@@ -724,14 +722,14 @@ static int export_machine(int argc, char *argv[])
 	machine_config_free_files(n, files);
 	machine_config_free(c);
 	if (e == NULL) {
-		fprintf(stderr, "%s\n", err);
+		fatal_error(SUBSYS_STARTUP, "main", "%s", err);
 		free(err);
 		return 1;
 	}
 	while ((r = machine_config_export_step(e, &err)) == 0)
 		;
 	if (r < 0) {
-		fprintf(stderr, "%s\n", err);
+		fatal_error(SUBSYS_STARTUP, "main", "%s", err);
 		free(err);
 		machine_config_export_free(e);
 		return 1;
@@ -855,17 +853,17 @@ int main(int argc, char *argv[])
 			break;
 		}
 	if (edit_no_start && edit_path == NULL) {
-		fprintf(stderr, "--no-start needs --edit machine.json.\n");
-		return 1;
+		fatal_error(SUBSYS_STARTUP, "main", "--no-start needs --edit machine.json.");
+			return 1;
 	}
 
 	/*  --control unix:path or tcp:port (anywhere among the options):  */
 	for (i = 1; i < argc; i++)
 		if (strcmp(argv[i], "--control") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "--control needs unix:path or "
-				    "tcp:port.\n");
-				return 1;
+				fatal_error(SUBSYS_STARTUP, "main", "--control needs unix:path or "
+				    "tcp:port.");
+					return 1;
 			}
 			control_spec = argv[i + 1];
 			memmove(&argv[i], &argv[i + 2],
@@ -878,9 +876,9 @@ int main(int argc, char *argv[])
 	for (i = 1; i < argc; i++)
 		if (strcmp(argv[i], "--vnc") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "--vnc needs tcp:port, "
-				    "tcp:host:port or unix:path.\n");
-				return 1;
+				fatal_error(SUBSYS_STARTUP, "main", "--vnc needs tcp:port, "
+				    "tcp:host:port or unix:path.");
+					return 1;
 			}
 			vnc_spec = argv[i + 1];
 			memmove(&argv[i], &argv[i + 2],
@@ -896,8 +894,8 @@ int main(int argc, char *argv[])
 		if (strcmp(argv[i], "--log") == 0 ||
 		    strcmp(argv[i], "--debug-log") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "%s needs a file path, 'console', or 'stderr'.\n", argv[i]);
-				return 1;
+				fatal_error(SUBSYS_STARTUP, "main", "%s needs a file path, 'console', or 'stderr'.", argv[i]);
+					return 1;
 			}
 			const char *target = argv[i + 1];
 			if (strcmp(target, "console") == 0) {
@@ -917,8 +915,8 @@ int main(int argc, char *argv[])
 	for (i = 1; i < argc; i++)
 		if (strcmp(argv[i], "--config") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "--config needs a configuration file path.\n");
-				return 1;
+				fatal_error(SUBSYS_STARTUP, "main", "--config needs a configuration file path.");
+					return 1;
 			}
 			config_file = argv[i + 1];
 			memmove(&argv[i], &argv[i + 2],
@@ -932,9 +930,9 @@ int main(int argc, char *argv[])
 		if (strcmp(argv[i], "--record") == 0 ||
 		    strcmp(argv[i], "--record-nonblack") == 0) {
 			if (i + 1 >= argc) {
-				fprintf(stderr, "%s needs a file name, e.g. "
-				    "video.mp4.\n", argv[i]);
-				return 1;
+				fatal_error(SUBSYS_STARTUP, "main", "%s needs a file name, e.g. "
+				    "video.mp4.", argv[i]);
+					return 1;
 			}
 			display_video_record(argv[i + 1],
 			    strcmp(argv[i], "--record-nonblack") == 0);
@@ -965,19 +963,19 @@ int main(int argc, char *argv[])
 	if (want_ui) {
 		if (config_file != NULL || emul->machines[0]->machine_type !=
 		    MACHINE_NONE || n_diskimages > 0) {
-			fprintf(stderr, "--edit can't be used with a machine "
-			    "on the command line.\n");
-			return 1;
+			fatal_error(SUBSYS_STARTUP, "main", "--edit can't be used with a machine "
+			    "on the command line.");
+				return 1;
 		}
 		if (!config_ui_available()) {
 			if (edit_path == NULL) {
 				usage(false);
-				fprintf(stderr, "\nNo filename given. "
-				    "Aborting.\n");
-				return 1;
+				fatal_error(SUBSYS_STARTUP, "main", "No filename given. "
+				    "Aborting.");
+					return 1;
 			}
-			fprintf(stderr, "--edit needs a window system.\n");
-			return 1;
+			fatal_error(SUBSYS_STARTUP, "main", "--edit needs a window system.");
+				return 1;
 		}
 		chosen = config_ui_run(edit_path, edit_no_start);
 		if (chosen == NULL)
@@ -997,9 +995,9 @@ int main(int argc, char *argv[])
 	if (chosen != NULL) {
 		/*  Set up the machine chosen in the window:  */
 		if (!machine_config_apply(chosen, emul, emul->machines[0])) {
-			fprintf(stderr, "Could not initialize the "
-			    "emulation.\n");
-			return 1;
+			fatal_error(SUBSYS_STARTUP, "main", "Could not initialize the "
+			    "emulation.");
+				return 1;
 		}
 		machine_config_free(chosen);
 	} else if (config_file != NULL) {
@@ -1009,7 +1007,7 @@ int main(int argc, char *argv[])
 		    &err);
 
 		if (c == NULL) {
-			fprintf(stderr, "%s\n", err);
+			fatal_error(SUBSYS_STARTUP, "main", "%s", err);
 			free(err);
 			return 1;
 		}
@@ -1023,15 +1021,15 @@ int main(int argc, char *argv[])
 		/*  Simple initialization, from command line arguments:  */
 		for (i=0; i<n_diskimages; i++) {
 			if (diskimage_add(emul->machines[0], diskimages[i]) < 0) {
-				fprintf(stderr, "Aborting.\n");
+				fatal_error(SUBSYS_DISK, "main", "Aborting.");
 				return 1;
 			}
 		}
 
 		/*  Initialize one emul:  */
 		if (!emul_simple_init(emul, tap_devname)) {
-			fprintf(stderr, "Could not initialize the emulation.\n");
-			return 1;
+			fatal_error(SUBSYS_STARTUP, "main", "Could not initialize the emulation.");
+				return 1;
 		}
 	}
 
@@ -1088,9 +1086,9 @@ int main(int argc, char *argv[])
 		for (i = 0; i < emul->n_machines; i++)
 			any_display |= emul->machines[i]->display_md.in_use;
 		if (!any_display)
-			fprintf(stderr, "gxemul: --vnc: no machine has a "
+			fatal_error(SUBSYS_STARTUP, "main", "gxemul: --vnc: no machine has a "
 			    "framebuffer; use -X, or turn the display on in "
-			    "the machine's settings\n");
+			    "the machine's settings");
 	}
 
 	/*  Run the emulation:  */

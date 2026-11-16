@@ -444,8 +444,7 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 	for (i=0; i<m->ncpus; i++) {
 		m->cpus[i] = cpu_new(m->memory, m, i, m->cpu_name);
 		if (m->cpus[i] == NULL) {
-			fprintf(stderr, "Unable to create CPU object. "
-			    "Aborting.");
+			fatal_error(SUBSYS_CPU, "cpu_new", "Unable to create CPU object. Aborting.");
 			return false;
 		}
 	}
