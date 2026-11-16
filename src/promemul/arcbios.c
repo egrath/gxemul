@@ -67,8 +67,7 @@ void arcbios_add_string_to_component(struct machine *machine,
 {
 	if (machine->md.arc->n_string_to_components
 	    >= MAX_STRING_TO_COMPONENT) {
-		printf("Too many string-to-component mappings.\n");
-		exit(1);
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "Too many string-to-component mappings.\n");
 	}
 
 	CHECK_ALLOCATION(machine->md.arc->string_to_component[machine->
@@ -201,7 +200,7 @@ static void handle_esc_seq(struct cpu *cpu)
 		case 47: /*  White background.  */
 			cpu->machine->md.arc->console_curcolor &= 0x0f;
 			cpu->machine->md.arc->console_curcolor |= 0x70; break;
-		default:fatal("{ handle_esc_seq: color %i }\n", color);
+		default:debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "{ handle_esc_seq: color %i }", color);
 		}
 		return;
 	case 'H':
@@ -225,7 +224,7 @@ static void handle_esc_seq(struct cpu *cpu)
 		 */
 		i = atoi(cpu->machine->md.arc->escape_sequence + 1);
 		if (i != 0 && i != 2)
-			fatal("{ handle_esc_seq(): %iJ }\n", i);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "{ handle_esc_seq(): %iJ }", i);
 		if (i == 0)
 			for (col = cpu->machine->md.arc->console_curx;
 			    col < cpu->machine->md.arc->console_maxx; col++)
@@ -251,18 +250,18 @@ static void handle_esc_seq(struct cpu *cpu)
 		return;
 	}
 
-	fatal("{ handle_esc_seq(): unimplemented escape sequence: ");
+	debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "{ handle_esc_seq(): unimplemented escape sequence: ");
 	for (i=0; i<len; i++) {
 		int x = cpu->machine->md.arc->escape_sequence[i];
 		if (i == len-1)
 			x = code;
 
 		if (x >= ' ' && x < 127)
-			fatal("%c", x);
+			fatal_error(SUBSYS_PROMEMUL, "arcbios", "%c", x);
 		else
-			fatal("[0x%02x]", x);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[0x%02x]", x);
 	}
-	fatal(" }\n");
+	fatal_error(SUBSYS_PROMEMUL, "arcbios", " }\n");
 }
 
 
@@ -464,7 +463,7 @@ void arcbios_add_memory_descriptor(struct cpu *cpu,
 #if 1
 	if (cpu->machine->machine_type == MACHINE_SGI) {
 		/*  arctype is SGI style  */
-		/*  printf("%i => ", arctype); */
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "%i => ", arctype); */
 		switch (arctype) {
 		case 0:	arctype = 0; break;
 		case 1:	arctype = 1; break;
@@ -475,7 +474,7 @@ void arcbios_add_memory_descriptor(struct cpu *cpu,
 		case 6:	arctype = 7; break;
 		case 7:	arctype = 2; break;
 		}
-		/*  printf("%i\n", arctype);  */
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "%i", arctype);  */
 	}
 #endif
 	if (cpu->machine->md.arc->arc_64bit)
@@ -854,9 +853,8 @@ uint64_t arcbios_addchild_manual(struct cpu *cpu,
 		size_t i;
 
 		if (machine->md.arc->n_configuration_data >= MAX_CONFIG_DATA) {
-			printf("fatal error: you need to increase "
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "fatal error: you need to increase "
 			    "MAX_CONFIG_DATA\n");
-			exit(1);
 		}
 
 		for (i=0; i<config_len; i++) {
@@ -877,8 +875,8 @@ uint64_t arcbios_addchild_manual(struct cpu *cpu,
 		    machine->md.arc->next_component_address +
 		    (cpu->machine->md.arc->arc_64bit? 0x18 : 0x0c);
 
-		/*  printf("& ADDING %i: configdata=0x%016" PRIx64" "
-		    "component=0x%016" PRIx64"\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "& ADDING %i: configdata=0x%016" PRIx64" "
+		    "component=0x%016" PRIx64"",
 		     machine->md.arc->n_configuration_data,
 		    (uint64_t) machine->md.arc->configuration_data_configdata[
 			machine->md.arc->n_configuration_data],
@@ -957,20 +955,20 @@ static void arcbios_get_msdos_partition_size(struct machine *machine,
 ugly_goto:
 	*start = 0; *size = 0;
 
-	/*  printf("reading MSDOS partition from offset 0x%" PRIx64"\n",
+	/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "reading MSDOS partition from offset 0x%" PRIx64"",
 	    (uint64_t) offset);  */
 
 	res = diskimage_access(machine, disk_id, disk_type, 0, offset,
 	    sector, sizeof(sector));
 	if (!res) {
-		fatal("[ arcbios_get_msdos_partition_size(): couldn't "
-		    "read the disk image, id %i, offset 0x%" PRIx64" ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ arcbios_get_msdos_partition_size(): couldn't "
+		    "read the disk image, id %i, offset 0x%" PRIx64" ]",
 		    disk_id, (uint64_t) offset);
 		return;
 	}
 
 	if (sector[510] != 0x55 || sector[511] != 0xaa) {
-		fatal("[ arcbios_get_msdos_partition_size(): not an "
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ arcbios_get_msdos_partition_size(): not an "
 		    "MSDOS partition table ]\n");
 	}
 
@@ -978,10 +976,10 @@ ugly_goto:
 	/*  Debug dump:  */
 	for (i=0; i<4; i++) {
 		int j;
-		printf("  partition %i: ", i+1);
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "  partition %i: ", i+1);
 		for (j=0; j<16; j++)
-			printf(" %02x", sector[446 + i*16 + j]);
-		printf("\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, " %02x", sector[446 + i*16 + j]);
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n");
 	}
 #endif
 
@@ -1014,7 +1012,7 @@ ugly_goto:
 			return;
 	}
 
-	fatal("[ partition(%i) NOT found ]\n", partition_nr);
+	debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ partition(%i) NOT found ]", partition_nr);
 }
 
 
@@ -1099,7 +1097,7 @@ static void arcbios_handle_to_start_and_size(struct machine *machine,
 	s2 = strstr(s, "partition(");
 	if (s2 != NULL) {
 		int partition_nr = atoi(s2 + 10);
-		/*  printf("partition_nr = %i\n", partition_nr);  */
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "partition_nr = %i", partition_nr);  */
 		if (partition_nr != 0)
 			arcbios_get_msdos_partition_size(machine,
 			    disk_id, disk_type, partition_nr, start, size);
@@ -1129,7 +1127,7 @@ static int arcbios_getfileinformation(struct cpu *cpu)
 	store_32bit_word(cpu, addr + 28, 0);
 	store_32bit_word(cpu, addr + 32, 0);
 
-	/*  printf("\n!!! size=0x%x start=0x%x\n", (int)size, (int)start);  */
+	/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n!!! size=0x%x start=0x%x", (int)size, (int)start);  */
 
 	return ARCBIOS_ESUCCESS;
 }
@@ -1202,7 +1200,7 @@ void arcbios_sgi_emul(struct cpu *cpu)
 		debug("a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		debug("\n");
-		fatal("ARCBIOS: unimplemented SGI vector 0x%x\n", vector);
+		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented SGI vector 0x%x", vector);
 		cpu->running = 0;
 	}
 }
@@ -1251,8 +1249,7 @@ int arcbios_emul(struct cpu *cpu)
 		if (machine->machine_type == MACHINE_SGI)
 			arcbios_sgi_emul(cpu);
 		else {
-			fatal("[ ARCBIOS private call for non-SGI. ]\n");
-			exit(1);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS private call for non-SGI. ]\n");
 		}
 
 		return 1;
@@ -1449,14 +1446,14 @@ int arcbios_emul(struct cpu *cpu)
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_V0]);
 		break;
 	case 0x30:  /*  GetConfigurationData(void *configdata, void *node)  */
-		/*  fatal("[ ARCBIOS GetConfigurationData(0x%016" PRIx64","
-		    "0x%016" PRIx64") ]\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetConfigurationData(0x%016" PRIx64","
+		    "0x%016" PRIx64") ]",
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A1]);  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = ARCBIOS_EINVAL;
 		for (i=0; i<machine->md.arc->n_configuration_data; i++) {
-			/*  fatal("configuration_data_component[%i] = "
-			    "0x%016" PRIx64"\n", i, (uint64_t) machine->
+			/*  fatal_error(SUBSYS_PROMEMUL, "arcbios", "configuration_data_component[%i] = "
+			    "0x%016" PRIx64"", i, (uint64_t) machine->
 			    md.arc->configuration_data_component[i]);  */
 			if (cpu->cd.mips.gpr[MIPS_GPR_A1] ==
 			    machine->md.arc->configuration_data_component[i]) {
@@ -1482,7 +1479,7 @@ int arcbios_emul(struct cpu *cpu)
 		debug("\") ]\n");
 
 		if (cpu->cd.mips.gpr[MIPS_GPR_A0] == 0) {
-			fatal("[ ARCBIOS GetComponent: NULL ptr ]\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetComponent: NULL ptr ]\n");
 		} else {
 			unsigned char buf2[500];
 			int match_index = -1;
@@ -1499,7 +1496,7 @@ int arcbios_emul(struct cpu *cpu)
 			buf2[sizeof(buf2) - 1] = '\0';
 
 			/*  "scsi(0)disk(0)rdisk(0)partition(0)" and such.  */
-			/*  printf("GetComponent(\"%s\")\n", buf2);  */
+			/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "GetComponent(\"%s\")", buf2);  */
 
 			/*  Default to NULL return value.  */
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
@@ -1520,7 +1517,7 @@ int arcbios_emul(struct cpu *cpu)
 			}
 
 			if (match_index >= 0) {
-				/*  printf("Longest match: '%s'\n",
+				/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "Longest match: '%s'",
 				    machine->md.arc->string_to_component[
 				    match_index]);  */
 				cpu->cd.mips.gpr[MIPS_GPR_V0] =
@@ -1584,9 +1581,9 @@ int arcbios_emul(struct cpu *cpu)
 		}
 
 		if (handle >= ARC_MAX_HANDLES) {
-			fatal("[ ARCBIOS Open: out of file handles ]\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Open: out of file handles ]\n");
 		} else if (cpu->cd.mips.gpr[MIPS_GPR_A0] == 0) {
-			fatal("[ ARCBIOS Open: NULL ptr ]\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Open: NULL ptr ]\n");
 		} else {
 			/*
 			 *  TODO: This is hardcoded to successfully open
@@ -1624,7 +1621,7 @@ int arcbios_emul(struct cpu *cpu)
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		if (!machine->md.arc->file_handle_in_use[cpu->cd.mips.gpr[
 		    MIPS_GPR_A0]]) {
-			fatal("ARCBIOS Close(%i): bad handle\n",
+			fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS Close(%i): bad handle",
 			    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = ARCBIOS_EBADF;
 		} else {
@@ -1757,8 +1754,8 @@ int arcbios_emul(struct cpu *cpu)
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = console_charavail(
 			    machine->main_console_handle)? 0 : 1;
 		} else {
-			fatal("[ ARCBIOS GetReadStatus(%i) from "
-			    "something other than STDIN: TODO ]\n",
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetReadStatus(%i) from "
+			    "something other than STDIN: TODO ]",
 			    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 			/*  TODO  */
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = 1;
@@ -1834,8 +1831,8 @@ int arcbios_emul(struct cpu *cpu)
 		    (int) cpu->cd.mips.gpr[MIPS_GPR_A2]);
 
 		if (cpu->cd.mips.gpr[MIPS_GPR_A2] != 0) {
-			fatal("[ ARCBIOS Seek(%i,0x%08" PRIx64",%i): "
-			    "UNIMPLEMENTED whence=%i ]\n",
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Seek(%i,0x%08" PRIx64",%i): "
+			    "UNIMPLEMENTED whence=%i ]",
 			    (int) cpu->cd.mips.gpr[MIPS_GPR_A0],
 			    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A1],
 			    (int) cpu->cd.mips.gpr[MIPS_GPR_A2],
@@ -1951,7 +1948,7 @@ int arcbios_emul(struct cpu *cpu)
 		/*
 		 *  Magical crash if there is no exception handling code.
 		 */
-		fatal("EXCEPTION, but no exception handler installed yet.\n");
+		fatal_error(SUBSYS_PROMEMUL, "arcbios", "EXCEPTION, but no exception handler installed yet.\n");
 		quiet_mode = 0;
 		cpu_register_dump(machine, cpu, 1, 0x1);
 		cpu->running = 0;
@@ -1962,7 +1959,7 @@ int arcbios_emul(struct cpu *cpu)
 		debug("a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		debug("\n");
-		fatal("ARCBIOS: unimplemented vector 0x%x\n", vector);
+		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented vector 0x%x", vector);
 		cpu->running = 0;
 	}
 
@@ -2397,8 +2394,7 @@ static void arc_environment_setup(struct machine *machine, int is64bit,
 				prefix = "pci(0)";
 				break;
 			default:
-				fprintf(stderr, "TODO: prefix for SGI IP%i\n", machine->machine_subtype);
-				exit(1);
+				debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG,  "TODO: prefix for SGI IP%i", machine->machine_subtype);
 			}
 		}
 
@@ -2698,7 +2694,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 	const char *primary_ether_addr, uint8_t *primary_ether_macaddr)
 {
 	int i, alloclen = 20;
-	char *name;
+	char *name = NULL;
 	uint64_t arc_reserved, mem_base;
 	struct cpu *cpu = machine->cpus[0];
 	struct arcbios_dsp_stat arcbios_dsp_stat;
@@ -2717,7 +2713,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 	machine->md.arc->configuration_data_next_addr = ARC_CONFIG_DATA_ADDR;
 
 	if (machine->physical_ram_in_mb < 16)
-		fprintf(stderr, "WARNING! The ARC platform specification "
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_WARNING,  "WARNING! The ARC platform specification "
 		    "doesn't allow less than 16 MB of RAM. Continuing "
 		    "anyway.\n");
 
@@ -2747,7 +2743,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 		arcbios_putstring(cpu, "GXemul " VERSION"  ARCBIOS emulation\n");
 
 		snprintf(tmpstr, sizeof(tmpstr), "%i cpu%s (%s), %i MB "
-		    "memory\n\n", machine->ncpus, machine->ncpus > 1? "s" : "",
+		    "memory\n", machine->ncpus, machine->ncpus > 1? "s" : "",
 		    cpu->cd.mips.cpu_type.name,
 		    machine->physical_ram_in_mb);
 		arcbios_putstring(cpu, tmpstr);
@@ -2782,8 +2778,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 			memcpy(arcbios_sysid.ProductId, "ijkl", 4);
 			break;
 		default:
-			fatal("error in machine.c sysid\n");
-			exit(1);
+			fatal_error(SUBSYS_PROMEMUL, "arcbios", "error in machine.c sysid\n");
 		}
 	}
 
@@ -2853,7 +2848,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 				// is in the machine?
 				break;
 			} else {
-				fatal("Ignoring RAM above 256 MB! (Not yet "
+				fatal_error(SUBSYS_PROMEMUL, "arcbios", "Ignoring RAM above 256 MB! (Not yet "
 					"implemented for this machine type.)\n");
 				break;
 			}
@@ -2878,7 +2873,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 	 */
 
 	if (machine->machine_name == NULL)
-		fatal("ERROR: machine_name == NULL\n");
+		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ERROR: machine_name == NULL\n");
 
 	/*  Add the root node:  */
 	switch (machine->machine_type) {
@@ -2908,15 +2903,14 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 			name = strdup("Microsoft-Jazz");
 			break;
 		default:
-			fatal("Unimplemented ARC machine type %i\n",
+			fatal_error(SUBSYS_PROMEMUL, "arcbios", "Unimplemented ARC machine type %i",
 			    machine->machine_subtype);
-			exit(1);
 		}
 		break;
 
 	default:
-		fatal("ERROR: non-SGI and non-ARC?\n");
-		exit(1);
+		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ERROR: non-SGI and non-ARC?");
+		return;
 	}
 
 	system = arcbios_addchild_manual(cpu, COMPONENT_CLASS_SystemClass,

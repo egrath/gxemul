@@ -354,7 +354,7 @@ void debugmsg(int subsystem, const char *name,
 
 
 /*
- *  debugmsg():
+ *  debugmsg_cpu():
  *
  *  The main routine to call, when something should be printed and we are
  *  in the context of a specific CPU.

@@ -119,7 +119,7 @@ int dec_jumptable_func(struct cpu *cpu, int vector)
 		 *  is ignored, and a file handle value of 1 is returned.
 		 */
 		if (file_opened) {
-			fatal("\ndec_jumptable_func(): opening more than one "
+			fatal_error(SUBSYS_PROMEMUL, "dec_prom", "\ndec_jumptable_func(): opening more than one "
 			    "file isn't supported yet.\n");
 			cpu->running = 0;
 		}
@@ -167,7 +167,7 @@ int dec_jumptable_func(struct cpu *cpu, int vector)
 		if (cpu->cd.mips.gpr[MIPS_GPR_A2] == 0)
 			current_file_offset = cpu->cd.mips.gpr[MIPS_GPR_A1];
 		else
-			fatal("WARNING! Unimplemented whence in "
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_WARNING, "WARNING! Unimplemented whence in "
 			    "dec_jumptable_func()\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
@@ -181,20 +181,20 @@ int dec_jumptable_func(struct cpu *cpu, int vector)
 		return 0x64;
 	default:
 		cpu_register_dump(cpu->machine, cpu, 1, 0x1);
-		printf("a0 points to: ");
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "a0 points to: ");
 		for (i=0; i<40; i++) {
 			unsigned char ch = '\0';
 			cpu->memory_rw(cpu, cpu->mem,
 			    (int32_t)cpu->cd.mips.gpr[MIPS_GPR_A0] + i, &ch,
 			    sizeof(ch), MEM_READ, CACHE_DATA | NO_EXCEPTIONS);
 			if (ch >= ' ' && ch < 126)
-				printf("%c", ch);
+				debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "%c", ch);
 			else
-				printf("[%02x]", ch);
+				debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[%02x]", ch);
 		}
-		printf("\n");
-		fatal("PROM emulation: unimplemented JUMP TABLE vector "
-		    "0x%x (decimal function %i)\n", vector, vector/8);
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "\n");
+		fatal_error(SUBSYS_PROMEMUL, "dec_prom", "PROM emulation: unimplemented JUMP TABLE vector "
+		    "0x%x (decimal function %i)", vector, vector/8);
 		cpu->running = 0;
 	}
 
@@ -372,7 +372,7 @@ int decstation_prom_emul(struct cpu *cpu)
 						strlcpy(printfbuf, "[...]\n",
 						    sizeof(printfbuf));
 #else
-						printf("[ decstation_prom_emul"
+						debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ decstation_prom_emul"
 						    "(): too many arguments ]");
 						/*  This reuses the last arg,
 						    which is utterly incorrect.
@@ -402,8 +402,7 @@ int decstation_prom_emul(struct cpu *cpu)
 						while (ch2) {
 							ch2 = mem_readchar(cpu, argreg, j++);
 							if (ch2) {
-								snprintf(
-								    printfbuf + strlen(printfbuf),
+								snprintf(printfbuf + strlen(printfbuf),
 								    sizeof(printfbuf) - 1 - strlen(printfbuf),
 								    "%c",
 								    ch2);
@@ -414,7 +413,7 @@ int decstation_prom_emul(struct cpu *cpu)
 					argreg ++;
 					break;
 				default:
-					printf("[ unknown printf format char '%c' ]", ch);
+					debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ unknown printf format char '%c' ]", ch);
 				}
 				break;
 			case '\0':
@@ -563,8 +562,8 @@ int decstation_prom_emul(struct cpu *cpu)
 			}
 		}
 		/*  Return NULL if string wasn't found.  */
-		fatal("[ DEC PROM getenv(\"%s\"): WARNING: Not in "
-		    "environment! ]\n", buf);
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_WARNING, "[ DEC PROM getenv(\"%s\"): WARNING: Not in "
+		    "environment! ]", buf);
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x6c:		/*  ulong slot_address(int sn)  */
@@ -590,7 +589,7 @@ int decstation_prom_emul(struct cpu *cpu)
 			slot_size = 0x4000000;		/*  64 MB  */
 			break;
 		default:
-			fatal("warning: DEC PROM slot_address() "
+			fatal_error(SUBSYS_PROMEMUL, "dec_prom", "warning: DEC PROM slot_address() "
 			    "unimplemented for this machine type\n");
 		}
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = (int64_t)(int32_t)
@@ -681,8 +680,8 @@ int decstation_prom_emul(struct cpu *cpu)
 			cpu->running = 0;
 			break;
 		default:
-			fatal("DEC prom emulation: unknown rex() a0=0x%" PRIx64
-			    " ('%c')\n",
+			fatal_error(SUBSYS_PROMEMUL, "dec_prom", "DEC prom emulation: unknown rex() a0=0x%" PRIx64
+			    " ('%c')",
 			    (int64_t) cpu->cd.mips.gpr[MIPS_GPR_A0],
 			    (char) cpu->cd.mips.gpr[MIPS_GPR_A0]);
 			cpu->running = 0;
@@ -690,19 +689,19 @@ int decstation_prom_emul(struct cpu *cpu)
 		break;
 	default:
 		cpu_register_dump(cpu->machine, cpu, 1, 0x1);
-		printf("a0 points to: ");
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "a0 points to: ");
 		for (i=0; i<40; i++) {
 			unsigned char chTmp = '\0';
 			cpu->memory_rw(cpu, cpu->mem, (int32_t)
 			    cpu->cd.mips.gpr[MIPS_GPR_A0] + i, &chTmp,
 			    sizeof(chTmp), MEM_READ, CACHE_DATA | NO_EXCEPTIONS);
 			if (chTmp >= ' ' && chTmp < 126)
-				printf("%c", chTmp);
+				debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "%c", chTmp);
 			else
-				printf("[%02x]", chTmp);
+				debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[%02x]", chTmp);
 		}
-		printf("\n");
-		fatal("PROM emulation: unimplemented callback vector 0x%x\n",
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "\n");
+		fatal_error(SUBSYS_PROMEMUL, "dec_prom", "PROM emulation: unimplemented callback vector 0x%x",
 		    vector);
 		cpu->running = 0;
 	}

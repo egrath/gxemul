@@ -222,17 +222,17 @@ int yamon_emul(struct cpu *cpu)
 			break;
 
 		default:
-			fatal("[ yamon_emul(): unimplemented object id 0x%"
-			    PRIx32" ]\n", oid);
+			debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "[ yamon_emul(): unimplemented object id 0x%"
+			    PRIx32" ]", oid);
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = 1;
 		}
 		break;
 
 	default:
 		cpu_register_dump(cpu->machine, cpu, 1, 0);
-		printf("\n");
-		fatal("[ yamon_emul(): unimplemented yamon function 0x%"
-		    PRIx32" ]\n", ofs);
+		debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "\n");
+		debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "[ yamon_emul(): unimplemented yamon function 0x%"
+		    PRIx32" ]", ofs);
 		cpu->running = 0;
 	}
 

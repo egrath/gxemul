@@ -151,14 +151,14 @@ static int find_device_handle(struct of_data *ofd, const char *name)
 
 OF_SERVICE(call_method_2_2)
 {
-	fatal("[ of: call_method_2_2('%s'): TODO ]\n", arg[0]);
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: call_method_2_2('%s'): TODO ]", arg[0]);
 	return -1;
 }
 
 
 OF_SERVICE(call_method_3_4)
 {
-	fatal("[ of: call_method_3_4('%s'): TODO ]\n", arg[0]);
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: call_method_3_4('%s'): TODO ]", arg[0]);
 	return -1;
 }
 
@@ -180,7 +180,7 @@ OF_SERVICE(call_method_5_2)
 			v->update_y2 = v->ysize - 1;
 		}
 	} else {
-		fatal("[ of: call_method_5_2('%s'): TODO ]\n", arg[0]);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: call_method_5_2('%s'): TODO ]", arg[0]);
 		return -1;
 	}
 	return 0;
@@ -189,14 +189,14 @@ OF_SERVICE(call_method_5_2)
 
 OF_SERVICE(call_method_6_1)
 {
-	fatal("[ of: call_method_6_1('%s'): TODO ]\n", arg[0]);
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: call_method_6_1('%s'): TODO ]", arg[0]);
 	return -1;
 }
 
 
 OF_SERVICE(call_method_6_2)
 {
-	fatal("[ of: call_method_6_2('%s'): TODO ]\n", arg[0]);
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: call_method_6_2('%s'): TODO ]", arg[0]);
 	return -1;
 }
 
@@ -217,7 +217,7 @@ OF_SERVICE(claim)
 	// Returns:    pointer to claimed memory
 
 	// TODO: This is just a dummy.
-	fatal("[ of: claim(0x%x,0x%x,0x%x): TODO ]\n",
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: claim(0x%x,0x%x,0x%x): TODO ]",
 	    OF_GET_ARG(0), OF_GET_ARG(1), OF_GET_ARG(2));
 
 	store_32bit_word(cpu, base + retofs, OF_GET_ARG(0));
@@ -250,7 +250,7 @@ OF_SERVICE(getprop)
 
 	OF_FIND(od, od->handle == handle);
 	if (od == NULL) {
-		fatal("[ of: WARNING: getprop handle=%i; no such handle ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_WARNING, "[ of: WARNING: getprop handle=%i; no such handle ]",
 		    handle);
 		return -1;
 	}
@@ -258,13 +258,13 @@ OF_SERVICE(getprop)
 	pr = od->properties;
 	OF_FIND(pr, strcmp(pr->name, arg[1]) == 0);
 	if (pr == NULL) {
-		fatal("[ of: WARNING: getprop: no property '%s' at handle"
-		    " %i (device '%s') ]\n", arg[1], handle, od->name);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_WARNING, "[ of: WARNING: getprop: no property '%s' at handle"
+		    " %i (device '%s') ]", arg[1], handle, od->name);
 		return -1;
 	}
 
 	if (pr->data == NULL) {
-		fatal("[ of: WARNING: property '%s' of '%s' has no data! ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_WARNING, "[ of: WARNING: property '%s' of '%s' has no data! ]",
 		    arg[1], od->name);
 		goto ret;
 	}
@@ -275,8 +275,7 @@ OF_SERVICE(getprop)
 	for (i=0; i<len_returned; i++) {
 		if (!cpu->memory_rw(cpu, cpu->mem, buf + i, pr->data + i,
 		    1, MEM_WRITE, CACHE_DATA | NO_EXCEPTIONS)) {
-			fatal("[ of: getprop memory_rw() error ]\n");
-			exit(1);
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: getprop memory_rw() error ]\n");
 		}
 	}
 
@@ -294,7 +293,7 @@ OF_SERVICE(getproplen)
 
 	OF_FIND(od, od->handle == handle);
 	if (od == NULL) {
-		fatal("[ of: TODO: getproplen handle=%i; no such handle ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: TODO: getproplen handle=%i; no such handle ]",
 		    handle);
 		return -1;
 	}
@@ -302,8 +301,8 @@ OF_SERVICE(getproplen)
 	pr = od->properties;
 	OF_FIND(pr, strcmp(pr->name, arg[1]) == 0);
 	if (pr == NULL) {
-		fatal("[ of: TODO: getproplen: no property '%s' at handle"
-		    " %i (device '%s') ]\n", arg[1], handle, od->name);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: TODO: getproplen: no property '%s' at handle"
+		    " %i (device '%s') ]", arg[1], handle, od->name);
 		return -1;
 	}
 
@@ -325,7 +324,7 @@ OF_SERVICE(interpret_1)
 {
 	if (strcmp(arg[0], "#lines 2 - to line#") == 0) {
 	} else {
-		fatal("[ of: interpret_1('%s'): TODO ]\n", arg[0]);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: interpret_1('%s'): TODO ]", arg[0]);
 		return -1;
 	}
 	return 0;
@@ -348,7 +347,7 @@ OF_SERVICE(interpret_2)
 	} else if (strcmp(arg[0], "font-adr") == 0) {
 		store_32bit_word(cpu, base + retofs + 4, 0);
 	} else {
-		fatal("[ of: interpret_2('%s'): TODO ]\n", arg[0]);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: interpret_2('%s'): TODO ]", arg[0]);
 		return -1;
 	}
 	return 0;
@@ -357,7 +356,7 @@ OF_SERVICE(interpret_2)
 
 OF_SERVICE(package_to_path)
 {
-	fatal("[ of: package-to-path: TODO ]\n");
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: package-to-path: TODO ]\n");
 	return -1;
 }
 
@@ -385,8 +384,7 @@ OF_SERVICE(peer)
 
 	OF_FIND(od, od->handle == handle);
 	if (od == NULL) {
-		fatal("[ of: TODO: peer(): can't find handle %i ]\n", handle);
-		exit(1);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: TODO: peer(): can't find handle %i ]", handle);
 	}
 	parent = od->parent;
 	seen_self = 0;
@@ -422,8 +420,7 @@ OF_SERVICE(open)
 		unsigned char ch;
 		if (!cpu->memory_rw(cpu, cpu->mem, ptr + i, &ch,
 		    1, MEM_READ, CACHE_DATA | NO_EXCEPTIONS)) {
-			fatal("[ of: TODO: write: memory_rw() error ]\n");
-			exit(1);
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: TODO: write: memory_rw() error ]\n");
 		}
 
 		if (ch == 0)
@@ -438,8 +435,7 @@ OF_SERVICE(open)
 	s[s_len] = 0;
 
 	if (s[0]) {
-		printf("Unimplemented OF_SERVICE(open) with name: '%s'\n", s);
-		exit(1);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "Unimplemented OF_SERVICE(open) with name: '%s'", s);
 	}
 
 	return 0;
@@ -461,8 +457,7 @@ OF_SERVICE(read)
 	ch = c;
 	if (!cpu->memory_rw(cpu, cpu->mem, ptr, &ch, 1, MEM_WRITE,
 	    CACHE_DATA | NO_EXCEPTIONS)) {
-		fatal("[ of: TODO: read: memory_rw() error ]\n");
-		exit(1);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: TODO: read: memory_rw() error ]\n");
 	}
 
 	store_32bit_word(cpu, base + retofs, c == -1? 0 : 1);
@@ -482,8 +477,7 @@ OF_SERVICE(write)
 		unsigned char ch;
 		if (!cpu->memory_rw(cpu, cpu->mem, ptr + i, &ch,
 		    1, MEM_READ, CACHE_DATA | NO_EXCEPTIONS)) {
-			fatal("[ of: TODO: write: memory_rw() error ]\n");
-			exit(1);
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: TODO: write: memory_rw() error ]\n");
 		}
 		if (ch != 7)
 			console_putchar(cpu->machine->main_console_handle, ch);
@@ -536,9 +530,8 @@ static struct of_device *of_add_device(struct of_data *of_data, const char *name
 	od->handle = of_get_unused_device_handle(of_data);
 	od->parent = find_device_handle(of_data, parentname);
 	if (od->parent < 0) {
-		fatal("of_add_device(): adding '%s' to parent '%s' failed: "
-		    "parent not found!\n", name, parentname);
-		exit(1);
+		fatal_error(SUBSYS_PROMEMUL, "of", "of_add_device(): adding '%s' to parent '%s' failed: "
+		    "parent not found!", name, parentname);
 	}
 
 	od->next = of_data->of_devices;
@@ -565,8 +558,7 @@ static void of_add_prop(struct of_data *of_data, const char *devname,
 
 	OF_FIND(od, od->handle == h);
 	if (od == NULL) {
-		fatal("of_add_prop(): device '%s' not registered\n", devname);
-		exit(1);
+		fatal_error(SUBSYS_PROMEMUL, "of", "of_add_prop(): device '%s' not registered", devname);
 	}
 
 	CHECK_ALLOCATION(pr->name = strdup(propname));
@@ -974,7 +966,7 @@ struct of_data *of_emul_init(struct machine *machine, struct vfb_data *vfb_data,
 	devstdout = of_add_device(ofd, "stdout", "/io");
 
 	if (machine->display_md.in_use) {
-		fatal("!\n!  TODO: keyboard + framebuffer for MacPPC\n!\n");
+		fatal_error(SUBSYS_PROMEMUL, "of", "!\n!  TODO: keyboard + framebuffer for MacPPC\n!\n");
 
 		of_add_prop_str(machine, ofd, "/io/stdin", "name",
 		    "keyboard");
@@ -1088,8 +1080,7 @@ int of_emul(struct cpu *cpu)
 	struct of_data *of_data = cpu->machine->md.of_data;
 
 	if (of_data == NULL) {
-		fatal("of_emul(): no of_data struct?\n");
-		exit(1);
+		fatal_error(SUBSYS_PROMEMUL, "of", "of_emul(): no of_data struct?\n");
 	}
 
 	/*
@@ -1108,8 +1099,8 @@ int of_emul(struct cpu *cpu)
 	case ARCH_PPC:
 		base = cpu->cd.ppc.gpr[3];
 		break;
-	default:fatal("of_emul(): unimplemented arch (TODO)\n");
-		exit(1);
+	default:fatal_error(SUBSYS_PROMEMUL, "of", "of_emul(): unimplemented arch (TODO)");
+		return 0;
 	}
 
 	/*  TODO: how about 64-bit OpenFirmware?  */
@@ -1126,7 +1117,7 @@ int of_emul(struct cpu *cpu)
 		if (i > 0)
 			debug(", ");
 		if (i >= OF_N_MAX_ARGS) {
-			fatal("TOO MANY ARGS!");
+			fatal_error(SUBSYS_PROMEMUL, "of", "TOO MANY ARGS!");
 			continue;
 		}
 
@@ -1164,11 +1155,12 @@ int of_emul(struct cpu *cpu)
 	if (os == NULL) {
 		quiet_mode = 0;
 		cpu_register_dump(cpu->machine, cpu, 1, 0);
-		printf("\n");
-		fatal("[ of: unimplemented service \"%s\" with %i input "
-		    "args and %i output values ]\n", service, nargs, nret);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "\n");
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_ERROR, "[ of: unimplemented service \"%s\" with %i input "
+		    "args and %i output values ]", service, nargs, nret);
 		cpu->running = 0;
-		exit(1);
+		fatal_error_dropped = true;
+		debugger_drop_to_console("unimplemented OF service");
 	}
 
 	for (i=0; i<nargs; i++)
@@ -1182,8 +1174,7 @@ int of_emul(struct cpu *cpu)
 	case ARCH_PPC:
 		cpu->cd.ppc.gpr[3] = retval;
 		break;
-	default:fatal("of_emul(): TODO: unimplemented arch (Retval)\n");
-		exit(1);
+	default:fatal_error(SUBSYS_PROMEMUL, "of", "of_emul(): TODO: unimplemented arch (Retval)\n");
 	}
 
 	return 1;

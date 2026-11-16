@@ -43,7 +43,7 @@
 
 
 /*  #define debug fatal  */
-static int net_ip_debug = 0;	// replace by debugmsg(....)
+static int net_ip_debug = 0;	// replace by debugmsg(....);
 
 
 
@@ -363,10 +363,10 @@ void net_ip_tcp_connectionreply(struct net *net, struct nic_data *nic,
 	    lp->data + 26, lp->data + 30, 0);
 
 	if (net_ip_debug) {
-		fatal("[ net_ip_tcp_connectionreply(%i): ", connecting);
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net_ip_tcp_connectionreply(%i): ", connecting);
 		for (int i=0; i<ip_len+14; i++)
-			fatal("%02x", lp->data[i]);
-		fatal(" ]\n");
+			fatal_error(SUBSYS_NET, "net_ip", "%02x", lp->data[i]);
+		fatal_error(SUBSYS_NET, "net_ip", " ]\n");
 	}
 
 	if (connecting)
@@ -409,10 +409,10 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	int send_ofs;
 
 	if (net_ip_debug) {
-		fatal("[ net: TCP: ");
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: TCP: ");
 		for (i=0; i<26; i++)
-			fatal("%02x", packet[i]);
-		fatal(" ");
+			fatal_error(SUBSYS_NET, "net_ip", "%02x", packet[i]);
+		fatal_error(SUBSYS_NET, "net_ip", " ");
 	}
 
 	srcport = (packet[34] << 8) + packet[35];
@@ -424,7 +424,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 		+ (packet[44] << 8) + packet[45];
 
 	if (net_ip_debug)
-		fatal("%i.%i.%i.%i:%i -> %i.%i.%i.%i:%i, seqnr=%lli acknr=%lli ",
+		fatal_error(SUBSYS_NET, "net_ip", "%i.%i.%i.%i:%i -> %i.%i.%i.%i:%i, seqnr=%lli acknr=%lli ",
 		    packet[26], packet[27], packet[28], packet[29], srcport,
 		    packet[30], packet[31], packet[32], packet[33], dstport,
 		    (long long)seqnr, (long long)acknr);
@@ -443,24 +443,24 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	urgptr   = (packet[52] << 8) + packet[53];
 
 	if (net_ip_debug) {
-		fatal(urg? "URG " : "");
-		fatal(ack? "ACK " : "");
-		fatal(psh? "PSH " : "");
-		fatal(rst? "RST " : "");
-		fatal(syn? "SYN " : "");
-		fatal(fin? "FIN " : "");
+		fatal_error(SUBSYS_NET, "net_ip", urg? "URG " : "");
+		fatal_error(SUBSYS_NET, "net_ip", ack? "ACK " : "");
+		fatal_error(SUBSYS_NET, "net_ip", psh? "PSH " : "");
+		fatal_error(SUBSYS_NET, "net_ip", rst? "RST " : "");
+		fatal_error(SUBSYS_NET, "net_ip", syn? "SYN " : "");
+		fatal_error(SUBSYS_NET, "net_ip", fin? "FIN " : "");
 
-		fatal("window=0x%04x checksum=0x%04x urgptr=0x%04x ", window, checksum, urgptr);
+		fatal_error(SUBSYS_NET, "net_ip", "window=0x%04x checksum=0x%04x urgptr=0x%04x ", window, checksum, urgptr);
 
-		fatal("options=");
+		fatal_error(SUBSYS_NET, "net_ip", "options=");
 		for (i=34+20; i<data_offset; i++)
-			fatal("%02x", packet[i]);
+			fatal_error(SUBSYS_NET, "net_ip", "%02x", packet[i]);
 
-		fatal(" data=");
+		fatal_error(SUBSYS_NET, "net_ip", " data=");
 		for (i=data_offset; i<len; i++)
-			fatal("%02x", packet[i]);
+			fatal_error(SUBSYS_NET, "net_ip", "%02x", packet[i]);
 
-		fatal(" ]\n");
+		fatal_error(SUBSYS_NET, "net_ip", " ]\n");
 	}
 
 	net_ip_tcp_checksum(packet + 34, 16, len - 34,
@@ -529,7 +529,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 			 *  TODO:  Reuse the oldest one currently in use, or
 			 *  just drop the new connection attempt? Drop for now.
 			 */
-			fatal("[ TOO MANY TCP CONNECTIONS IN USE! "
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ TOO MANY TCP CONNECTIONS IN USE! "
 			    "Increase MAX_TCP_CONNECTIONS! ]\n");
 			return;
 #else
@@ -538,7 +538,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 			    tcp_connections[0].last_used_timestamp;
 			free_con_id = 0;
 
-			fatal("[ NO FREE TCP SLOTS, REUSING OLDEST ONE ]\n");
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ NO FREE TCP SLOTS, REUSING OLDEST ONE ]\n");
 			for (i=0; i<MAX_TCP_CONNECTIONS; i++)
 				if (net->tcp_connections[i].
 				    last_used_timestamp < oldest) {
@@ -586,7 +586,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 		net->tcp_connections[con_id].socket =
 		    socket(AF_INET, SOCK_STREAM, 0);
 		if (net->tcp_connections[con_id].socket < 0) {
-			fatal("[ net: TCP: socket() returned %i ]\n",
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: TCP: socket() returned %i ]",
 			    net->tcp_connections[con_id].socket);
 			return;
 		}
@@ -1025,7 +1025,7 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 		net->udp_connections[con_id].socket = socket(AF_INET,
 		    SOCK_DGRAM, 0);
 		if (net->udp_connections[con_id].socket < 0) {
-			fatal("[ net: UDP: socket() returned %i ]\n",
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: UDP: socket() returned %i ]",
 			    net->udp_connections[con_id].socket);
 			return;
 		}
@@ -1199,30 +1199,30 @@ static void net_ip_broadcast_dhcp(struct net *net, struct nic_data *nic,
 	 */
 
 #if 0
-	fatal("op=%02x ", packet[42]);
-	fatal("htype=%02x ", packet[43]);
-	fatal("hlen=%02x ", packet[44]);
-	fatal("hops=%02x ", packet[45]);
-	fatal("xid=%02x%02x%02x%02x ", packet[46], packet[47],
+	fatal_error(SUBSYS_NET, "net_ip", "op=%02x ", packet[42]);
+	fatal_error(SUBSYS_NET, "net_ip", "htype=%02x ", packet[43]);
+	fatal_error(SUBSYS_NET, "net_ip", "hlen=%02x ", packet[44]);
+	fatal_error(SUBSYS_NET, "net_ip", "hops=%02x ", packet[45]);
+	fatal_error(SUBSYS_NET, "net_ip", "xid=%02x%02x%02x%02x ", packet[46], packet[47],
 	    packet[48], packet[49]);
-	fatal("secs=%02x%02x ", packet[50], packet[51]);
-	fatal("flags=%02x%02x ", packet[52], packet[53]);
-	fatal("ciaddr=%02x%02x%02x%02x ", packet[54], packet[55],
+	fatal_error(SUBSYS_NET, "net_ip", "secs=%02x%02x ", packet[50], packet[51]);
+	fatal_error(SUBSYS_NET, "net_ip", "flags=%02x%02x ", packet[52], packet[53]);
+	fatal_error(SUBSYS_NET, "net_ip", "ciaddr=%02x%02x%02x%02x ", packet[54], packet[55],
 	    packet[56], packet[57]);
-	fatal("yiaddr=%02x%02x%02x%02x ", packet[58], packet[59],
+	fatal_error(SUBSYS_NET, "net_ip", "yiaddr=%02x%02x%02x%02x ", packet[58], packet[59],
 	    packet[60], packet[61]);
-	fatal("siaddr=%02x%02x%02x%02x ", packet[62], packet[63],
+	fatal_error(SUBSYS_NET, "net_ip", "siaddr=%02x%02x%02x%02x ", packet[62], packet[63],
 	    packet[64], packet[65]);
-	fatal("giaddr=%02x%02x%02x%02x ", packet[66], packet[67],
+	fatal_error(SUBSYS_NET, "net_ip", "giaddr=%02x%02x%02x%02x ", packet[66], packet[67],
 	    packet[68], packet[69]);
-	fatal("chaddr=");
+	fatal_error(SUBSYS_NET, "net_ip", "chaddr=");
 	for (i=70; i<70+16; i++)
-		fatal("%02x", packet[i]);
+		fatal_error(SUBSYS_NET, "net_ip", "%02x", packet[i]);
 	/*
 	   |                          sname   (64)                         |
 	   |                          file    (128)                        |
 	 */
-	fatal(" ]\n");
+	fatal_error(SUBSYS_NET, "net_ip", " ]\n");
 #endif
 
         reply_len = 307;
@@ -1412,9 +1412,9 @@ void net_ip_broadcast(struct net *net, struct nic_data *nic,
 		match = 1;
 
 	if (warning)
-		fatal("[ net_ip_broadcast(): warning: broadcast to "
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net_ip_broadcast(): warning: broadcast to "
 		    "0x%08x, expecting broadcast to 0x%08x or "
-		    "0xffffffff ]\n", y, x);
+		    "0xffffffff ]", y, x);
 
 	/*  Cut off overflowing tail data:  */
 	if (len > 14 + packet[16]*256 + packet[17])
@@ -1497,7 +1497,7 @@ void net_udp_rx_avail(struct net *net, struct nic_data *nic)
 			continue;
 
 		if (net->udp_connections[con_id].socket < 0) {
-			fatal("INTERNAL ERROR in net.c, udp socket < 0 "
+			fatal_error(SUBSYS_NET, "net_ip", "INTERNAL ERROR in net.c, udp socket < 0 "
 			    "but in use?\n");
 			continue;
 		}
@@ -1649,7 +1649,7 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 			continue;
 
 		if (net->tcp_connections[con_id].socket < 0) {
-			fatal("INTERNAL ERROR in net.c, tcp socket < 0"
+			fatal_error(SUBSYS_NET, "net_ip", "INTERNAL ERROR in net.c, tcp socket < 0"
 			    " but in use?\n");
 			continue;
 		}

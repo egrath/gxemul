@@ -29,6 +29,7 @@
  */
 
 #include <stdio.h>
+#include "misc.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -107,8 +108,8 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 1;		/*  TODO  */
 		break;
 	case 64:
-		fatal("[ SIFBIOS SBR_IOPH_INIT(0x%" PRIx32",0x%" PRIx32",0x%"
-		    PRIx32"): TODO ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS SBR_IOPH_INIT(0x%" PRIx32",0x%" PRIx32",0x%"
+		    PRIx32"): TODO ]",
 		    (uint32_t) cpu->cd.mips.gpr[MIPS_GPR_A1],
 		    (uint32_t) cpu->cd.mips.gpr[MIPS_GPR_A2],
 		    (uint32_t) cpu->cd.mips.gpr[MIPS_GPR_A3]);
@@ -135,21 +136,21 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 0);
-			fatal("  +0: %08x\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "  +0: %08x", tmpaddr);
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 4);
-			fatal("  +4: %08x\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "  +4: %08x", tmpaddr);
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 8);
-			fatal("  +8: %08x\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "  +8: %08x", tmpaddr);
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 12);
-			fatal(" +12: %08x\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", " +12: %08x", tmpaddr);
 
 			/*  TODO: This is probably netbsd specific  */
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 12);
-			fatal("tmpaddr 1 = 0x%08x\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "tmpaddr 1 = 0x%08x", tmpaddr);
 
 			/*  "done" word for NetBSD:  */
 			store_32bit_word(cpu, tmpaddr, 1);
@@ -162,7 +163,7 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 65:
-		fatal("[ SIFBIOS alloc iop heap(0x" PRIx32") ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS alloc iop heap(0x" PRIx32") ]",
 		    (uint32_t)cpu->cd.mips.gpr[MIPS_GPR_A1]);
 
 		/*
@@ -181,24 +182,24 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 0);
-			fatal("  +0: %08x (result should be placed here)\n",
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "  +0: %08x (result should be placed here)",
 			    tmpaddr);
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 4);
-			fatal("  +4: %08x (*arg)\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "  +4: %08x (*arg)", tmpaddr);
 			size = load_32bit_word(cpu, tmpaddr + 0);
-			fatal("      size = %08x\n", size);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "      size = %08x", size);
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 8);
-			fatal("  +8: %08x (*func (void *, int))\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "  +8: %08x (*func (void *, int))", tmpaddr);
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 12);
-			fatal(" +12: %08x (*para)\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", " +12: %08x (*para)", tmpaddr);
 
 			/*  TODO: This is probably netbsd specific  */
 			tmpaddr = load_32bit_word(cpu,
 			    cpu->cd.mips.gpr[MIPS_GPR_A1] + 12);
-			fatal("tmpaddr 1 = 0x%08x\n", tmpaddr);
+			fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "tmpaddr 1 = 0x%08x", tmpaddr);
 
 			/*  "done" word for NetBSD:  */
 			store_32bit_word(cpu, tmpaddr, 1);
@@ -223,9 +224,9 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 	default:
 		quiet_mode = 0;
 		cpu_register_dump(cpu->machine, cpu, 1, 0x1);
-		printf("\n");
-		fatal("Playstation 2 SIFBIOS emulation: "
-		    "unimplemented call nr 0x%x\n", callnr);
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "\n");
+		fatal_error(SUBSYS_PROMEMUL, "ps2_bios", "Playstation 2 SIFBIOS emulation: "
+		    "unimplemented call nr 0x%x", callnr);
 		cpu->running = 0;
 	}
 

@@ -89,14 +89,14 @@ bool net_l2tp_init(struct net *net, uint32_t session, const char *cookie,
 	size_t i, n;
 
 	if (session == 0) {
-		fprintf(stderr, "l2tp_session must not be 0\n");
+		debugmsg(SUBSYS_NET, "net_l2tp", VERBOSITY_DEBUG,  "l2tp_session must not be 0\n");
 		return false;
 	}
 	if (cookie[0] == '0' && (cookie[1] == 'x' || cookie[1] == 'X'))
 		cookie += 2;
 	n = strlen(cookie);
 	if (n != 0 && n != 8 && n != 16) {
-		fprintf(stderr, "l2tp_cookie must be 8 or 16 hex digits\n");
+		debugmsg(SUBSYS_NET, "net_l2tp", VERBOSITY_DEBUG,  "l2tp_cookie must be 8 or 16 hex digits\n");
 		return false;
 	}
 	for (i = 0; i < n; i += 2) {
@@ -104,7 +104,7 @@ bool net_l2tp_init(struct net *net, uint32_t session, const char *cookie,
 		if (!isxdigit((unsigned char)cookie[i]) ||
 		    !isxdigit((unsigned char)cookie[i+1]) ||
 		    sscanf(cookie + i, "%2x", &b) != 1) {
-			fprintf(stderr, "l2tp_cookie must be 8 or 16 hex "
+			debugmsg(SUBSYS_NET, "net_l2tp", VERBOSITY_DEBUG,  "l2tp_cookie must be 8 or 16 hex "
 			    "digits\n");
 			return false;
 		}

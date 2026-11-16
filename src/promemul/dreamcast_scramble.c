@@ -12,6 +12,7 @@
 /*  #define STAND_ALONE  */
 
 #include <stdio.h>
+#include "misc.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -34,8 +35,7 @@ void load(FILE *fh, unsigned char *ptr, unsigned long sz)
 {
   if(fread(ptr, 1, sz, fh) != sz)
     {
-      fprintf(stderr, "Read error!\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Read error!\n");
     }
 }
 
@@ -93,25 +93,21 @@ void read_file(char *filename, unsigned char **ptr, unsigned long *sz)
   FILE *fh = fopen(filename, "rb");
   if(fh == NULL)
     {
-      fprintf(stderr, "Can't open \"%s\".\n", filename);
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Can't open \"%s\".", filename);
     }
   if(fseek(fh, 0, SEEK_END)<0)
     {
-      fprintf(stderr, "Seek error.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Seek error.\n");
     }
   *sz = ftell(fh);
   *ptr = (unsigned char *) malloc(*sz);
   if( *ptr == NULL )
     {
-      fprintf(stderr, "Out of memory.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Out of memory.\n");
     }
   if(fseek(fh, 0, SEEK_SET)<0)
     {
-      fprintf(stderr, "Seek error.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Seek error.\n");
     }
   load_file(fh, *ptr, *sz);
   fclose(fh);
@@ -121,8 +117,7 @@ void save(FILE *fh, unsigned char *ptr, unsigned long sz)
 {
   if(fwrite(ptr, 1, sz, fh) != sz)
     {
-      fprintf(stderr, "Write error!\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Write error!\n");
     }
 }
 
@@ -180,8 +175,7 @@ void write_file(char *filename, unsigned char *ptr, unsigned long sz)
   FILE *fh = fopen(filename, "wb");
   if(fh == NULL)
     {
-      fprintf(stderr, "Can't open \"%s\".\n", filename);
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Can't open \"%s\".", filename);
     }
   save_file(fh, ptr, sz);
   fclose(fh);
@@ -198,13 +192,11 @@ void dreamcast_descramble(char *src, char *dst)
   fh = fopen(dst, "wb");
   if(fh == NULL)
     {
-      fprintf(stderr, "Can't open \"%s\".\n", dst);
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Can't open \"%s\".", dst);
     }
   if( fwrite(ptr, 1, sz, fh) != sz )
     {
-      fprintf(stderr, "Write error.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Write error.\n");
     }
   fclose(fh);
   free(ptr);
@@ -219,30 +211,25 @@ void scramble(char *src, char *dst)
   fh = fopen(src, "rb");
   if(fh == NULL)
     {
-      fprintf(stderr, "Can't open \"%s\".\n", src);
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Can't open \"%s\".", src);
     }
   if(fseek(fh, 0, SEEK_END)<0)
     {
-      fprintf(stderr, "Seek error.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Seek error.\n");
     }
   sz = ftell(fh);
   ptr = (unsigned char *) malloc(sz);
   if( ptr == NULL )
     {
-      fprintf(stderr, "Out of memory.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Out of memory.\n");
     }
   if(fseek(fh, 0, SEEK_SET)<0)
     {
-      fprintf(stderr, "Seek error.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Seek error.\n");
     }
   if( fread(ptr, 1, sz, fh) != sz )
     {
-      fprintf(stderr, "Read error.\n");
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Read error.\n");
     }
   fclose(fh);
 
@@ -263,8 +250,7 @@ int main(int argc, char *argv[])
 
   if(argc != 3+opt)
     {
-      fprintf(stderr, "Usage: %s [-d] from to\n", argv[0]);
-      exit(1);
+      debugmsg(SUBSYS_PROMEMUL, "dreamcast_scramble", VERBOSITY_DEBUG,  "Usage: %s [-d] from to", argv[0]);
     }
   
   if(opt)

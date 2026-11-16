@@ -67,8 +67,7 @@ void net_debugaddr(void *addr, int type)
 		break;
 
 	default:
-		fatal("net_debugaddr(): UNIMPLEMTED type %i\n", type);
-		exit(1);
+		fatal_error(SUBSYS_NET, "net_misc", "net_debugaddr(): UNIMPLEMTED type %i", type);
 	}
 }
 
@@ -85,7 +84,7 @@ void net_debugaddr(void *addr, int type)
 void net_generate_unique_mac(struct machine *machine, unsigned char *macbuf)
 {
 	if (macbuf == NULL || machine == NULL) {
-		fatal("**\n**  net_generate_unique_mac(): NULL ptr\n**\n");
+		fatal_error(SUBSYS_NET, "net_misc", "**\n**  net_generate_unique_mac(): NULL ptr\n**\n");
 		return;
 	}
 
@@ -120,11 +119,11 @@ void send_udp(struct in_addr *addrp, int portnr, unsigned char *packet, size_t l
 
 	s = socket(AF_INET, SOCK_DGRAM, 0);
 	if (s < 0) {
-		perror("send_udp(): socket");
+		fatal_error(SUBSYS_NET, "net_misc", "%s: %s", "send_udp(): socket", strerror(errno));
 		return;
 	}
 
-	/*  fatal("send_udp(): sending to port %i\n", portnr);  */
+	/*  fatal_error(SUBSYS_NET, "net_misc", "send_udp(): sending to port %i", portnr);  */
 
 	si.sin_family = AF_INET;
 	si.sin_addr = *addrp;
@@ -132,7 +131,7 @@ void send_udp(struct in_addr *addrp, int portnr, unsigned char *packet, size_t l
 
 	if (sendto(s, (const char *) packet, len, 0, (struct sockaddr *)&si,
 	    sizeof(si)) != (ssize_t)len) {
-		perror("send_udp(): sendto");
+		fatal_error(SUBSYS_NET, "net_misc", "%s: %s", "send_udp(): sendto", strerror(errno));
 	}
 
 	socket_close(s);

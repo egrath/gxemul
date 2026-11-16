@@ -541,18 +541,18 @@ bool net_tap_init(struct net *net, const char *tapdev)
 		if (strcasecmp(tapdev, "list") != 0)
 			debugmsg(SUBSYS_NET, "tap", VERBOSITY_ERROR,
 			    "unknown network interface '%s'", tapdev);
-		fprintf(stderr, "Available network interfaces:\n");
+		debugmsg(SUBSYS_NET, "net_tap", VERBOSITY_DEBUG,  "Available network interfaces:\n");
 		for (d = alldevs, idx = 0; d != NULL; d = d->next) {
 			if (!pcap_usable(d))
 				continue;
 			idx++;
-			fprintf(stderr, "  %i. %s (%s)\n", idx,
+			debugmsg(SUBSYS_NET, "net_tap", VERBOSITY_DEBUG,  "  %i. %s (%s)", idx,
 			    npcap_short_name(d->name),
 			    d->description != NULL ? d->description :
 			    "no description");
 		}
 		if (idx == 0)
-			fprintf(stderr, "  (none)\n");
+			debugmsg(SUBSYS_NET, "net_tap", VERBOSITY_DEBUG,  "  (none)\n");
 		p_pcap_freealldevs(alldevs);
 		return false;
 	}

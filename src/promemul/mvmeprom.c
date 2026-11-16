@@ -112,7 +112,7 @@ int mvmeprom_emul(struct cpu *cpu)
 		break;
 
 	case MVMEPROM_EXIT:
-		fatal("[ MVME PROM: exit ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "mvmeprom", VERBOSITY_DEBUG, "[ MVME PROM: exit ]\n");
 		cpu->running = 0;
 		break;
 
@@ -124,8 +124,8 @@ int mvmeprom_emul(struct cpu *cpu)
 	default:
 		cpu_register_dump(cpu->machine, cpu, 1, 0);
 		cpu_register_dump(cpu->machine, cpu, 0, 1);
-		fatal("[ MVME PROM emulation: unimplemented function 0x%"
-		    PRIx32" ]\n", func);
+		debugmsg(SUBSYS_PROMEMUL, "mvmeprom", VERBOSITY_DEBUG, "[ MVME PROM emulation: unimplemented function 0x%"
+		    PRIx32" ]", func);
 		cpu->running = 0;
 		return 0;
 	}

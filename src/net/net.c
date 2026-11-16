@@ -619,8 +619,7 @@ void net_add_nic(struct net *net, struct nic_data *nic)
 		return;
 
 	if (nic == NULL) {
-		fprintf(stderr, "net_add_nic(): nic = NULL\n");
-		exit(1);
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG,  "net_add_nic(): nic = NULL\n");
 	}
 
 	/*
@@ -802,15 +801,15 @@ struct net *net_init(struct emul *emul, int init_flags,
 	res = inet_aton(ipv4addr, &net->netmask_ipv4);
 #endif
 	if (res < 1) {
-		fprintf(stderr, "net_init(): could not parse IPv4 address"
-		    " '%s'\n", ipv4addr);
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG,  "net_init(): could not parse IPv4 address"
+		    " '%s'", ipv4addr);
 		free(net);
 		return NULL;
 	}
 
 	if (netipv4len < 1 || netipv4len > 30) {
-		fprintf(stderr, "net_init(): extremely weird ipv4 "
-		    "network length (%i)\n", netipv4len);
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG,  "net_init(): extremely weird ipv4 "
+		    "network length (%i)", netipv4len);
 		free(net);
 		return NULL;
 	}
@@ -827,7 +826,7 @@ struct net *net_init(struct emul *emul, int init_flags,
 		net->local_port = local_port;
 		net->local_port_socket = socket(AF_INET, SOCK_DGRAM, 0);
 		if (net->local_port_socket < 0) {
-			perror("socket");
+			fatal_error(SUBSYS_NET, "net", "%s: %s", "socket", strerror(errno));
 			free(net);
 			return NULL;
 		}
@@ -838,7 +837,7 @@ struct net *net_init(struct emul *emul, int init_flags,
 		si_self.sin_addr.s_addr = htonl(INADDR_ANY);
 		if (bind(net->local_port_socket, (struct sockaddr *)&si_self,
 		    sizeof(si_self)) < 0) {
-			perror("bind");
+			fatal_error(SUBSYS_NET, "net", "%s: %s", "bind", strerror(errno));
 			free(net);
 			return NULL;
 		}
@@ -871,7 +870,7 @@ struct net *net_init(struct emul *emul, int init_flags,
 
 			hp = gethostbyname(rnp->name);
 			if (hp == NULL) {
-				fprintf(stderr, "could not resolve '%s'\n",
+				debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG,  "could not resolve '%s'",
 				    rnp->name);
 				free(net);
 				return NULL;
@@ -883,8 +882,8 @@ struct net *net_init(struct emul *emul, int init_flags,
 			/*  And again:  */
 			CHECK_ALLOCATION(rnp->name = strdup(remote[n_remote]));
 			if (strchr(rnp->name, ':') == NULL) {
-				fprintf(stderr, "Remote network '%s' is not "
-				    "'host:portnr'?\n", rnp->name);
+				debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG,  "Remote network '%s' is not "
+				    "'host:portnr'?", rnp->name);
 				free(net);
 				return NULL;
 			}
