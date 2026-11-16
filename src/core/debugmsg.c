@@ -70,6 +70,7 @@
 #include "console.h"
 #include "control.h"
 #include "cpu.h"
+#include "debugger.h"
 #include "emul.h"
 #include "machine.h"
 #include "misc.h"
@@ -153,6 +154,10 @@ static void debugmsg_va(struct cpu* cpu, int subsystem,
 	bool subsys_enabled = (subsystem >= 0 &&
 	    (size_t)subsystem < debugmsg_nr_of_subsystems &&
 	    debugmsg_current_verbosity[subsystem] >= verbosity);
+
+	/*  Errors are always shown:  */
+	if (verbosity <= VERBOSITY_ERROR)
+		subsys_enabled = true;
 
 	bool do_console = ((debugmsg_destinations & DEBUG_DEST_CONSOLE) && subsys_enabled) ||
 	    (ss && subsystem == SUBSYS_CPU);
@@ -491,6 +496,40 @@ void fatal(const char *fmt, ...)
 	va_start(argp, fmt);
 	va_debug(argp, fmt);
 	va_end(argp);
+}
+
+
+/*
+ *  fatal_error():
+ *
+ *  A fatal error during emulation: report through the debugmsg framework
+ *  at ERROR level (always shown), and drop to the debugger console instead
+ *  of terminating the process with exit().  If the debugger cannot be
+ *  entered (e.g. before emulation has started), this behaves like the old
+ *  fatal() + exit(1).
+ */
+bool fatal_error_dropped = false;
+
+void fatal_error(int subsystem, const char *name, const char *fmt, ...)
+{
+	va_list argp;
+
+	va_start(argp, fmt);
+	debugmsg_va(NULL, subsystem, name, VERBOSITY_ERROR, argp, fmt);
+	va_end(argp);
+	fflush(NULL);
+
+	if (emul_executing) {
+		/*
+		 *  Ask the emulation loop to stop and drop to the debugger
+		 *  console, the same way as CTRL-C does:
+		 */
+		fatal_error_dropped = true;
+		debugger_ctl_stop("fatal error");
+	} else {
+		/*  Not emulating yet: behave like the legacy fatal()+exit():  */
+		exit(1);
+	}
 }
 
 

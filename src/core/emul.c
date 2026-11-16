@@ -1018,13 +1018,38 @@ void emul_run(struct emul *emul)
 		if (emul_shutdown)
 			break;
 
+		/*
+		 *  A fatal_error() during machine_run() drops to the
+		 *  debugger console before running any more instructions:
+		 */
+		if (fatal_error_dropped) {
+			fatal_error_dropped = false;
+			debugger_reset();
+			single_step = true;
+			debugger();
+			if (emul_shutdown)
+				break;
+		}
+
 		emul_executing = true;
+
 
 		bool any_machine_still_running = false;
 		for (int i = 0; i < emul->n_machines; i++)
 			any_machine_still_running |= machine_run(emul->machines[i]);
 
 		emul_executing = false;
+
+		if (fatal_error_dropped) {
+			fatal_error_dropped = false;
+			emul_executing = true;
+			debugger_reset();
+			single_step = true;
+			debugger();
+			emul_executing = false;
+			if (emul_shutdown)
+				break;
+		}
 
 		if (!any_machine_still_running) {
 			if (debugger_enter_at_end_of_run) {

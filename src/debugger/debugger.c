@@ -302,6 +302,20 @@ void debugger_ctl_stop(const char *reason)
 }
 
 
+/*
+ *  debugger_drop_to_console():
+ *
+ *  Drop to the interactive debugger console from emulation code, e.g.
+ *  after a fatal error.  Safe to call while a machine is running: the
+ *  emulation loop notices about_to_enter_single_step and calls
+ *  debugger() before running more instructions.
+ */
+void debugger_drop_to_console(const char *reason)
+{
+	debugger_ctl_stop(reason);
+}
+
+
 /****************************************************************************/
 
 
