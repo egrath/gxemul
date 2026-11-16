@@ -216,6 +216,7 @@ struct sym_target {
 	int			atn;		/*  the chip asserts ATN  */
 	int			ack_held;	/*  after a message in byte  */
 	int			disconnect_pending;
+	int			sdtr_sent, wdtr_sent;	/*  replied, this connection  */
 
 	unsigned char		msg_out[64];
 	int			msg_out_len;
@@ -255,6 +256,7 @@ struct sym53c810_data {
 
 	int			running;	/*  SCRIPTS  */
 	int			wait_reselect;
+	int64_t			sel_timeout_ticks; /*  > 0: selecting, no one answers  */
 	int			in_scripts;	/*  register access from SCRIPTS  */
 	uint32_t		insn_addr;	/*  of the current instruction  */
 
@@ -332,6 +334,7 @@ static void sym_halt(struct sym53c810_data *d, int dstat, int sist0,
 	d->reg[SIST1] |= sist1;
 	d->running = 0;
 	d->wait_reselect = 0;
+	d->sel_timeout_ticks = 0;
 
 	sym_update_irq(d);
 
@@ -477,13 +480,22 @@ static void tgt_messages(struct sym53c810_data *d)
 			if (left < 2 || left < m[1] + 2)
 				break;
 			n = m[1] + 2;
+			/*
+			 *  SDTR and WDTR: agreed, as asked, once per
+			 *  connection; another one is the initiator's
+			 *  answer to ours (NT 4.0 SP6's symc810 answers it
+			 *  so), which takes no reply.
+			 */
 			if (m[1] == 3 && m[2] == MSG_EXT_SDTR) {
-				/*  Agreed, as asked.  */
-				tgt_queue_msg_in(t, m, 5);
+				if (!t->sdtr_sent)
+					tgt_queue_msg_in(t, m, 5);
+				t->sdtr_sent = 1;
 			} else if (m[1] == 2 && m[2] == MSG_EXT_WDTR) {
 				unsigned char wdtr[4] = { MSG_EXTENDED, 2,
 				    MSG_EXT_WDTR, 0 };
-				tgt_queue_msg_in(t, wdtr, 4);
+				if (!t->wdtr_sent)
+					tgt_queue_msg_in(t, wdtr, 4);
+				t->wdtr_sent = 1;
 			} else {
 				static const unsigned char rej = MSG_REJECT;
 				tgt_queue_msg_in(t, &rej, 1);
@@ -879,6 +891,46 @@ static void sym_reg_write_internal(struct sym53c810_data *d,
 	sym_reg_access(d, cpu, r & (SYM_NREGS - 1), &v, MEM_WRITE);
 }
 
+/*
+ *  A selection that no target answers. As on the chip, SCRIPTS go on after
+ *  the SELECT, up to the first instruction that needs the target (a block
+ *  move, a phase test, WAIT DISCONNECT: sym_needs_target()), and wait there;
+ *  STO comes after the selection timeout in STIME0 <3:0> (0: none; n: 0.125
+ *  ms << (n - 1)). NT 4.0 SP6's symc810 relies on both: its SCRIPTS take the
+ *  request off their queue right after the SELECT, and its ISR completes
+ *  the request and gets the next one in a DPC, which never runs if STO
+ *  comes at once.
+ */
+static void sym_select_timeout_start(struct sym53c810_data *d,
+	struct cpu *cpu)
+{
+	int sel = d->reg[STIME0] & 0xf;
+	int64_t hz = cpu->machine->emulated_hz > 0?
+	    cpu->machine->emulated_hz : 100000000;
+	int64_t us = sel == 0? -1 : (125 << (sel - 1)) / 1000;
+
+	if (us < 0) {
+		/*  No timeout: until an abort or a reset.  */
+		d->sel_timeout_ticks = INT64_MAX;
+		return;
+	}
+	if (us < 1)
+		us = 1;
+	d->sel_timeout_ticks = (hz / 1000000 * us >> SYM_TICK_SHIFT) + 1;
+}
+
+/*  Does the instruction need a connected target (see above)?  */
+static int sym_needs_target(uint32_t insn)
+{
+	switch (insn >> 30) {
+	case 0:	return 1;				/*  block move  */
+	case 1:	return ((insn >> 27) & 7) == 1;		/*  WAIT DISCONNECT  */
+	case 2:	return (insn & 0x00230000) != 0 &&	/*  phase tests  */
+		    !(insn & 0x00200000);
+	}
+	return 0;
+}
+
 /*  I/O and register move instructions  */
 static void sym_io(struct sym53c810_data *d, struct cpu *cpu, uint32_t insn,
 	uint32_t addr2)
@@ -922,8 +974,8 @@ static void sym_io(struct sym53c810_data *d, struct cpu *cpu, uint32_t insn,
 			    !diskimage_exist(d->machine, id, DISKIMAGE_SCSI)) {
 				debugmsg(d->subsys, "sym53c810",
 				    VERBOSITY_DEBUG, "select id %i: "
-				    "timeout\n", id);
-				sym_halt(d, 0, 0, SIST1_STO);
+				    "no answer\n", id);
+				sym_select_timeout_start(d, cpu);
 				return;
 			}
 
@@ -1107,6 +1159,12 @@ static void sym_execute(struct sym53c810_data *d, struct cpu *cpu)
 		return;
 	}
 
+	/*  Selecting a target that doesn't answer: wait here for STO.  */
+	if (d->sel_timeout_ticks > 0 && sym_needs_target(insn)) {
+		d->running = 0;
+		return;
+	}
+
 	set_reg32(d, DSP, dsp + 8);
 	d->reg[DCMD] = insn >> 24;
 	set_dbc(d, insn & 0xffffff);
@@ -1132,20 +1190,31 @@ static void sym_execute(struct sym53c810_data *d, struct cpu *cpu)
 		}
 
 		if ((insn & 0xe0000000) == 0xc0000000) {
-			/*  Memory move, the destination is in TEMP.  */
-			uint32_t n = insn & 0xffffff, i;
+			/*
+			 *  Memory move, through the DMA FIFO: the source is
+			 *  read before TEMP takes the destination address,
+			 *  which is written after it. (Symbios' SCRIPTS in
+			 *  NT 4.0 SP6's symc810 rely on both: a move from
+			 *  TEMP stores TEMP's old value, a move to TEMP
+			 *  leaves what was moved.)
+			 */
+			uint32_t n = insn & 0xffffff;
+			unsigned char *buf;
 
 			set_reg32(d, DSP, dsp + 12);
-			set_reg32(d, TEMP, addr3);
-			for (i = 0; i < n; i++) {
-				unsigned char b;
-				if (!sym_dma(d, cpu, addr2 + i, &b, 1,
-				    MEM_READ) || !sym_dma(d, cpu, addr3 + i,
-				    &b, 1, MEM_WRITE)) {
-					sym_halt(d, DSTAT_BF, 0, 0);
-					return;
-				}
+			CHECK_ALLOCATION(buf = (unsigned char *) malloc(n + 1));
+			if (!sym_dma(d, cpu, addr2, buf, n, MEM_READ)) {
+				free(buf);
+				sym_halt(d, DSTAT_BF, 0, 0);
+				return;
 			}
+			set_reg32(d, TEMP, addr3);
+			if (!sym_dma(d, cpu, addr3, buf, n, MEM_WRITE)) {
+				free(buf);
+				sym_halt(d, DSTAT_BF, 0, 0);
+				return;
+			}
+			free(buf);
 		} else {
 			/*  LOAD and STORE (the 53C810A's), 1..4 bytes.  */
 			int r = (insn >> 16) & 0x7f, n = insn & 7, i;
@@ -1206,6 +1275,7 @@ static void sym_start(struct sym53c810_data *d, struct cpu *cpu)
 	    "SCRIPTS start at 0x%08x\n", (int) reg32(d, DSP));
 	d->running = 1;
 	d->wait_reselect = 0;
+	d->sel_timeout_ticks = 0;
 	sym_run(d, cpu);
 }
 
@@ -1228,6 +1298,7 @@ static void sym_reset(struct sym53c810_data *d)
 	d->reg[STEST0] = 0x03;		/*  SOM, SOZ  */
 	d->carry = 0;
 	d->running = 0;
+	d->sel_timeout_ticks = 0;
 	d->wait_reselect = 0;
 
 	sym_update_irq(d);
@@ -1383,6 +1454,14 @@ DEVICE_ACCESS(sym53c810)
 DEVICE_TICK(sym53c810)
 {
 	struct sym53c810_data *d = (struct sym53c810_data *) extra;
+
+	if (d->sel_timeout_ticks > 0 && d->sel_timeout_ticks != INT64_MAX &&
+	    --d->sel_timeout_ticks == 0) {
+		debugmsg(d->subsys, "sym53c810", VERBOSITY_DEBUG,
+		    "selection timeout\n");
+		sym_halt(d, 0, 0, SIST1_STO);
+		return;
+	}
 
 	if (d->running || (d->wait_reselect &&
 	    (d->reg[ISTAT] & ISTAT_SIGP)))
