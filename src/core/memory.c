@@ -125,11 +125,11 @@ void *zeroed_alloc(size_t s)
 
 	if (p == NULL) {
 #if 1
-		fprintf(stderr, "zeroed_alloc(): mmap() failed. This should"
+		fatal_error(SUBSYS_MEMORY, "alloc",
+		    "zeroed_alloc(): mmap() failed. This should"
 		    " not usually happen. If you can reproduce this, then"
 		    " please contact me with details about your run-time"
-		    " environment.\n");
-		exit(1);
+		    " environment.");
 #else
 		CHECK_ALLOCATION(p = malloc(s));
 		memset(p, 0, s);
@@ -160,9 +160,8 @@ struct memory *memory_new(uint64_t physical_max)
 
 	/*  Check bits_per_pagetable and bits_per_memblock for sanity:  */
 	if (bits_per_pagetable + bits_per_memblock != max_bits) {
-		fprintf(stderr, "memory_new(): bits_per_pagetable and "
-		    "bits_per_memblock mismatch\n");
-		exit(1);
+		fatal_error(SUBSYS_MEMORY, "memory_new",
+		    "bits_per_pagetable and bits_per_memblock mismatch");
 	}
 
 	mem->physical_max = physical_max;
@@ -368,15 +367,15 @@ void memory_device_register(struct memory *mem, const char *device_name,
 		if (baseaddr >= mem->devices[i].endaddr)
 			continue;
 
-		fatal("\nERROR! \"%s\" collides with device %i (\"%s\")!\n",
+		fatal_error(SUBSYS_MEMORY, "memory_device_register",
+		    "\"%s\" collides with device %i (\"%s\")!",
 		    device_name, i, mem->devices[i].name);
-		exit(1);
 	}
 	if (mem->n_mmapped_devices == 0)
 		newi = 0;
 	if (newi == -1) {
-		fatal("INTERNAL ERROR\n");
-		exit(1);
+		fatal_error(SUBSYS_MEMORY, "memory_device_register",
+		    "INTERNAL ERROR");
 	}
 
 	if (verbose >= 2) {
@@ -386,8 +385,10 @@ void memory_device_register(struct memory *mem, const char *device_name,
 
 		if (flags & (DM_DYNTRANS_OK | DM_DYNTRANS_WRITE_OK)
 		    && (baseaddr & mem->dev_dyntrans_alignment) != 0) {
-			fatal("\nWARNING: Device dyntrans access, but unaligned"
-			    " baseaddr 0x%" PRIx64".\n", (uint64_t) baseaddr);
+			debugmsg(SUBSYS_MEMORY, "memory_device_register",
+			    VERBOSITY_WARNING,
+			    "Device dyntrans access, but unaligned"
+			    " baseaddr 0x%" PRIx64".", (uint64_t) baseaddr);
 		}
 
 		if (flags & (DM_DYNTRANS_OK | DM_DYNTRANS_WRITE_OK)) {
@@ -401,12 +402,12 @@ void memory_device_register(struct memory *mem, const char *device_name,
 		if (dyntrans_data == mem->devices[i].dyntrans_data &&
 		    mem->devices[i].flags&(DM_DYNTRANS_OK|DM_DYNTRANS_WRITE_OK)
 		    && flags & (DM_DYNTRANS_OK | DM_DYNTRANS_WRITE_OK)) {
-			fatal("ERROR: the data pointer used for dyntrans "
-			    "accesses must only be used once!\n");
-			fatal("(%p cannot be used by '%s'; already in use by '"
-			    "%s')\n", dyntrans_data, device_name,
+			fatal_error(SUBSYS_MEMORY, "memory_device_register",
+			    "the data pointer used for dyntrans "
+			    "accesses must only be used once! "
+			    "(%p cannot be used by '%s'; already in use by '%s')",
+			    dyntrans_data, device_name,
 			    mem->devices[i].name);
-			exit(1);
 		}
 	}
 
@@ -430,16 +431,14 @@ void memory_device_register(struct memory *mem, const char *device_name,
 
 	if (flags & (DM_DYNTRANS_OK | DM_DYNTRANS_WRITE_OK)
 	    && !(flags & DM_EMULATED_RAM) && dyntrans_data == NULL) {
-		fatal("\nERROR: Device dyntrans access, but dyntrans_data"
-		    " = NULL!\n");
-		exit(1);
+		fatal_error(SUBSYS_MEMORY, "memory_device_register",
+		    "Device dyntrans access, but dyntrans_data = NULL!");
 	}
 
 	if ((size_t)dyntrans_data & (sizeof(void *) - 1)) {
-		fprintf(stderr, "memory_device_register():"
-		    " dyntrans_data not aligned correctly (%p)\n",
+		fatal_error(SUBSYS_MEMORY, "memory_device_register",
+		    "dyntrans_data not aligned correctly (%p)",
 		    dyntrans_data);
-		abort();
 	}
 
 	mem->devices[newi].dyntrans_write_low = (uint64_t)-1;
@@ -512,8 +511,8 @@ int memory_device_dispatch(struct cpu *cpu, struct memory *mem,
 void memory_device_remove(struct memory *mem, int i)
 {
 	if (i < 0 || i >= mem->n_mmapped_devices) {
-		fatal("memory_device_remove(): invalid device number %i\n", i);
-		exit(1);
+		fatal_error(SUBSYS_MEMORY, "memory_device_remove",
+		    "invalid device number %i", i);
 	}
 
 	mem->n_mmapped_devices --;

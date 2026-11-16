@@ -379,8 +379,7 @@ static void put_deflated(struct vnc_client *c, int i, unsigned char *data,
 
 	if (!c->zs_init[i]) {
 		if (deflateInit(zs, Z_DEFAULT_COMPRESSION) != Z_OK) {
-			fprintf(stderr, "vnc: deflateInit failed\n");
-			exit(1);
+			fatal_error(SUBSYS_DISPLAY, "vnc", "deflateInit failed");
 		}
 		c->zs_init[i] = true;
 	}

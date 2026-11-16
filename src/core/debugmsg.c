@@ -54,8 +54,6 @@
  *		command for showing debug output in new xterms?
  *		command for enabling breakpoints for subsystem output?
  *
- *	Convert existing debug() and fatal() calls to the new debugmsg() call.
- *
  *	Make sure that all the hardcoded subsystems are actually used, and/or
  *	move registering to individual subsystems.
  */
@@ -155,12 +153,12 @@ static void debugmsg_va(struct cpu* cpu, int subsystem,
 	    (size_t)subsystem < debugmsg_nr_of_subsystems &&
 	    debugmsg_current_verbosity[subsystem] >= verbosity);
 
-	/*  Errors are always shown:  */
+	/*  Errors are always shown, on the console even without --log:  */
 	if (verbosity <= VERBOSITY_ERROR)
 		subsys_enabled = true;
 
 	bool do_console = ((debugmsg_destinations & DEBUG_DEST_CONSOLE) && subsys_enabled) ||
-	    (ss && subsystem == SUBSYS_CPU);
+	    (ss && subsystem == SUBSYS_CPU) || (verbosity <= VERBOSITY_ERROR);
 	bool do_file = ((debugmsg_destinations & DEBUG_DEST_FILE) && debugmsg_logfile != NULL && subsys_enabled);
 	bool do_stderr = ((debugmsg_destinations & DEBUG_DEST_STDERR) && subsys_enabled);
 

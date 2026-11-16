@@ -134,9 +134,8 @@ struct fb_window *display_fb_init(int xsize, int ysize, const char *name,
 			win->cursor_pixels[y][x] = N_GRAYCOLORS-1;
 
 	if (!vnc_active() && !display_backend_open(win)) {
-		debugmsg(SUBSYS_DISPLAY, "fb_init", VERBOSITY_ERROR,
+		fatal_error(SUBSYS_DISPLAY, "fb_init",
 		    "couldn't open a window for '%s'", name);
-		exit(1);
 	}
 
 	CHECK_ALLOCATION(m->display_md.fb_windows = (struct fb_window **)

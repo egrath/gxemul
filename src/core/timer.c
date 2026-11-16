@@ -136,9 +136,8 @@ void timer_remove(struct timer *t)
 		TIMER_UNLOCK();
 		free(cur);
 	} else {
-		fprintf(stderr, "attempt to remove timer %p which "
-		    "doesn't exist. aborting\n", t);
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "timer",
+		    "attempt to remove timer %p which doesn't exist. aborting", t);
 	}
 }
 
@@ -191,7 +190,8 @@ static void timer_tick(int signal_nr)
 		{
 			double diff = tv.tv_usec * 0.000001 + tv.tv_sec
 			    - timer_current_time;
-			printf("timer: lagging behind %f seconds\n", diff);
+			debugmsg(SUBSYS_EMUL, "timer", VERBOSITY_DEBUG,
+			    "timer: lagging behind %f seconds", diff);
 		}
 #endif
 

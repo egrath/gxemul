@@ -1160,7 +1160,8 @@ void display_backend_resize(struct fb_window *win)
 {
 	set_window_size(win);
 	if (!create_texture(win))
-		exit(1);
+		fatal_error(SUBSYS_DISPLAY, "display",
+		    "could not create texture for window resize");
 }
 
 

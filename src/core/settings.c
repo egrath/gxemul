@@ -102,9 +102,8 @@ void settings_destroy(struct settings *settings)
 	int i;
 
 	if (settings == NULL) {
-		fprintf(stderr, "settings_destroy(): internal error, "
-		    "settings = NULL!\n");
-		exit(1);
+		fatal_error(SUBSYS_STARTUP, "settings",
+		    "settings_destroy(): internal error, settings = NULL!");
 	}
 
 	if (settings->n_settings > 0)
@@ -125,10 +124,10 @@ void settings_destroy(struct settings *settings)
 
 		free(settings->name);
 	} else if (settings->n_settings != 0) {
-		fprintf(stderr, "settings_destroy(): internal error, "
+		fatal_error(SUBSYS_STARTUP, "settings",
+		    "settings_destroy(): internal error, "
 		    "settings->name = NULL, but there were settings?"
-		    " (n_settings = %i)\n", settings->n_settings);
-		exit(1);
+		    " (n_settings = %i)", settings->n_settings);
 	}
 
 	if (settings->writable != NULL)
@@ -195,9 +194,9 @@ static int settings_read(struct settings *settings, int i, uint64_t *valuep)
 	case SETTINGS_TYPE_STRING:
 		/*  Note: Strings cannot be read like this.  */
 		break;
-	default:printf("settings_read(): FATAL ERROR! Unknown storage type"
-		    ": %i\n", settings->storage_type[i]);
-		exit(1);
+	default:fatal_error(SUBSYS_STARTUP, "settings",
+		    "settings_read(): FATAL ERROR! Unknown storage type: %i",
+		    settings->storage_type[i]);
 	}
 
 	return SETTINGS_OK;
@@ -237,12 +236,12 @@ static int settings_write(struct settings *settings, int i, uint64_t *valuep)
 		break;
 	case SETTINGS_TYPE_STRING:
 		/*  Note: Strings cannot be read like this.  */
-		printf("settings_write(): ERROR! Strings cannot be "
-		    "written like this.\n");
+		debugmsg(SUBSYS_STARTUP, "settings", VERBOSITY_ERROR,
+		    "settings_write(): Strings cannot be written like this.");
 		break;
-	default:printf("settings_read(): FATAL ERROR! Unknown storage type"
-		    ": %i\n", settings->storage_type[i]);
-		exit(1);
+	default:fatal_error(SUBSYS_STARTUP, "settings",
+		    "settings_read(): FATAL ERROR! Unknown storage type: %i",
+		    settings->storage_type[i]);
 	}
 
 	return SETTINGS_OK;
@@ -328,10 +327,10 @@ void settings_debugdump(struct settings *settings, const char *prefix,
 			case SETTINGS_FORMAT_STRING:
 				printf("\"%s\"", *((char **)settings->ptr[i]));
 				break;
-			default:printf("FATAL ERROR! Unknown presentation "
-				    "format: %i\n",
+			default:fatal_error(SUBSYS_STARTUP, "settings",
+				    "settings_debugdump(): FATAL ERROR! Unknown "
+				    "presentation format: %i",
 				    settings->presentation_format[i]);
-				exit(1);
 			}
 
 			if (!settings->writable[i])
@@ -361,9 +360,8 @@ void settings_add(struct settings *settings, const char *name, int writable,
 	}
 
 	if (i < settings->n_settings) {
-		fprintf(stderr, "settings_add(): name '%s' is already"
-		    " in use\n", name);
-		exit(1);
+		fatal_error(SUBSYS_STARTUP, "settings",
+		    "settings_add(): name '%s' is already in use", name);
 	}
 
 	settings->n_settings ++;
@@ -420,12 +418,13 @@ void settings_remove(struct settings *settings, const char *name)
 	    settings->ptr[i] != NULL) {
 		struct settings *subsettings = (struct settings *) settings->ptr[i];
 		if (subsettings->n_settings != 0) {
-			fprintf(stderr, "settings_remove(): attempting to "
-			    "remove non-emtpy setting '%s'\n", name);
-			fprintf(stderr, "Remaining settings are:\n");
+			fatal_error(SUBSYS_STARTUP, "settings",
+			    "settings_remove(): attempting to "
+			    "remove non-emtpy setting '%s'; remaining settings:",
+			    name);
 			for (i=0; i<subsettings->n_settings; i++)
-				fprintf(stderr, "\t%s\n", subsettings->name[i]);
-			exit(1);
+				debugmsg(SUBSYS_STARTUP, "settings", VERBOSITY_ERROR,
+				    "\t%s", subsettings->name[i]);
 		}
 	}
 

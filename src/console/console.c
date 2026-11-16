@@ -251,8 +251,8 @@ static void telnet_listen(int handle)
 
 	chp->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (chp->listen_fd < 0) {
-		perror("console: socket");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "console",
+		    "socket(): %s", strerror(errno));
 	}
 
 	setsockopt(chp->listen_fd, SOL_SOCKET, SO_REUSEADDR,
@@ -274,17 +274,17 @@ static void telnet_listen(int handle)
 
 		if (socket_error() != SOCKET_EADDRINUSE ||
 		    telnet_port >= 65535) {
-			fprintf(stderr, "console: can't listen on port %i "
-			    "(error %i)\n", telnet_port, socket_error());
-			exit(1);
+			fatal_error(SUBSYS_EMUL, "console",
+			    "can't listen on port %i (error %i)",
+			    telnet_port, socket_error());
 		}
 
 		telnet_port ++;
 	}
 
 	if (listen(chp->listen_fd, 1) < 0) {
-		perror("console: listen");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "console",
+		    "listen(): %s", strerror(errno));
 	}
 
 	socket_set_nonblocking(chp->listen_fd);
@@ -622,7 +622,8 @@ static void console_makeavail_raw(int handle, char ch)
 
 	if (console_handles[handle].fifo_head ==
 	    console_handles[handle].fifo_tail)
-		fatal("[ WARNING: console fifo overrun, handle %i ]\n", handle);
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+		    "[ WARNING: console fifo overrun, handle %i ]", handle);
 }
 
 
@@ -745,7 +746,8 @@ void console_key_hold(int handle)
 
 	if (console_handles[handle].fifo_head ==
 	    console_handles[handle].fifo_tail)
-		fatal("[ WARNING: console fifo overrun, handle %i ]\n", handle);
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+		    "[ WARNING: console fifo overrun, handle %i ]", handle);
 }
 
 
@@ -774,7 +776,8 @@ void console_key_up(int handle)
 
 	if (console_handles[handle].fifo_head ==
 	    console_handles[handle].fifo_tail)
-		fatal("[ WARNING: console fifo overrun, handle %i ]\n", handle);
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+		    "[ WARNING: console fifo overrun, handle %i ]", handle);
 }
 
 
@@ -1014,8 +1017,8 @@ static void console_putchar_raw(int handle, int ch)
 	}
 
 	if (!console_handles[handle].in_use) {
-		printf("[ console_putchar(): handle %i not in"
-		    " use! ]\n", handle);
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+		    "[ console_putchar(): handle %i not in use! ]", handle);
 		return;
 	}
 
@@ -1318,8 +1321,7 @@ int console_start_slave(struct machine *machine, const char *consolename,
 	int handle;
 
 	if (machine == NULL || consolename == NULL) {
-		printf("console_start_slave(): NULL ptr\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "console", "console_start_slave(): NULL ptr");
 	}
 
 	chp = console_new_handle(consolename, &handle);
@@ -1367,8 +1369,7 @@ int console_start_slave_inputonly(struct machine *machine, const char *consolena
 	int handle;
 
 	if (machine == NULL || consolename == NULL) {
-		printf("console_start_slave(): NULL ptr\n");
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "console", "console_start_slave(): NULL ptr");
 	}
 
 	chp = console_new_handle(consolename, &handle);
@@ -1401,9 +1402,8 @@ int console_change_inputability(int handle, int inputability)
 	int old;
 
 	if (handle < 0 || handle >= n_console_handles) {
-		fatal("console_change_inputability(): bad handle %i\n",
-		    handle);
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "console",
+		    "console_change_inputability(): bad handle %i", handle);
 	}
 
 	old = console_handles[handle].in_use_for_input;
@@ -1413,12 +1413,12 @@ int console_change_inputability(int handle, int inputability)
 		if (console_warn_if_slaves_are_needed(0)) {
 			console_handles[handle].in_use_for_input = old;
 			if (!console_handles[handle].warning_printed) {
-				fatal("%%\n%%  WARNING! Input to console ha"
-				    "ndle \"%s\" wasn't enabled,\n%%  because "
-				    "it", console_handles[handle].name);
-				fatal(" would interfere with other inputs,\n"
-				    "%%  and you did not use the -x command "
-				    "line option!\n%%\n");
+				debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+				    "%%\n%%  WARNING! Input to console handle \"%s\" "
+				    "wasn't enabled,\n%%  because it would interfere "
+				    "with other inputs,\n%%  and you did not use the -x "
+				    "command line option!\n%%",
+				    console_handles[handle].name);
 			}
 			console_handles[handle].warning_printed = 1;
 			return 0;
@@ -1555,7 +1555,8 @@ void console_debug_dump(struct machine *machine)
 	debug_indentation(-iadd);
 
 	if (!listed_main)
-		fatal("WARNING! no main console handle?\n");
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+		    "WARNING! no main console handle?");
 }
 
 
@@ -1714,9 +1715,9 @@ void console_init(void)
 
 	chp = console_new_handle("MAIN", &handle);
 	if (handle != MAIN_CONSOLE) {
-		printf("console_init(): fatal error: could not create"
-		    " console 0: handle = %i\n", handle);
-		exit(1);
+		fatal_error(SUBSYS_EMUL, "console",
+		    "console_init(): could not create console 0: handle = %i",
+		    handle);
 	}
 
 	chp->in_use_for_input = 1;

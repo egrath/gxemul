@@ -145,8 +145,8 @@ unsigned long long mystrtoull(const char *s, char **endp, int base)
 
 	/*  TODO: Implement endp?  */
 	if (endp != NULL) {
-		fprintf(stderr, "mystrtoull(): endp isn't implemented\n");
-		exit(1);
+		fatal_error(SUBSYS_STARTUP, "mystrtoull",
+		    "endp isn't implemented");
 	}
 
 	if (s[0] == '-') {

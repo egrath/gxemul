@@ -83,7 +83,8 @@ void interrupt_handler_register(struct interrupt *templ)
 	int i;
 
 #ifdef INTERRUPT_DEBUG
-	printf("interrupt_handler_register(\"%s\")\n", templ->name);
+	debugmsg(SUBSYS_EMUL, "interrupt", VERBOSITY_DEBUG,
+	    "interrupt_handler_register(\"%s\")", templ->name);
 #endif
 
 	/*  See if the name is already registered:  */
@@ -92,10 +93,10 @@ void interrupt_handler_register(struct interrupt *templ)
 		    interrupt_handlers[i].templ.name) != 0)
 			continue;
 
-		fatal("\ninterrupt_handler_register(): An interrupt handler"
-		    " using the name '%s' is already registered.\n",
+		fatal_error(SUBSYS_EMUL, "interrupt",
+		    "interrupt_handler_register(): An interrupt handler"
+		    " using the name '%s' is already registered.",
 		    templ->name);
-		exit(1);
 	}
 
 	nr_of_interrupt_handlers ++;
@@ -133,12 +134,12 @@ void interrupt_handler_remove(const char *name)
 		 */
 		if (interrupt_handlers[i].nr_of_exclusive_users > 0 ||
 		    interrupt_handlers[i].nr_of_nonexclusive_users > 0) {
-			fatal("interrupt_handler_remove(): Attempt to "
+			fatal_error(SUBSYS_EMUL, "interrupt",
+			    "interrupt_handler_remove(): Attempt to "
 			    "remove interrupt handler '%s' which has %i "
-			    "exclusive and %i non-exclusive users. Aborting.\n",
+			    "exclusive and %i non-exclusive users. Aborting.",
 			    name, interrupt_handlers[i].nr_of_exclusive_users,
 			    interrupt_handlers[i].nr_of_nonexclusive_users);
-			exit(1);
 		}
 
 		if (i != nr_of_interrupt_handlers-1)
@@ -151,8 +152,8 @@ void interrupt_handler_remove(const char *name)
 		return;
 	}
 
-	fatal("interrupt_handler_remove(): '%s' not found? Aborting.\n", name);
-	exit(1);
+	fatal_error(SUBSYS_EMUL, "interrupt",
+	    "interrupt_handler_remove(): '%s' not found? Aborting.", name);
 }
 
 
@@ -168,7 +169,8 @@ int interrupt_handler_lookup(const char *name, struct interrupt *templ)
 	int i;
 
 #ifdef INTERRUPT_DEBUG
-	printf("interrupt_handler_lookup(\"%s\")\n", name);
+	debugmsg(SUBSYS_EMUL, "interrupt", VERBOSITY_DEBUG,
+	    "interrupt_handler_lookup(\"%s\")", name);
 #endif
 
 	if (name[0] == '\0') {
@@ -188,14 +190,12 @@ int interrupt_handler_lookup(const char *name, struct interrupt *templ)
 
 	/*  The 'if' is an ugly hack to prevent a Compaq CC warning.  */
 	if (i >= nr_of_interrupt_handlers) {
-		printf("interrupt_handler_lookup(\"%s\") failed.\n", name);
-
-		printf("Available handler paths are:\n");
+		fatal_error(SUBSYS_EMUL, "interrupt",
+		    "interrupt_handler_lookup(\"%s\") failed. "
+		    "Available handler paths:", name);
 		for (i=0; i<nr_of_interrupt_handlers; i++)
-			printf("    %s\n", interrupt_handlers[i].templ.name);
-
-		printf("Aborting.\n");
-		abort();
+			debugmsg(SUBSYS_EMUL, "interrupt", VERBOSITY_ERROR,
+			    "    %s", interrupt_handlers[i].templ.name);
 	}
 
 	return 0;
@@ -212,7 +212,8 @@ void interrupt_connect(struct interrupt *in, int exclusive)
 	int i;
 
 #ifdef INTERRUPT_DEBUG
-	printf("interrupt_connect(\"%s\")\n", in->name);
+	debugmsg(SUBSYS_EMUL, "interrupt", VERBOSITY_DEBUG,
+	    "interrupt_connect(\"%s\")", in->name);
 #endif
 
 	if (in->name == NULL || in->name[0] == '\0')
@@ -225,10 +226,10 @@ void interrupt_connect(struct interrupt *in, int exclusive)
 		if (exclusive) {
 			interrupt_handlers[i].nr_of_exclusive_users ++;
 			if (interrupt_handlers[i].nr_of_exclusive_users > 1) {
-				fatal("Fatal error in interrupt_connect(): "
-				    "more than 1 exclusive user. Dumping "
-				    "core for backtrace.\n");
-				abort();
+				fatal_error(SUBSYS_EMUL, "interrupt",
+				    "interrupt_connect(): "
+				    "more than 1 exclusive user of '%s'.",
+				    in->name);
 			}
 		} else {
 			interrupt_handlers[i].nr_of_nonexclusive_users ++;
@@ -237,9 +238,8 @@ void interrupt_connect(struct interrupt *in, int exclusive)
 		return;
 	}
 
-	fatal("Internal error in interrupt_connect(): name '%s' not "
-	    "found? Dumping core for debugging.\n", in->name);
-	abort();
+	fatal_error(SUBSYS_EMUL, "interrupt",
+	    "interrupt_connect(): name '%s' not found?", in->name);
 }
 
 
@@ -262,25 +262,24 @@ void interrupt_disconnect(struct interrupt *in, int exclusive)
 		if (exclusive) {
 			interrupt_handlers[i].nr_of_exclusive_users --;
 			if (interrupt_handlers[i].nr_of_exclusive_users < 0) {
-				fatal("Fatal error in interrupt_disconnect():"
-				    "nr of exclusive users < 0?\n");
-				exit(1);
+				fatal_error(SUBSYS_EMUL, "interrupt",
+				    "interrupt_disconnect():"
+				    "nr of exclusive users < 0?");
 			}
 		} else {
 			interrupt_handlers[i].nr_of_nonexclusive_users --;
 			if (interrupt_handlers[i].nr_of_nonexclusive_users<0) {
-				fatal("Fatal error in interrupt_disconnect():"
-				    "nr of non-exclusive users < 0?\n");
-				exit(1);
+				fatal_error(SUBSYS_EMUL, "interrupt",
+				    "interrupt_disconnect():"
+				    "nr of non-exclusive users < 0?");
 			}
 		}
 
 		return;
 	}
 
-	fatal("Internal error in interrupt_disconnect(): name '%s' not "
-	    "found?\n", in->name);
-	exit(1);
+	fatal_error(SUBSYS_EMUL, "interrupt",
+	    "interrupt_disconnect(): name '%s' not found?", in->name);
 }
 
 

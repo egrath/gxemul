@@ -28,6 +28,7 @@
  *  Emulation startup and misc. routines.
  */
 
+#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -95,11 +96,9 @@ static void add_breakpoints(struct machine *m)
 			int res = get_symbol_addr(&m->symbol_context,
 			    m->breakpoints.string[i], &addr);
 			if (!res) {
-				fprintf(stderr,
-				    "ERROR! Breakpoint '%s' could not be"
-					" parsed\n",
+				fatal_error(SUBSYS_EMUL, "breakpoint",
+				    "Breakpoint '%s' could not be parsed",
 				    m->breakpoints.string[i]);
-				exit(1);
 			} else {
 				dp = addr;
 				string_flag = 1;
@@ -383,7 +382,8 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 	debug_indentation(1);
 
 	if (m->machine_type == MACHINE_NONE) {
-		fatal("No machine type specified?\n");
+		fatal_error(SUBSYS_MACHINE, "setup",
+		    "No machine type specified?");
 		return false;
 	}
 
@@ -540,15 +540,18 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 
 				tmpfile_handle = mkstemp(new_temp_name);
 				if (tmpfile_handle < 0) {
-					perror(new_temp_name);
-					exit(1);
+					fatal_error(SUBSYS_DISK, "gunzip",
+					    "mkstemp(%s): %s",
+					    new_temp_name, strerror(errno));
 				}
 				close(tmpfile_handle);
 
 				if (!gunzip_file(name_to_load,
 				    new_temp_name)) {
 					unlink(new_temp_name);
-					exit(1);
+					fatal_error(SUBSYS_DISK, "gunzip",
+					    "gunzip of '%s' failed",
+					    name_to_load);
 				}
 
 				if (remove_after_load)
@@ -585,7 +588,8 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 
 		case ARCH_ARM:
 			if (cpu->pc & 2) {
-				fatal("ARM: misaligned pc: TODO\n");
+				fatal_error(SUBSYS_CPU, "setup",
+				    "ARM: misaligned pc: TODO");
 				return false;
 			}
 
@@ -598,7 +602,8 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 
 		case ARCH_I960:
 			if (cpu->pc & 3) {
-				fatal("i960: lowest bits of pc set: TODO\n");
+				fatal_error(SUBSYS_CPU, "setup",
+				    "i960: lowest bits of pc set: TODO");
 				return false;
 			}
 			cpu->pc &= 0xfffffffc;
@@ -606,7 +611,8 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 
 		case ARCH_M88K:
 			if (cpu->pc & 3) {
-				fatal("M88K: lowest bits of pc set: TODO\n");
+				fatal_error(SUBSYS_CPU, "setup",
+				    "M88K: lowest bits of pc set: TODO");
 				return false;
 			}
 			cpu->pc &= 0xfffffffc;
@@ -635,7 +641,8 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 
 		case ARCH_RISCV:
 			if (cpu->pc & 1) {
-				fatal("RISC-V: lowest bit of pc set: TODO\n");
+				fatal_error(SUBSYS_CPU, "setup",
+				    "RISC-V: lowest bit of pc set: TODO");
 				return false;
 			}
 			cpu->pc &= ~1ULL;
@@ -873,12 +880,14 @@ void emul_run(struct emul *emul)
 	atexit(fix_console);
 
 	if (emul == NULL) {
-		fatal("No emulation defined. Aborting.\n");
+		fatal_error(SUBSYS_EMUL, "run",
+		    "No emulation defined. Aborting.");
 		return;
 	}
 
 	if (emul->n_machines == 0) {
-		fatal("No machine(s) defined. Aborting.\n");
+		fatal_error(SUBSYS_EMUL, "run",
+		    "No machine(s) defined. Aborting.");
 		return;
 	}
 

@@ -61,8 +61,8 @@ void ieee_interpret_float_value(uint64_t x, struct ieee_float_value *fvp,
 	case IEEE_FMT_W:	n_frac = 31; n_exp = 0; break;
 	case IEEE_FMT_D:	n_frac = 52; n_exp = 11; break;
 	case IEEE_FMT_L:	n_frac = 63; n_exp = 0; break;
-	default:fatal("ieee_interpret_float_value(): "
-		    "unimplemented format %i\n", fmt);
+	default:fatal_error(SUBSYS_CPU, "float",
+		    "ieee_interpret_float_value(): unimplemented format %i", fmt);
 	}
 
 	/*  Get the Exponent:  */
@@ -79,8 +79,8 @@ void ieee_interpret_float_value(uint64_t x, struct ieee_float_value *fvp,
 		exponent = (x >> n_frac) & ((1 << n_exp) - 1);
 		exponent -= (1 << (n_exp-1)) - 1;
 		break;
-	default:fatal("ieee_interpret_float_value(): unimplemented "
-		    "format %i\n", fmt);
+	default:fatal_error(SUBSYS_CPU, "float",
+		    "ieee_interpret_float_value(): unimplemented format %i", fmt);
 	}
 
 	/*  Is this a Not-A-Number?  */
@@ -151,15 +151,16 @@ void ieee_interpret_float_value(uint64_t x, struct ieee_float_value *fvp,
 		fraction = (fraction / 2.0) + 1.0;
 		break;
 
-	default:fatal("ieee_interpret_float_value(): "
-		    "unimplemented format %i\n", fmt);
+	default:fatal_error(SUBSYS_CPU, "float",
+		    "ieee_interpret_float_value(): unimplemented format %i", fmt);
 	}
 
 	/*  form the value:  */
 	fvp->f = fraction;
 
 #ifdef IEEE_DEBUG
-	fatal("{ ieee: x=%016"PRIx64" => sign=%i exponent=%i frac=%f ",
+	debugmsg(SUBSYS_CPU, "float", VERBOSITY_DEBUG,
+	    "{ ieee: x=%016"PRIx64" => sign=%i exponent=%i frac=%f ",
 	    (uint64_t) x, sign, exponent, fraction);
 #endif
 
@@ -191,7 +192,8 @@ no_reasonable_result:
 	fvp->nan = nan;
 
 #ifdef IEEE_DEBUG
-	fatal("nan=%i (f=%f) }\n", nan, fvp->f);
+	debugmsg(SUBSYS_CPU, "float", VERBOSITY_DEBUG,
+	    "nan=%i (f=%f) }", nan, fvp->f);
 #endif
 }
 
@@ -213,8 +215,8 @@ uint64_t ieee_store_float_value(double nf, int fmt)
 	case IEEE_FMT_W:	n_frac = 31; n_exp = 0; signofs = 31; break;
 	case IEEE_FMT_D:	n_frac = 52; n_exp = 11; signofs = 63; break;
 	case IEEE_FMT_L:	n_frac = 63; n_exp = 0; signofs = 63; break;
-	default:fatal("ieee_store_float_value(): unimplemented format"
-		    " %i\n", fmt);
+	default:fatal_error(SUBSYS_CPU, "float",
+		    "ieee_store_float_value(): unimplemented format %i", fmt);
 	}
 
 	switch (fmt) {
@@ -304,8 +306,8 @@ uint64_t ieee_store_float_value(double nf, int fmt)
 		}
 		break;
 	default:/*  TODO  */
-		fatal("ieee_store_float_value(): unimplemented format %i\n",
-		    fmt);
+		fatal_error(SUBSYS_CPU, "float",
+		    "ieee_store_float_value(): unimplemented format %i", fmt);
 	}
 
 	if (fmt == IEEE_FMT_S || fmt == IEEE_FMT_W)
