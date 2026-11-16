@@ -80,16 +80,14 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_aout", "%s: %s", filename, strerror(errno));
 	}
 
 	if (flags & AOUT_FLAG_I960_BOUT) {
 		len = fread(&bout_header, 1, sizeof(bout_header), f);
 		if (len != sizeof(bout_header)) {
-			fprintf(stderr, "%s: not a complete b.out image\n",
+			fatal_error(SUBSYS_DISK, "file_aout",  "%s: not a complete b.out image",
 			    filename);
-			exit(1);
 		}
 
 		unencode(entry, &bout_header.a_entry, uint32_t);
@@ -103,8 +101,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		unencode(symbsize, &bout_header.a_syms, uint32_t);
 	} else if (flags & AOUT_FLAG_DECOSF1) {
 		if (fread(&buf, 1, 32, f) != 32) {
-			perror(filename);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_aout", "%s: %s", filename, strerror(errno));
 		}
 		vaddr = buf[16] + (buf[17] << 8) +
 		    (buf[18] << 16) + ((uint64_t)buf[19] << 24);
@@ -127,9 +124,8 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 	} else {
 		len = fread(&aout_header, 1, sizeof(aout_header), f);
 		if (len != sizeof(aout_header)) {
-			fprintf(stderr, "%s: not a complete a.out image\n",
+			fatal_error(SUBSYS_DISK, "file_aout",  "%s: not a complete a.out image",
 			    filename);
-			exit(1);
 		}
 
 		unencode(entry, &aout_header.a_entry, uint32_t);
@@ -177,10 +173,9 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 			if (flags & AOUT_FLAG_DATA_AT_END_MAY_BE_OMITTED)
 				break;
 			else {
-				fprintf(stderr, "could not read from %s,"
-				    " wanted to read %i bytes\n", filename,
+				fatal_error(SUBSYS_DISK, "file_aout",  "could not read from %s,"
+				    " wanted to read %i bytes", filename,
 				    (int) total_len);
-				exit(1);
 			}
 		}
 
@@ -200,9 +195,8 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		CHECK_ALLOCATION(syms = (unsigned char *) malloc(symbsize));
 		len = fread(syms, 1, symbsize, f);
 		if (len != symbsize) {
-			fprintf(stderr, "error reading symbols from %s\n",
+			fatal_error(SUBSYS_DISK, "file_aout",  "error reading symbols from %s",
 			    filename);
-			exit(1);
 		}
 
 		oldpos = ftello(f);
@@ -212,9 +206,8 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		debug("strings: %i bytes @ 0x%x\n", strings_len,(int)ftello(f));
 		CHECK_ALLOCATION(string_symbols = (char *) malloc(strings_len));
 		if (fread(string_symbols, 1, strings_len, f) != strings_len) {
-			fprintf(stderr, "Could not read symbols from %s?\n", filename);
-			perror("fread");
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_aout",  "Could not read symbols from %s?", filename);
+			fatal_error(SUBSYS_DISK, "file_aout", "%s: %s", "fread", strerror(errno));
 		}
 
 		aout_symbol_ptr = (struct aout_symbol *) (void*) syms;

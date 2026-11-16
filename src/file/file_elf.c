@@ -95,26 +95,22 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 	int chunk_len = 1024, align_len;
 	char *symbol_strings = NULL;
 	size_t symbol_length = 0;
-	const char *s;
 	int n_symbols = 0;
 	Elf32_Sym *symbols_sym32 = NULL;
 	Elf64_Sym *symbols_sym64 = NULL;
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_elf", "%s: %s", filename, strerror(errno));
 	}
 
 	len = fread(&hdr32, 1, sizeof(Elf32_Ehdr), f);
 	if (len < (signed int)sizeof(Elf32_Ehdr)) {
-		fprintf(stderr, "%s: not an ELF file image\n", filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_elf",  "%s: not an ELF file image", filename);
 	}
 
 	if (memcmp(&hdr32.e_ident[EI_MAG0], ELFMAG, SELFMAG) != 0) {
-		fprintf(stderr, "%s: not an ELF file image\n", filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_elf",  "%s: not an ELF file image", filename);
 	}
 
 	switch (hdr32.e_ident[EI_CLASS]) {
@@ -126,22 +122,21 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		fseek(f, 0, SEEK_SET);
 		len = fread(&hdr64, 1, sizeof(Elf64_Ehdr), f);
 		if (len < (signed int)sizeof(Elf64_Ehdr)) {
-			fprintf(stderr, "%s: not an ELF64 file image\n",
+			fatal_error(SUBSYS_DISK, "file_elf",  "%s: not an ELF64 file image",
 			    filename);
-			exit(1);
 		}
 		break;
 	default:
-		fprintf(stderr, "%s: unknown ELF class '%i'\n",
+		fatal_error(SUBSYS_DISK, "file_elf",  "%s: unknown ELF class '%i'",
 		    filename, hdr32.e_ident[EI_CLASS]);
-		exit(1);
+		return;
 	}
 
 	encoding = hdr32.e_ident[EI_DATA];
 	if (encoding != ELFDATA2LSB && encoding != ELFDATA2MSB) {
-		fprintf(stderr, "%s: unknown data encoding '%i'\n",
+		fatal_error(SUBSYS_DISK, "file_elf",  "%s: unknown data encoding '%i'",
 		    filename, hdr32.e_ident[EI_DATA]);
-		exit(1);
+		return;
 	}
 
 	if (elf64) {
@@ -155,18 +150,16 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		unencode(eshentsize, &hdr64.e_shentsize, Elf64_Quarter);
 		unencode(eshoff,     &hdr64.e_shoff,     Elf64_Off);
 		if (ephentsize != sizeof(Elf64_Phdr)) {
-			fprintf(stderr, "%s: incorrect phentsize? %i, should "
+			fatal_error(SUBSYS_DISK, "file_elf",  "%s: incorrect phentsize? %i, should "
 			    "be %i\nPerhaps this is a dynamically linked "
-			    "binary (which isn't supported yet).\n", filename,
+			    "binary (which isn't supported yet).", filename,
 			    (int)ephentsize, (int)sizeof(Elf64_Phdr));
-			exit(1);
 		}
 		if (eshentsize != sizeof(Elf64_Shdr)) {
-			fprintf(stderr, "%s: incorrect shentsize? %i, should "
+			fatal_error(SUBSYS_DISK, "file_elf",  "%s: incorrect shentsize? %i, should "
 			    "be %i\nPerhaps this is a dynamically linked "
-			    "binary (which isn't supported yet).\n", filename,
+			    "binary (which isn't supported yet).", filename,
 			    (int)eshentsize, (int)sizeof(Elf64_Shdr));
-			exit(1);
 		}
 	} else {
 		unencode(etype,      &hdr32.e_type,      Elf32_Half);
@@ -179,25 +172,22 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		unencode(eshentsize, &hdr32.e_shentsize, Elf32_Half);
 		unencode(eshoff,     &hdr32.e_shoff,     Elf32_Off);
 		if (ephentsize != sizeof(Elf32_Phdr)) {
-			fprintf(stderr, "%s: incorrect phentsize? %i, should "
+			fatal_error(SUBSYS_DISK, "file_elf",  "%s: incorrect phentsize? %i, should "
 			    "be %i\nPerhaps this is a dynamically linked "
-			    "binary (which isn't supported yet).\n", filename,
+			    "binary (which isn't supported yet).", filename,
 			    (int)ephentsize, (int)sizeof(Elf32_Phdr));
-			exit(1);
 		}
 		if (eshentsize != sizeof(Elf32_Shdr)) {
-			fprintf(stderr, "%s: incorrect shentsize? %i, should "
+			fatal_error(SUBSYS_DISK, "file_elf",  "%s: incorrect shentsize? %i, should "
 			    "be %i\nPerhaps this is a dynamically linked "
-			    "binary (which isn't supported yet).\n", filename,
+			    "binary (which isn't supported yet).", filename,
 			    (int)eshentsize, (int)sizeof(Elf32_Shdr));
-			exit(1);
 		}
 	}
 
 	if ( etype != ET_EXEC ) {
-		fprintf(stderr, "%s is not an ELF Executable file, type = %i\n",
+		fatal_error(SUBSYS_DISK, "file_elf",  "%s is not an ELF Executable file, type = %i",
 		    filename, etype);
-		exit(1);
 	}
 
 	ok = 0;
@@ -310,38 +300,15 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		}
 		break;  */
 	default:
-		fatal("file.c: INTERNAL ERROR: Unimplemented arch %i!\n", arch);
+		fatal_error(SUBSYS_DISK, "file_elf", "file.c: INTERNAL ERROR: Unimplemented arch %i!", arch);
 	}
 	if (!ok) {
-		fprintf(stderr, "%s: this is a ", filename);
+		fatal_error(SUBSYS_DISK, "file_elf",  "%s: this is a ", filename);
 		if (emachine >= 0 && emachine < N_ELF_MACHINE_TYPES)
-			fprintf(stderr, "%s", elf_machine_type[emachine]);
+			fatal_error(SUBSYS_DISK, "file_elf",  "%s", elf_machine_type[emachine]);
 		else
-			fprintf(stderr, "machine type '%i'", emachine);
-		fprintf(stderr, " ELF binary!\n");
-		exit(1);
-	}
-
-	s = "entry point";
-	if (elf64 && arch == ARCH_PPC)
-		s = "function descriptor at";
-
-	debug("ELF%i %s, %s 0x", elf64? 64 : 32,
-	    encoding == ELFDATA2LSB? "LSB (LE)" : "MSB (BE)", s);
-
-	if (elf64)
-		debug("%016" PRIx64"\n", (uint64_t) eentry);
-	else
-		debug("%08" PRIx32"\n", (uint32_t) eentry);
-
-	/*
-	 *  SH64: 32-bit instruction encoding?
-	 */
-	if (arch == ARCH_SH && (eentry & 1)) {
-		fatal("SH64: 32-bit instruction encoding: TODO\n");
-		/*  m->cpus[0]->cd.sh.compact = 0;  */
-		m->cpus[0]->cd.sh.cpu_type.bits = 64;
-		exit(1);
+			fatal_error(SUBSYS_DISK, "file_elf",  "machine type '%i'", emachine);
+		fatal_error(SUBSYS_DISK, "file_elf",  " ELF binary!\n");
 	}
 
 	/*  Read the program headers:  */
@@ -376,8 +343,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		}
 
 		if (!allRead) {
-			fprintf(stderr, "Could not read Phdr from %s. Aborting.\n", filename);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_elf",  "Could not read Phdr from %s. Aborting.", filename);
 		}
 
 		/*
@@ -423,11 +389,10 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 			}
 
 			if (p_memsz < p_filesz) {
-				fprintf(stderr, "%s: memsz < filesz. TODO: how"
+				fatal_error(SUBSYS_DISK, "file_elf",  "%s: memsz < filesz. TODO: how"
 				    " to handle this? memsz=%016" PRIx64
-				    " filesz=%016" PRIx64"\n", filename,
+				    " filesz=%016" PRIx64"", filename,
 				    (uint64_t) p_memsz, (uint64_t) p_filesz);
-				exit(1);
 			}
 
 			fseek(f, p_offset, SEEK_SET);
@@ -499,8 +464,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		if (elf64) {
 			len = fread(&shdr64, 1, sizeof(Elf64_Shdr), f);
 			if (len != sizeof(Elf64_Shdr)) {
-				fprintf(stderr, "couldn't read header\n");
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_elf",  "couldn't read header\n");
 			}
 			unencode(sh_type,    &shdr64.sh_type, Elf64_Half);
 			unencode(sh_offset,  &shdr64.sh_offset, Elf64_Off);
@@ -509,8 +473,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		} else {
 			len = fread(&shdr32, 1, sizeof(Elf32_Shdr), f);
 			if (len != sizeof(Elf32_Shdr)) {
-				fprintf(stderr, "couldn't read header\n");
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_elf",  "couldn't read header\n");
 			}
 			unencode(sh_type,      &shdr32.sh_type,    Elf32_Word);
 			unencode(sh_offset,    &shdr32.sh_offset,  Elf32_Off);
@@ -556,9 +519,8 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 			}
 
 			if (len2 != sh_size) {
-				fprintf(stderr, "could not read symbols from "
-				    "%s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_elf",  "could not read symbols from "
+				    "%s", filename);
 			}
 
 			debug("%i symbol entries at 0x%" PRIx64"\n",
@@ -584,9 +546,8 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 			fseek(f, sh_offset, SEEK_SET);
 			size_t len2 = fread(symbol_strings, 1, sh_size, f);
 			if (len2 != sh_size) {
-				fprintf(stderr, "could not read symbols from "
-				    "%s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_elf",  "could not read symbols from "
+				    "%s", filename);
 			}
 
 			debug("%i bytes of symbol strings at 0x%" PRIx64"\n",
@@ -683,7 +644,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		res = m->cpus[0]->memory_rw(m->cpus[0], mem, eentry + 8,
 		    b, sizeof(b), MEM_READ, NO_EXCEPTIONS);
 		if (!res)
-			fatal(" [WARNING: could not read memory?] ");
+			fatal_error(SUBSYS_DISK, "file_elf", " [WARNING: could not read memory?] ");
 
 		toc_base = ((uint64_t)b[0] << 56) +
 		    ((uint64_t)b[1] << 48) + ((uint64_t)b[2] << 40) +

@@ -145,7 +145,7 @@ bool diskimage_add_overlay(struct diskimage *d, char *overlay_basename, bool rem
 	CHECK_ALLOCATION(overlay.overlay_basename = strdup(overlay_basename));
 	overlay.f_data = fopen(overlay_basename, mode);
 	if (overlay.f_data == NULL) {
-		perror(overlay_basename);
+		fatal_error(SUBSYS_DISK, "diskimage", "%s: %s", overlay_basename, strerror(errno));
 
 		if (remove_after_open) {
 			unlink(overlay_basename);
@@ -158,8 +158,8 @@ bool diskimage_add_overlay(struct diskimage *d, char *overlay_basename, bool rem
 
 	overlay.f_bitmap = fopen(bitmap_name, mode);
 	if (overlay.f_bitmap == NULL) {
-		perror(bitmap_name);
-		fprintf(stderr, "Please create the map file first.\n");
+		fatal_error(SUBSYS_DISK, "diskimage", "%s: %s", bitmap_name, strerror(errno));
+		fatal_error(SUBSYS_DISK, "diskimage",  "Please create the map file first.\n");
 		fclose(overlay.f_data);
 
 		if (remove_after_open) {
@@ -181,10 +181,10 @@ bool diskimage_add_overlay(struct diskimage *d, char *overlay_basename, bool rem
 #ifndef _WIN32
 	if (remove_after_open) {
 		if (unlink(overlay_basename) != 0)
-			perror(overlay_basename);
+			fatal_error(SUBSYS_DISK, "diskimage", "%s: %s", overlay_basename, strerror(errno));
 
 		if (unlink(bitmap_name) != 0)
-			perror(bitmap_name);
+			fatal_error(SUBSYS_DISK, "diskimage", "%s: %s", bitmap_name, strerror(errno));
 	}
 #endif
 
@@ -329,9 +329,8 @@ void diskimage_set_baseoffset(struct machine *machine, int id, int type, int64_t
 		d = d->next;
 	}
 
-	fatal("diskimage_set_baseoffset(): disk id %i (type %i) not found?\n",
+	fatal_error(SUBSYS_DISK, "diskimage", "diskimage_set_baseoffset(): disk id %i (type %i) not found?",
 	    id, diskimage_types[type]);
-	exit(1);
 }
 
 
@@ -354,9 +353,8 @@ void diskimage_getchs(struct machine *machine, int id, int type,
 		}
 		d = d->next;
 	}
-	fatal("diskimage_getchs(): disk id %i (type %i) not found?\n",
+	fatal_error(SUBSYS_DISK, "diskimage", "diskimage_getchs(): disk id %i (type %i) not found?",
 	    id, diskimage_types[type]);
-	exit(1);
 }
 
 
@@ -423,10 +421,9 @@ static void overlay_set_block_in_use(struct diskimage *d,
 	res = my_fseek(d->overlays[overlay_nr].f_bitmap,
 	    bitmap_file_offset, SEEK_SET);
 	if (res) {
-		perror("my_fseek");
-		fprintf(stderr, "Could not seek in bitmap file?"
-		    " offset = %lli, read\n", (long long)bitmap_file_offset);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "diskimage", "%s: %s", "my_fseek", strerror(errno));
+		fatal_error(SUBSYS_DISK, "diskimage",  "Could not seek in bitmap file?"
+		    " offset = %lli, read", (long long)bitmap_file_offset);
 	}
 
 	/*  Read the original bitmap data, and OR in the new bit:  */
@@ -440,15 +437,13 @@ static void overlay_set_block_in_use(struct diskimage *d,
 	res = my_fseek(d->overlays[overlay_nr].f_bitmap,
 	    bitmap_file_offset, SEEK_SET);
 	if (res) {
-		perror("my_fseek");
-		fprintf(stderr, "Could not seek in bitmap file?"
-		    " offset = %lli, write\n", (long long)bitmap_file_offset);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "diskimage", "%s: %s", "my_fseek", strerror(errno));
+		fatal_error(SUBSYS_DISK, "diskimage",  "Could not seek in bitmap file?"
+		    " offset = %lli, write", (long long)bitmap_file_offset);
 	}
 	res = fwrite(&data, 1, 1, d->overlays[overlay_nr].f_bitmap);
 	if (res != 1) {
-		fprintf(stderr, "Could not write to bitmap file. Aborting.\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "diskimage",  "Could not write to bitmap file. Aborting.\n");
 	}
 	
 	if (do_fsync)
@@ -496,8 +491,8 @@ static size_t fwrite_helper(off_t offset, unsigned char *buf,
 	if (d->nr_of_overlays == 0) {
 		int res = my_fseek(d->f, offset, SEEK_SET);
 		if (res != 0) {
-			fatal("[ diskimage__internal_access(): fseek() failed"
-			    " on disk id %i \n", d->id);
+			fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage__internal_access(): fseek() failed"
+			    " on disk id %i ", d->id);
 			return 0;
 		}
 
@@ -510,15 +505,13 @@ static size_t fwrite_helper(off_t offset, unsigned char *buf,
 	}
 
 	if ((len & (OVERLAY_BLOCK_SIZE-1)) != 0) {
-		fatal("TODO: overlay access (write), len not multiple of "
+		fatal_error(SUBSYS_DISK, "diskimage", "TODO: overlay access (write), len not multiple of "
 		    "overlay block size. not yet implemented.\n");
-		fatal("len = %lli\n", (long long) len);
-		abort();
+		fatal_error(SUBSYS_DISK, "diskimage", "len = %lli", (long long) len);
 	}
 	if ((offset & (OVERLAY_BLOCK_SIZE-1)) != 0) {
-		fatal("TODO: unaligned overlay access\n");
-		fatal("offset = %lli\n", (long long) offset);
-		abort();
+		fatal_error(SUBSYS_DISK, "diskimage", "TODO: unaligned overlay access\n");
+		fatal_error(SUBSYS_DISK, "diskimage", "offset = %lli", (long long) offset);
 	}
 
 	/*  Split the write into OVERLAY_BLOCK_SIZE writes:  */
@@ -530,17 +523,16 @@ static size_t fwrite_helper(off_t offset, unsigned char *buf,
 		int res = my_fseek(d->overlays[overlay_nr].f_data,
 		    curofs, SEEK_SET);
 		if (res != 0) {
-			fatal("[ diskimage: fwrite_helper(): fseek()"
-			    " failed on disk id %i ]\n", d->id);
+			fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage: fwrite_helper(): fseek()"
+			    " failed on disk id %i ]", d->id);
 			return 0;
 		}
 
 		lenwritten = fwrite(buf, 1, OVERLAY_BLOCK_SIZE,
 		    d->overlays[overlay_nr].f_data);
 		if (lenwritten != OVERLAY_BLOCK_SIZE) {
-			fatal("[ diskimage: fwrite_helper(): fwrite to"
-			    " overlay failed on disk id %i ]\n", d->id);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage: fwrite_helper(): fwrite to"
+			    " overlay failed on disk id %i ]", d->id);
 		}
 
 		buf += OVERLAY_BLOCK_SIZE;
@@ -573,8 +565,8 @@ static size_t fread_helper(off_t offset, unsigned char *buf,
 	if (d->nr_of_overlays == 0) {
 		int res = my_fseek(d->f, offset, SEEK_SET);
 		if (res != 0) {
-			fatal("[ diskimage__internal_access(): fseek() failed"
-			    " on disk id %i \n", d->id);
+			fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage__internal_access(): fseek() failed"
+			    " on disk id %i ", d->id);
 			return 0;
 		}
 
@@ -600,8 +592,8 @@ static size_t fread_helper(off_t offset, unsigned char *buf,
 			int res = my_fseek(d->overlays[overlay_nr].f_data,
 			    curofs, SEEK_SET);
 			if (res != 0) {
-				fatal("[ diskimage__internal_access(): fseek()"
-				    " failed on disk id %i \n", d->id);
+				fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage__internal_access(): fseek()"
+				    " failed on disk id %i ", d->id);
 				return 0;
 			}
 			lenread = fread(buf, 1, lentoread,
@@ -610,16 +602,16 @@ static size_t fread_helper(off_t offset, unsigned char *buf,
 			/*  Read from the base disk image:  */
 			int res = my_fseek(d->f, curofs, SEEK_SET);
 			if (res != 0) {
-				fatal("[ diskimage__internal_access(): fseek()"
-				    " failed on disk id %i \n", d->id);
+				fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage__internal_access(): fseek()"
+				    " failed on disk id %i ", d->id);
 				return 0;
 			}
 			lenread = fread(buf, 1, lentoread, d->f);
 		}
 
 		if (lenread != lentoread) {
-			fatal("[ INCOMPLETE READ from disk id %i, offset"
-			    " %lli ]\n", d->id, (long long)curofs);
+			fatal_error(SUBSYS_DISK, "diskimage", "[ INCOMPLETE READ from disk id %i, offset"
+			    " %lli ]", d->id, (long long)curofs);
 		}
 
 		len -= lentoread;
@@ -644,8 +636,7 @@ int diskimage__internal_access(struct diskimage *d, int writeflag,
 	ssize_t lendone;
 
 	if (buf == NULL) {
-		fprintf(stderr, "diskimage__internal_access(): buf = NULL\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "diskimage",  "diskimage__internal_access(): buf = NULL\n");
 	}
 	if (len == 0)
 		return 1;
@@ -682,8 +673,8 @@ int diskimage__internal_access(struct diskimage *d, int writeflag,
 #if 0
 // TODO: check against full cylinder-size instead
 	if (lendone <= 0) {
-		fatal("[ diskimage__internal_access(): disk_id %i, offset %lli"
-		    ", transfer not completed. len=%i, len_done=%i ]\n",
+		fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage__internal_access(): disk_id %i, offset %lli"
+		    ", transfer not completed. len=%i, len_done=%i ]",
 		    d->id, (long long)offset, (int)len, (int)lendone);
 		return 0;
 	}
@@ -711,8 +702,8 @@ int diskimage_access(struct machine *machine, int id, int type, int writeflag,
 	}
 
 	if (d == NULL) {
-		fatal("[ diskimage_access(): ERROR: trying to access a "
-		    "non-existant %s disk image (id %i)\n",
+		fatal_error(SUBSYS_DISK, "diskimage", "[ diskimage_access(): ERROR: trying to access a "
+		    "non-existant %s disk image (id %i)",
 		    diskimage_types[type], id);
 		return 0;
 	}
@@ -805,8 +796,7 @@ static int assign_id(struct machine *machine, struct diskimage *d,
 		}
 		
 		if (id < 0) {
-			fprintf(stderr, "Too many IDs used?\n");
-			exit(1);
+			fatal_error(SUBSYS_DISK, "diskimage",  "Too many IDs used?\n");
 		}
 	} else {
 		id = prefix_id;
@@ -818,9 +808,8 @@ static int assign_id(struct machine *machine, struct diskimage *d,
 				continue;
 			}
 			if (d2->id == id && d2->type == d->type) {
-				fprintf(stderr, "disk image id %i "
-				    "already in use\n", id);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "diskimage",  "disk image id %i "
+				    "already in use", id);
 			}
 			d2 = d2->next;
 		}
@@ -962,8 +951,8 @@ int diskimage_add(struct machine *machine, char *fname)
 					fname ++;
 				if (override_heads < 1 ||
 				    override_spt < 1) {
-					fatal("Bad geometry: heads=%i "
-					    "spt=%i\n", override_heads,
+					fatal_error(SUBSYS_DISK, "diskimage", "Bad geometry: heads=%i "
+					    "spt=%i", override_heads,
 					    override_spt);
 					return -1;
 				}
@@ -980,8 +969,8 @@ int diskimage_add(struct machine *machine, char *fname)
 				if (*fname == ':' || *fname == ';')
 					fname ++;
 				if (override_base_offset < 0) {
-					fatal("Bad base offset: %" PRIi64
-					    "\n", override_base_offset);
+					fatal_error(SUBSYS_DISK, "diskimage", "Bad base offset: %" PRIi64
+					    "", override_base_offset);
 					return -1;
 				}
 				break;
@@ -1003,8 +992,8 @@ int diskimage_add(struct machine *machine, char *fname)
 			case ':':
 				break;
 			default:
-				fprintf(stderr, "diskimage_add(): invalid "
-				    "prefix char '%c'\n", c);
+				fatal_error(SUBSYS_DISK, "diskimage",  "diskimage_add(): invalid "
+				    "prefix char '%c'", c);
 				return -1;
 			}
 		}
@@ -1015,9 +1004,8 @@ int diskimage_add(struct machine *machine, char *fname)
 	memset(d, 0, sizeof(struct diskimage));
 
 	if (prefix_i + prefix_f + prefix_s > 1) {
-		fprintf(stderr, "Invalid disk image prefix(es). You can"
+		fatal_error(SUBSYS_DISK, "diskimage",  "Invalid disk image prefix(es). You can"
 		    "only use one of i, f, and s\nfor each disk image.\n");
-		exit(1);
 	}
 
 	if (prefix_i)
@@ -1057,7 +1045,7 @@ int diskimage_add(struct machine *machine, char *fname)
 		free(d);
 
 		if (dx == NULL) {
-			fprintf(stderr, "Bad ID supplied for overlay?\n");
+			fatal_error(SUBSYS_DISK, "diskimage",  "Bad ID supplied for overlay?\n");
 			return -1;
 		}
 

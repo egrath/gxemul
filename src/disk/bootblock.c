@@ -39,6 +39,7 @@
  *  TODO: This module needs some cleanup.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,9 +95,8 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 	case MACHINE_DREAMCAST:
 		if (!diskimage_is_a_cdrom(cpu->machine, boot_disk_id,
 		    boot_disk_type)) {
-			fatal("The Dreamcast emulation mode can only boot"
+			fatal_error(SUBSYS_DISK, "bootblock", "The Dreamcast emulation mode can only boot"
 			    " from CD images, not from other disk types.\n");
-			exit(1);
 		}
 
 		CHECK_ALLOCATION(bootblock_buf = (unsigned char *) malloc(32768));
@@ -107,12 +107,12 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		res = diskimage_access(m, boot_disk_id, boot_disk_type,
 		    0, base_offset, bootblock_buf, 0x8000);
 		if (!res) {
-			fatal("Couldn't read the first 32 KB from the disk image. Aborting.\n");
+			fatal_error(SUBSYS_DISK, "bootblock", "Couldn't read the first 32 KB from the disk image. Aborting.\n");
 			return 0;
 		}
 
 		if (strncmp((char *)bootblock_buf, "SEGA ", 5) != 0) {
-			fatal("This is not a Dreamcast IP.BIN header.\n");
+			fatal_error(SUBSYS_DISK, "bootblock", "This is not a Dreamcast IP.BIN header.\n");
 			free(bootblock_buf);
 			return 0;
 		}
@@ -242,17 +242,16 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		/*  Convert loadaddr to uncached:  */
 		if ((bootblock_loadaddr & 0xf0000000ULL) != 0x80000000 &&
 		    (bootblock_loadaddr & 0xf0000000ULL) != 0xa0000000) {
-			fatal("\nWARNING! Weird load address 0x%08" PRIx32
-			    " for SCSI id %i.\n\n",
+			fatal_error(SUBSYS_DISK, "bootblock", "\nWARNING! Weird load address 0x%08" PRIx32
+			    " for SCSI id %i.\n",
 			    (uint32_t)bootblock_loadaddr, boot_disk_id);
 			if (bootblock_loadaddr == 0) {
-				fatal("This disk has no DEC boot block. To "
+				fatal_error(SUBSYS_DISK, "bootblock", "This disk has no DEC boot block. To "
 				    "boot a kernel file with PROM emulation, "
 				    "load it:\ngive it on the command line "
 				    "(e.g. gxemul -e 3max -d disk.img vmunix), "
 				    "or in\nthe files to load of a machine."
 				    "json (\"load\": [ \"vmunix\" ]).\n");
-				exit(1);
 			}
 		}
 
@@ -278,7 +277,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			res = diskimage_access(m, boot_disk_id, boot_disk_type,
 			    0, readofs, minibuf, sizeof(minibuf));
 			if (!res) {
-				fatal("Couldn't read the disk image. "
+				fatal_error(SUBSYS_DISK, "bootblock", "Couldn't read the disk image. "
 				    "Aborting.\n");
 				return 0;
 			}
@@ -295,16 +294,16 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			debug(readofs == 0x18? "%i" : " + %i", n_blocks);
 
 			if (n_blocks * 512 > 65536)
-				fatal("\nWARNING! Unusually large bootblock "
-				    "(%i bytes)\n\n", n_blocks * 512);
+				fatal_error(SUBSYS_DISK, "bootblock", "\nWARNING! Unusually large bootblock "
+				    "(%i bytes)\n", n_blocks * 512);
 
 			CHECK_ALLOCATION(bootblock_buf = (unsigned char *) malloc(n_blocks*512));
 
 			res = diskimage_access(m, boot_disk_id, boot_disk_type,
 			    0, bootblock_offset, bootblock_buf, n_blocks * 512);
 			if (!res) {
-				fatal("WARNING: could not load bootblocks from"
-				    " disk offset 0x%llx\n",
+				fatal_error(SUBSYS_DISK, "bootblock", "WARNING: could not load bootblocks from"
+				    " disk offset 0x%llx",
 				    (long long)bootblock_offset);
 			}
 
@@ -334,7 +333,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 
 		uint32_t magic = ntohl(sgi_boot_block.magic);
 		if (magic != SGI_BOOT_BLOCK_MAGIC) {
-			fatal("SGI boot block: wrong magic! (Not a SGI bootable disk image?)\n");
+			fatal_error(SUBSYS_DISK, "bootblock", "SGI boot block: wrong magic! (Not a SGI bootable disk image?)\n");
 			return 0;
 		}
 
@@ -403,7 +402,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			}
 		}
 		if (found_osloader_block < 1 || found_osloader_bytes < 512) {
-			fatal("OSLoader \"%s\" (or \"%s\") NOT found in SGI voldir\n", osloaderA, osloaderB);
+			fatal_error(SUBSYS_DISK, "bootblock", "OSLoader \"%s\" (or \"%s\") NOT found in SGI voldir", osloaderA, osloaderB);
 			return 0;
 		}
 		if (found_osloader_bytes & 511) {
@@ -435,7 +434,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		res = diskimage_access(m, boot_disk_id, boot_disk_type,
 		    0, diskoffset, bootblock_buf, found_osloader_bytes);
 		if (!res) {
-			fatal("WARNING: could not load \"%s\" from disk offset 0x%llx\n",
+			fatal_error(SUBSYS_DISK, "bootblock", "WARNING: could not load \"%s\" from disk offset 0x%llx",
 			    found_osloader, (long long)diskoffset);
 		}
 
@@ -446,14 +445,12 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		snprintf(tmpfname, 300, "%s/gxemul.XXXXXXXXXXXX", tmpdir);
 		int tmpfile_handle = mkstemp(tmpfname);
 		if (tmpfile_handle < 0) {
-			fatal("could not create %s\n", tmpfname);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "bootblock", "could not create %s", tmpfname);
 		}
 
 		if (write(tmpfile_handle, bootblock_buf, found_osloader_bytes) != found_osloader_bytes) {
-			fatal("could not write to %s\n", tmpfname);
-			perror("write");
-			exit(1);
+			fatal_error(SUBSYS_DISK, "bootblock", "could not write to %s", tmpfname);
+			fatal_error(SUBSYS_DISK, "bootblock", "%s: %s", "write", strerror(errno));
 		}
 
 		close(tmpfile_handle);
@@ -493,7 +490,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 	res = diskimage_access(m, boot_disk_id, boot_disk_type,
 	    0, base_offset + 0x8000, bootblock_buf, 0x800);
 	if (!res) {
-		fatal("Couldn't read the ISO header from the disk image. Aborting.\n");
+		fatal_error(SUBSYS_DISK, "bootblock", "Couldn't read the ISO header from the disk image. Aborting.\n");
 		return 0;
 	}
 
@@ -512,7 +509,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		 */
 		if (cpu->machine->boot_kernel_filename == NULL ||
 		    cpu->machine->boot_kernel_filename[0] == '\0')
-			fatal("\nISO9660 filesystem, but no kernel "
+			fatal_error(SUBSYS_DISK, "bootblock", "\nISO9660 filesystem, but no kernel "
 			    "specified? (Use the -j option.)\n");
 		else
 			retval = iso_load_bootblock(m, cpu, boot_disk_id,
@@ -527,14 +524,14 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 	res = diskimage_access(m, boot_disk_id, boot_disk_type,
 	    0, 0x0, bootblock_buf, 0x800);
 	if (!res) {
-		fatal("Couldn't read the disk image. Aborting.\n");
+		fatal_error(SUBSYS_DISK, "bootblock", "Couldn't read the disk image. Aborting.\n");
 		return 0;
 	}
 	if (bootblock_buf[0x000] == 'E' && bootblock_buf[0x001] == 'R' &&
 	    bootblock_buf[0x200] == 'P' && bootblock_buf[0x201] == 'M') {
 		if (cpu->machine->boot_kernel_filename == NULL ||
 		    cpu->machine->boot_kernel_filename[0] == '\0')
-			fatal("\nApple partition table, but no kernel "
+			fatal_error(SUBSYS_DISK, "bootblock", "\nApple partition table, but no kernel "
 			    "specified? (Use the -j option.)\n");
 		else
 			retval = apple_load_bootblock(m, cpu, boot_disk_id,

@@ -67,23 +67,19 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "%s: %s", filename, strerror(errno));
 	}
 
 	if (is_64bit) {
-		fatal("TODO: 64-bit Mach-O. Not supported yet.\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "TODO: 64-bit Mach-O. Not supported yet.\n");
 	}
 	if (is_reversed) {
-		fatal("TODO: Reversed-endianness. Not supported yet.\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "TODO: Reversed-endianness. Not supported yet.\n");
 	}
 
 	len = fread(buf, 1, sizeof(buf), f);
 	if (len < 100) {
-		fatal("Bad Mach-O file?\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "Bad Mach-O file?\n");
 	}
 
 	unencode(cputype,    &buf[4], uint32_t);
@@ -102,28 +98,23 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 	 *  NOTE/TODO: These were for a Darwin (Macintosh PPC) kernel.
 	 */
 	if (cputype != 0x12) {
-		fatal("Error: Unimplemented cputype 0x%x\n", cputype);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "Error: Unimplemented cputype 0x%x", cputype);
 	}
 	if (cpusubtype != 0) {
-		fatal("Error: Unimplemented cpusubtype 0x%x\n", cpusubtype);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "Error: Unimplemented cpusubtype 0x%x", cpusubtype);
 	}
 	/*  Filetype 2 means an executable image.  */
 	if (filetype != 2) {
-		fatal("Error: Unimplemented filetype 0x%x\n", filetype);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "Error: Unimplemented filetype 0x%x", filetype);
 	}
 	if (!(flags & 1)) {
-		fatal("Error: File has 'undefined references'. Cannot"
-		    " be executed.\n", flags);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "Error: File has 'undefined references'. Cannot"
+		    " be executed.", flags);
 	}
 
 	/*  I've only encountered flags == 1 so far.  */
 	if (flags != 1) {
-		fatal("Error: Unimplemented flags 0x%x\n", flags);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "Error: Unimplemented flags 0x%x", flags);
 	}
 
 	/*
@@ -196,8 +187,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 					    vmaddr + len2, &buf2[len2], lenRead-len2,
 					    MEM_WRITE, NO_EXCEPTIONS);
 				} else {
-					fprintf(stderr, "error reading\n");
-					exit(1);
+					fatal_error(SUBSYS_DISK, "file_macho",  "error reading\n");
 				}
 
 				vmaddr += lenRead;
@@ -218,15 +208,13 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 			CHECK_ALLOCATION(symbols = (char *) malloc(12 * nsyms));
 			fseek(f, symoff, SEEK_SET);
 			if (fread(symbols, 1, 12 * nsyms, f) != (size_t) 12*nsyms) {
-				fprintf(stderr, "could not read symbols from %s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_macho",  "could not read symbols from %s", filename);
 			}
 
 			CHECK_ALLOCATION(strings = (char *) malloc(strsize));
 			fseek(f, stroff, SEEK_SET);
 			if (fread(strings, 1, strsize, f) != (size_t) strsize) {
-				fprintf(stderr, "could not read symbol strings from %s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_macho",  "could not read symbol strings from %s", filename);
 			}
 
 			for (i=0; i<nsyms; i++) {
@@ -251,13 +239,11 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 			    on the thread struct.  */
 			unencode(flavor, &buf[pos+8], uint32_t);
 			if (flavor != 1) {
-				fatal("unimplemented flavor %i\n", flavor);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_macho", "unimplemented flavor %i", flavor);
 			}
 
 			if (arch != ARCH_PPC) {
-				fatal("non-PPC arch? TODO\n");
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_macho", "non-PPC arch? TODO\n");
 			}
 
 			unencode(entry, &buf[pos+16], uint32_t);
@@ -268,16 +254,15 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 				uint32_t x;
 				unencode(x, &buf[pos+16+i*4], uint32_t);
 				if (x != 0) {
-					fatal("Entry nr %i in the Mach-O"
+					fatal_error(SUBSYS_DISK, "file_macho", "Entry nr %i in the Mach-O"
 					    " thread struct is non-zero"
 					    " (0x%x). This is not supported"
-					    " yet. TODO\n", i, x);
-					exit(1);
+					    " yet. TODO", i, x);
 				}
 			}
 			break;
 
-		default:fatal("WARNING! Unimplemented load command %i!\n",
+		default:fatal_error(SUBSYS_DISK, "file_macho", "WARNING! Unimplemented load command %i!",
 			    cmd_type);
 		}
 
@@ -287,8 +272,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 	fclose(f);
 
 	if (!entry_set) {
-		fatal("No entry point? Aborting.\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_macho", "No entry point? Aborting.\n");
 	}
 
 	*entrypointp = entry;

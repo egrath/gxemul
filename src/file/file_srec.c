@@ -57,8 +57,7 @@ static void file_load_srec(struct machine *m, struct memory *mem,
 
 	f = fopen(filename, "r");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_srec", "%s: %s", filename, strerror(errno));
 	}
 
 	/*  Load file contents:  */
@@ -101,7 +100,7 @@ static void file_load_srec(struct machine *m, struct memory *mem,
 				buf[i] -= '0';
 			else if (buf[i] == '\r' || buf[i] == '\n') {
 			} else
-				fatal("invalid characters '%c' in S-record\n",
+				fatal_error(SUBSYS_DISK, "file_srec", "invalid characters '%c' in S-record",
 				    buf[i]);
 
 			if (i >= 4) {

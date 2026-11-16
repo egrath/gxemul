@@ -33,6 +33,7 @@
  *  another, as gunzip does.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,7 +128,7 @@ bool gunzip_file(const char *from, const char *to)
 
 	f = fopen(from, "rb");
 	if (f == NULL) {
-		perror(from);
+		fatal_error(SUBSYS_DISK, "gunzip", "%s: %s", from, strerror(errno));
 		return false;
 	}
 
@@ -140,7 +141,7 @@ bool gunzip_file(const char *from, const char *to)
 
 	f = fopen(to, "wb");
 	if (f == NULL) {
-		perror(to);
+		fatal_error(SUBSYS_DISK, "gunzip", "%s: %s", to, strerror(errno));
 		free(in);
 		return false;
 	}
@@ -155,7 +156,7 @@ bool gunzip_file(const char *from, const char *to)
 			if (pos > 0 && in[pos] == 0)
 				ok = true;
 			else
-				fprintf(stderr, "%s: not in gzip format\n",
+				fatal_error(SUBSYS_DISK, "gunzip",  "%s: not in gzip format",
 				    from);
 			break;
 		}
@@ -166,12 +167,12 @@ bool gunzip_file(const char *from, const char *to)
 		    (dest NIL):  */
 		src_len = in_len - pos - header;
 		if (puff(NIL, &out_len, in + pos + header, &src_len) != 0) {
-			fprintf(stderr, "%s: corrupt gzip data\n", from);
+			fatal_error(SUBSYS_DISK, "gunzip",  "%s: corrupt gzip data", from);
 			break;
 		}
 
 		if (pos + header + src_len + 8 > in_len) {
-			fprintf(stderr, "%s: truncated gzip file\n", from);
+			fatal_error(SUBSYS_DISK, "gunzip",  "%s: truncated gzip file", from);
 			break;
 		}
 
@@ -183,12 +184,12 @@ bool gunzip_file(const char *from, const char *to)
 		    (uint32_t) out_len != expected_len ||
 		    crc32_update(0, out, out_len) !=
 		    get32le(in + pos + header + src_len)) {
-			fprintf(stderr, "%s: corrupt gzip data\n", from);
+			fatal_error(SUBSYS_DISK, "gunzip",  "%s: corrupt gzip data", from);
 			break;
 		}
 
 		if (fwrite(out, 1, out_len, f) != out_len) {
-			perror(to);
+			fatal_error(SUBSYS_DISK, "gunzip", "%s: %s", to, strerror(errno));
 			break;
 		}
 
@@ -197,7 +198,7 @@ bool gunzip_file(const char *from, const char *to)
 	}
 
 	if (fclose(f) != 0) {
-		perror(to);
+		fatal_error(SUBSYS_DISK, "gunzip", "%s: %s", to, strerror(errno));
 		ok = false;
 	}
 

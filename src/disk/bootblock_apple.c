@@ -58,7 +58,7 @@ int apple_load_bootblock(struct machine *m, struct cpu *cpu,
 
 	res = diskimage_access(m, disk_id, disk_type, 0, 0x0, buf, sizeof(buf));
 	if (!res) {
-		fatal("apple_load_bootblock: couldn't read the disk "
+		fatal_error(SUBSYS_DISK, "bootblock_apple", "apple_load_bootblock: couldn't read the disk "
 		    "image. Aborting.\n");
 		return 0;
 	}
@@ -90,11 +90,11 @@ int apple_load_bootblock(struct machine *m, struct cpu *cpu,
 	} while (partnr < n_partitions);
 
 	if (n_hfs_partitions == 0) {
-		fatal("Error: No HFS partition found! TODO\n");
+		fatal_error(SUBSYS_DISK, "bootblock_apple", "Error: No HFS partition found! TODO\n");
 		return 0;
 	}
 	if (n_hfs_partitions >= 2) {
-		fatal("Error: Too many HFS partitions found! TODO\n");
+		fatal_error(SUBSYS_DISK, "bootblock_apple", "Error: Too many HFS partitions found! TODO\n");
 		return 0;
 	}
 

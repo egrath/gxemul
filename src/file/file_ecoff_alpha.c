@@ -74,9 +74,8 @@ static void ea_read(FILE *f, const char *filename, off_t pos,
 	unsigned char *buf, size_t len, const char *what)
 {
 	if (fseeko(f, pos, SEEK_SET) != 0 || fread(buf, 1, len, f) != len) {
-		fprintf(stderr, "%s: Alpha ECOFF: can't read the %s\n",
+		fatal_error(SUBSYS_DISK, "file_ecoff_alpha",  "%s: Alpha ECOFF: can't read the %s",
 		    filename, what);
-		exit(1);
 	}
 }
 
@@ -157,17 +156,15 @@ static void file_load_ecoff_alpha(struct machine *m, struct memory *mem,
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_ecoff_alpha", "%s: %s", filename, strerror(errno));
 	}
 
 	ea_read(f, filename, 0, fh, sizeof(fh), "file and a.out headers");
 
 	f_magic = ea_le16(fh);
 	if (f_magic == ECOFF_MAGIC_ALPHA_COMPRESSED) {
-		fprintf(stderr, "%s: compressed Alpha ECOFF executables are not"
-		    " supported yet\n", filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_ecoff_alpha",  "%s: compressed Alpha ECOFF executables are not"
+		    " supported yet", filename);
 	}
 	f_nscns = ea_le16(fh + 2);
 	f_symptr = ea_le64(fh + 8);
@@ -214,18 +211,16 @@ static void file_load_ecoff_alpha(struct machine *m, struct memory *mem,
 			continue;
 
 		if (fseeko(f, s_scnptr, SEEK_SET) != 0) {
-			fprintf(stderr, "%s: can't seek to section %s\n",
+			fatal_error(SUBSYS_DISK, "file_ecoff_alpha",  "%s: can't seek to section %s",
 			    filename, name);
-			exit(1);
 		}
 		while (done < s_size) {
 			size_t len = sizeof(buf);
 			if (len > s_size - done)
 				len = s_size - done;
 			if (fread(buf, 1, len, f) != len) {
-				fprintf(stderr, "%s: section %s is truncated\n",
+				fatal_error(SUBSYS_DISK, "file_ecoff_alpha",  "%s: section %s is truncated",
 				    filename, name);
-				exit(1);
 			}
 			m->cpus[0]->memory_rw(m->cpus[0], mem, s_vaddr + done,
 			    buf, len, MEM_WRITE, NO_EXCEPTIONS);

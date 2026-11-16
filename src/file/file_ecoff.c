@@ -33,6 +33,8 @@
 
 #include "thirdparty/exec_ecoff.h"
 #ifdef _WIN32
+#include <string.h>
+#include <errno.h>
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
@@ -85,14 +87,12 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_ecoff", "%s: %s", filename, strerror(errno));
 	}
 
 	len = fread(&exechdr, 1, sizeof(exechdr), f);
 	if (len != sizeof(exechdr)) {
-		fprintf(stderr, " not a complete ecoff image\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_ecoff",  " not a complete ecoff image\n");
 	}
 
 	/*
@@ -138,9 +138,9 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		encoding = ELFDATA2LSB;
 		break;
 	default:
-		fprintf(stderr, "%s: unimplemented ECOFF format, magic = "
-		    "0x%04x\n", filename, (int)f_magic);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: unimplemented ECOFF format, magic = "
+		    "0x%04x", filename, (int)f_magic);
+		return;
 	}
 
 	/*  Read various header information:  */
@@ -205,9 +205,8 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		fseek(f, sectionHeadersPos + sizeof(scnhdr) * secn, SEEK_SET);
 		len = fread(&scnhdr, 1, sizeof(scnhdr), f);
 		if (len != sizeof(scnhdr)) {
-			fprintf(stderr, "%s: incomplete section "
-			    "header %i\n", filename, secn);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: incomplete section "
+			    "header %i", filename, secn);
 		}
 
 		debug("section %i: ", secn);
@@ -231,13 +230,11 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		    (int)s_nreloc, (long)s_relptr, (int)s_flags);
 
 		if (s_relptr != 0 && s_nreloc == 0) {
-			fprintf(stderr, "%s: relocation info, but 0 relocations, for section  %i\n", filename, secn);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: relocation info, but 0 relocations, for section  %i", filename, secn);
 		}
 
 		if (s_relptr == 0 && s_nreloc != 0) {
-			fprintf(stderr, "%s: no relocation info, but >0 relocations, for section  %i\n", filename, secn);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: no relocation info, but >0 relocations, for section  %i", filename, secn);
 		}
 
 		if (s_relptr != 0 && !relocated) {
@@ -250,8 +247,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			relocationOffset = relocationTarget - a_tstart;
 
 			if (s_vaddr != s_paddr) {
-				fprintf(stderr, "%s: relocated ECOFF, but vaddr (0x%08x) != paddr (0x%08x): TODO, for section  %i\n", filename, (int)s_vaddr, (int)s_paddr, secn);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: relocated ECOFF, but vaddr (0x%08x) != paddr (0x%08x): TODO, for section  %i", filename, (int)s_vaddr, (int)s_paddr, secn);
 			}
 			
 			if (!relocated) {
@@ -280,9 +276,8 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 
 		len = fread(&symhdr, 1, sizeof(symhdr), f);
 		if (len != sizeof(symhdr)) {
-			fprintf(stderr, "%s: not a complete "
-			    "ecoff image: symhdr broken\n", filename);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: not a complete "
+			    "ecoff image: symhdr broken", filename);
 		}
 
 		unencode(sym_magic,     &symhdr.magic,         uint16_t);
@@ -338,8 +333,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 					    sizeof(struct ms_sym) * f_nsyms;
 					fseek(f, ofs, SEEK_SET);
 					if (fread(name, 1, sizeof(name), f) != sizeof(name)) {
-						fprintf(stderr, "error reading symbol from %s\n", filename);
-						exit(1);
+						fatal_error(SUBSYS_DISK, "file_ecoff",  "error reading symbol from %s", filename);
 					}
 					name[sizeof(name)-1] = '\0';
 					/*  debug(" [altname=0x%x '%s']",
@@ -381,8 +375,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		memset(symbol_data, 0, issExtMax + 2);
 		fseek(f, cbSsExtOffset, SEEK_SET);
 		if (fread(symbol_data, 1, issExtMax + 1, f) != (size_t) issExtMax+1) {
-			fprintf(stderr, "error reading symbol data from %s\n", filename);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "error reading symbol data from %s", filename);
 		}
 
 		nsymbols = iextMax;
@@ -393,8 +386,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		fseek(f, cbExtOffset, SEEK_SET);
 		if (fread(extsyms, 1, iextMax * sizeof(struct ecoff_extsym), f) !=
 		    iextMax * sizeof(struct ecoff_extsym)) {
-			fprintf(stderr, "error reading extsyms from %s\n", filename);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "error reading extsyms from %s", filename);
 		}
 
 		/*  Unencode the strindex and value first:  */
@@ -435,9 +427,8 @@ skip_normal_coff_symbols:
 		fseek(f, sectionHeadersPos + sizeof(scnhdr) * secn, SEEK_SET);
 		len = fread(&scnhdr, 1, sizeof(scnhdr), f);
 		if (len != sizeof(scnhdr)) {
-			fprintf(stderr, "%s: incomplete section "
-			    "header %i\n", filename, secn);
-			exit(1);
+			fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: incomplete section "
+			    "header %i", filename, secn);
 		}
 
 		unencode(s_vaddr,   &scnhdr.s_vaddr,   uint32_t);
@@ -486,8 +477,7 @@ skip_normal_coff_symbols:
 				    	malloc(s_nreloc * sizeof(struct mips_ecoff_reloc)));
 				len = fread(relocs, 1, s_nreloc * sizeof(struct mips_ecoff_reloc), f);
 				if ((size_t)len != s_nreloc * sizeof(struct mips_ecoff_reloc)) {
-					fprintf(stderr, "%s: could not read relocation entries for section  %i\n", filename, secn);
-					exit(1);
+					fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: could not read relocation entries for section  %i", filename, secn);
 				}
 				
 				for (size_t ri = 0; ri < s_nreloc; ++ri) {
@@ -501,8 +491,7 @@ skip_normal_coff_symbols:
 					int symbolIndex = symbolIndexAndType >> 8;
 
 					if (symbolIndex < 0 || symbolIndex >= nsymbols) {
-						fprintf(stderr, "%s: relocation for out-of-range symbol %i\n", filename, symbolIndex);
-						exit(1);
+						fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: relocation for out-of-range symbol %i", filename, symbolIndex);
 					}
 
 					/*
@@ -587,8 +576,7 @@ skip_normal_coff_symbols:
 						m->cpus[0]->memory_rw(m->cpus[0], mem, vaddr,
 						    (uint8_t*)&data, sizeof(data), MEM_WRITE, NO_EXCEPTIONS);
 					} else {
-						fprintf(stderr, "%s: unimplemented relType %i\n", filename, relType);
-						exit(1);
+						fatal_error(SUBSYS_DISK, "file_ecoff",  "%s: unimplemented relType %i", filename, relType);
 					}
 				}
 				

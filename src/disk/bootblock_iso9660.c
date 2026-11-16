@@ -39,6 +39,7 @@
  *        directory, so that one can more easily choose the correct file.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,7 +133,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 		uint64_t base_offset = diskimage_get_baseoffset(m, disk_id, disk_type);
 		res2 = diskimage_access(m, disk_id, disk_type, 0, base_offset + 0x9000, tmpbuf, 0x800);
 		if (!res2) {
-			fatal("Couldn't read MKI part after the ISO header of the disk image. Aborting.\n");
+			fatal_error(SUBSYS_DISK, "bootblock_iso9660", "Couldn't read MKI part after the ISO header of the disk image. Aborting.\n");
 			goto ret;
 		}
 
@@ -162,7 +163,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 
 	dirlen = buf[0x84] + 256*buf[0x85] + 65536*buf[0x86];
 	if (dirlen != buf[0x8b] + 256*buf[0x8a] + 65536*buf[0x89])
-		fatal("WARNING: Root directory length mismatch?\n");
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "WARNING: Root directory length mismatch?\n");
 
 	dirofs = (int64_t)(buf[0x8c] + (buf[0x8d] << 8) + (buf[0x8e] << 16) +
 	    ((uint64_t)buf[0x8f] << 24)) * 2048;
@@ -175,7 +176,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 	res2 = diskimage_access(m, disk_id, disk_type, 0, dirofs, dirbuf,
 	    dirlen);
 	if (!res2) {
-		fatal("Couldn't read the disk image. Aborting.\n");
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "Couldn't read the disk image. Aborting.\n");
 		goto ret;
 	}
 
@@ -242,13 +243,13 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 	if (p != NULL) {
 		char *blah = filename_orig;
 
-		fatal("could not find '%s' (1) in /", filename);
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "could not find '%s' (1) in /", filename);
 
 		/*  Print the first part of the filename:  */
 		while (blah != filename)
-			fatal("%c", *blah++);
+			fatal_error(SUBSYS_DISK, "bootblock_iso9660", "%c", *blah++);
 		
-		fatal("\n");
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "\n");
 		goto ret;
 	}
 
@@ -271,7 +272,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 		res2 = diskimage_access(m, disk_id, disk_type, 0, dirofs,
 		    dirbuf, 256);
 		if (!res2) {
-			fatal("Couldn't read the disk image. Aborting.\n");
+			fatal_error(SUBSYS_DISK, "bootblock_iso9660", "Couldn't read the disk image. Aborting.\n");
 			goto ret;
 		}
 
@@ -309,11 +310,10 @@ printf("\n");
 					/*  The filename was found somewhere
 					    in the directory entry.  */
 					if (match_entry != NULL) {
-						fatal("TODO: I'm too lazy to"
+						fatal_error(SUBSYS_DISK, "bootblock_iso9660", "TODO: I'm too lazy to"
 						    " implement a correct "
 						    "directory parser right "
 						    "now... (BUG)\n");
-						exit(1);
 					}
 					CHECK_ALLOCATION(match_entry = (unsigned char *)
 					    malloc(512));
@@ -331,13 +331,13 @@ printf("\n");
 	if (match_entry == NULL) {
 		char *blah = filename_orig;
 
-		fatal("could not find '%s' (2) in /", filename);
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "could not find '%s' (2) in /", filename);
 
 		/*  Print the first part of the filename:  */
 		while (blah != filename)
-			fatal("%c", *blah++);
+			fatal_error(SUBSYS_DISK, "bootblock_iso9660", "%c", *blah++);
 		
-		fatal("\n");
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "\n");
 		goto ret;
 	}
 
@@ -358,19 +358,19 @@ printf("\n");
 	res2 = diskimage_access(m, disk_id, disk_type, 0, fileofs, filebuf,
 	    filelen);
 	if (!res2) {
-		fatal("could not read the file from the disk image!\n");
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "could not read the file from the disk image!\n");
 		goto ret;
 	}
 
 	tmpfile_handle = mkstemp(tmpfname);
 	if (tmpfile_handle < 0) {
-		fatal("could not create %s\n", tmpfname);
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "could not create %s", tmpfname);
 		goto ret;
 	}
 
 	if (write(tmpfile_handle, filebuf, filelen) != filelen) {
-		fatal("could not write to %s\n", tmpfname);
-		perror("write");
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "could not write to %s", tmpfname);
+		fatal_error(SUBSYS_DISK, "bootblock_iso9660", "%s: %s", "write", strerror(errno));
 		goto ret;
 	}
 

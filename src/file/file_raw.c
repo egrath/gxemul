@@ -57,9 +57,8 @@ static void file_load_raw(struct machine *m, struct memory *mem,
 
 	p = strchr(filename, ':');
 	if (p == NULL) {
-		fprintf(stderr, "\n");
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_raw",  "\n");
+		fatal_error(SUBSYS_DISK, "file_raw", "%s: %s", filename, strerror(errno));
 	}
 
 	loadaddr = vaddr = entry = strtoull(filename, NULL, 0);
@@ -87,8 +86,7 @@ static void file_load_raw(struct machine *m, struct memory *mem,
 
 	f = fopen(strrchr(filename, ':')+1, "rb");
 	if (f == NULL) {
-		perror(p);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_raw", "%s: %s", p, strerror(errno));
 	}
 
 	fseek(f, skip, SEEK_SET);

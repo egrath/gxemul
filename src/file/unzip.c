@@ -31,6 +31,7 @@
  *  file is in inside the archive.  Zip64 archives aren't supported.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -182,12 +183,12 @@ bool unzip_extract(const char *zip, const char *name, const char *to)
 	usize = get32le(e + 24);
 	l = buf + get32le(e + 42);
 	if (l + 30 > buf + len || get32le(l) != ZIP_LOCAL) {
-		fprintf(stderr, "%s: corrupt zip archive\n", zip);
+		fatal_error(SUBSYS_DISK, "unzip",  "%s: corrupt zip archive", zip);
 		goto done;
 	}
 	data = (l - buf) + 30 + get16le(l + 26) + get16le(l + 28);
 	if (data + csize > len) {
-		fprintf(stderr, "%s: truncated zip archive\n", zip);
+		fatal_error(SUBSYS_DISK, "unzip",  "%s: truncated zip archive", zip);
 		goto done;
 	}
 
@@ -199,28 +200,28 @@ bool unzip_extract(const char *zip, const char *name, const char *to)
 	else if (method == ZIP_DEFLATED) {
 		if (puff(out, &out_len, buf + data, &src_len) != 0 ||
 		    out_len != usize) {
-			fprintf(stderr, "%s: corrupt data for %s\n", zip, name);
+			fatal_error(SUBSYS_DISK, "unzip",  "%s: corrupt data for %s", zip, name);
 			goto done;
 		}
 	} else {
-		fprintf(stderr, "%s: %s is compressed in a way that isn't "
-		    "supported (method %u)\n", zip, name, (unsigned) method);
+		fatal_error(SUBSYS_DISK, "unzip",  "%s: %s is compressed in a way that isn't "
+		    "supported (method %u)", zip, name, (unsigned) method);
 		goto done;
 	}
 	if (crc32_update(0, out, usize) != get32le(e + 16)) {
-		fprintf(stderr, "%s: bad CRC for %s\n", zip, name);
+		fatal_error(SUBSYS_DISK, "unzip",  "%s: bad CRC for %s", zip, name);
 		goto done;
 	}
 
 	if ((f = fopen(to, "wb")) == NULL) {
-		perror(to);
+		fatal_error(SUBSYS_DISK, "unzip", "%s: %s", to, strerror(errno));
 		goto done;
 	}
 	ok = fwrite(out, 1, usize, f) == usize;
 	if (fclose(f) != 0)
 		ok = false;
 	if (!ok) {
-		perror(to);
+		fatal_error(SUBSYS_DISK, "unzip", "%s: %s", to, strerror(errno));
 		remove(to);
 	}
 

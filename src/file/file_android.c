@@ -84,15 +84,13 @@ static void file_load_android(struct machine *m, struct memory *mem,
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
-		perror(filename);
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_android", "%s: %s", filename, strerror(errno));
 	}
 
 	int hlen = fread(&android_header, 1, sizeof(android_header), f);
 	if (hlen != sizeof(android_header)) {
-		fprintf(stderr, "%s: not a complete Android boot.img file\n",
+		fatal_error(SUBSYS_DISK, "file_android",  "%s: not a complete Android boot.img file",
 		    filename);
-		exit(1);
 	}
 
 	unencode(page_size, &android_header.page_size, uint32_t);
@@ -113,8 +111,7 @@ static void file_load_android(struct machine *m, struct memory *mem,
 			int len = len_to_load > sizeof(buf) ? sizeof(buf) : len_to_load;
 			int len_read = fread(buf, 1, len, f);
 			if (len != len_read) {
-				fprintf(stderr, "could not read from %s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_android",  "could not read from %s", filename);
 			}
 
 			/*  printf("fread len=%i vaddr=%x buf[0..]=%02x %02x %02x\n",
@@ -137,8 +134,7 @@ static void file_load_android(struct machine *m, struct memory *mem,
 			len_to_load -= len;
 		}
 	} else {
-		fatal("kernel_size = 0?\n");
-		exit(1);
+		fatal_error(SUBSYS_DISK, "file_android", "kernel_size = 0?\n");
 	}
 
 	unencode(ramdisk_size, &android_header.ramdisk_size, uint32_t);
@@ -156,8 +152,7 @@ static void file_load_android(struct machine *m, struct memory *mem,
 			int len = len_to_load > sizeof(buf) ? sizeof(buf) : len_to_load;
 			int len_read = fread(buf, 1, len, f);
 			if (len != len_read) {
-				fprintf(stderr, "could not read from %s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_android",  "could not read from %s", filename);
 			}
 
 			/*  printf("fread len=%i vaddr=%x buf[0..]=%02x %02x %02x\n",
@@ -196,8 +191,7 @@ static void file_load_android(struct machine *m, struct memory *mem,
 			int len = len_to_load > sizeof(buf) ? sizeof(buf) : len_to_load;
 			int len_read = fread(buf, 1, len, f);
 			if (len != len_read) {
-				fprintf(stderr, "could not read from %s\n", filename);
-				exit(1);
+				fatal_error(SUBSYS_DISK, "file_android",  "could not read from %s", filename);
 			}
 
 			/*  printf("fread len=%i vaddr=%x buf[0..]=%02x %02x %02x\n",
