@@ -130,6 +130,8 @@
 #define	SCRATCHB	0x5c
 
 #define	SCNTL0_TRG	0x01
+#define	SCNTL0_START	0x20	/*  arbitrate (simple, with ARB1-0 = 0)  */
+#define	SSTAT0_AIP	0x10	/*  arbitration in progress  */
 #define	SCNTL1_RST	0x08
 #define	SCNTL1_CON	0x10
 
@@ -1348,10 +1350,24 @@ static void sym_reg_access(struct sym53c810_data *d, struct cpu *cpu,
 			v = (v & 0x0f) | CTEST3_REVISION;
 			break;
 		case SSTAT0:
+			/*
+			 *  Software-driven arbitration (SRM V7.2 does this
+			 *  while it probes the bus): with START set and no
+			 *  one else on the bus, the chip arbitrates at once
+			 *  and keeps BSY and its own ID on the data lines.
+			 */
+			v = 0;
+			if ((d->reg[SCNTL0] & SCNTL0_START) && !d->t.connected)
+				v |= SSTAT0_AIP;
+			break;
+		case SBDL:
+			v = 0;
+			if (d->reg[SCNTL0] & SCNTL0_START)
+				v = 1 << (d->reg[SCID] & 7);
+			break;
 		case SSTAT2:
 		case SIDL:
 		case SIDL + 1:
-		case SBDL:
 		case SBDL + 1:
 			v = 0;
 			break;
