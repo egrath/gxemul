@@ -567,6 +567,15 @@ NT then boots: "Version 4.0 (Build 1381: Service Pack 6)", "Revised
 Service Pack 6a"; the 21040 still pings. SRM V7.0 and Tru64 V5.1A on the
 same 53C810 still find the RZ29B and the RRD45 and boot, and read the disk.
 
+**Firmware Update CD (2026-11-16).** The CDs carry APU update bootfiles,
+not ROM images, and no DROM; flashing from them works through the emulated
+28F020 (saved as `<nvram>.flash`). SRM V7.1-2 and V7.2-1 hung at power-up
+code e6: they arbitrate for the SCSI bus by hand (SCNTL0 START, then poll
+SSTAT0 AIP with no timeout, read SBDL, set SCNTL1 CON). The 53C810 now
+reports AIP and its own ID on SBDL while START is set. Tested with DROM 1.7:
+AS200 V6.9-4/V7.0-9, AS400 V6.9-4/V7.0-9/V7.1-2/V7.2-1 all flash, boot SRM
+and Tru64 V5.1A. Script: scratchpad `fwtry.py MODEL ISO BOOTFILE`.
+
 **Next:** the TGA's DMA modes if something uses them.
 
 ## 7. Risks

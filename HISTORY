@@ -5854,5 +5854,10 @@ Changelog for GXemul:
 		- 21143/21040: descriptor skip length, empty descriptors.
 		- Simulated network: TCP to the guest with a sliding window
 		  and retransmission.
+20261116	AlphaStation 200/400: 53C810 simple arbitration (SCNTL0 START,
+		  SSTAT0 AIP, SBDL), which SRM V7.1 and later poll at power-up.
+		  The consoles on the Alpha Systems Firmware Update CDs (SRM
+		  V6.9-4 to V7.2-1) can be flashed and run; see
+		  machine_avanti.html.
 
 

@@ -109,6 +109,71 @@ appended.
 <p>SRM uses the serial console (COM1, <tt>tty0</tt>); ARC and Windows NT
 use the graphics card.
 
+<a name="fwupdate"></a>
+<p><b>Using the Alpha Systems Firmware Update CD:</b> the firmware CDs
+(e.g. versions 5.4 to 6.1) have the consoles for these machines in
+<tt>\ALPHA200</tt> (AlphaStation 200 and 250, e.g. <tt>AS200_V7_0.EXE</tt>)
+and <tt>\ALPHA400</tt> (AlphaStation 400, e.g. <tt>AS400_V72_1.EXE</tt>).
+These files are not ROM images: they are Digital's update program (APU)
+with the SRM and ARC images packed inside, and the DROM (E47) is not on
+the CD at all. So a ROM image as above is still needed to start the
+machine, but its flash part can be anything SRM starts from (an older
+version, or the same one). The update is then done as on the real machine,
+and the emulated flash keeps it.
+
+<p>These consoles have been flashed this way and boot, with the DROM 1.7
+from the chip dumps, to SRM and from there Tru64 UNIX V5.1A:
+
+<p><center><table border="1" cellpadding="3">
+<tr><th>Bootfile</th><th>Machine</th><th>SRM</th><th>ARC</th><th>On CD</th></tr>
+<tr><td><tt>[ALPHA200]AS200_V6_9.EXE</tt></td><td>200, 250</td><td>V6.9-4</td><td>4.57</td><td>5.4&ndash;5.8</td></tr>
+<tr><td><tt>[ALPHA200]AS200_V7_0.EXE</tt></td><td>200, 250</td><td>V7.0-9</td><td>4.58</td><td>5.4&ndash;6.1</td></tr>
+<tr><td><tt>[ALPHA400]AS400_V6_9.EXE</tt></td><td>400</td><td>V6.9-4</td><td>4.57</td><td>5.4, 5.5</td></tr>
+<tr><td><tt>[ALPHA400]AS400_V7_0.EXE</tt></td><td>400</td><td>V7.0-9</td><td>4.58</td><td>5.4&ndash;5.6</td></tr>
+<tr><td><tt>[ALPHA400]AS400_V71_2.EXE</tt></td><td>400</td><td>V7.1-2</td><td>4.58</td><td>5.6&ndash;6.1</td></tr>
+<tr><td><tt>[ALPHA400]AS400_V72_1.EXE</tt></td><td>400</td><td>V7.2-1</td><td>4.58</td><td>5.7&ndash;6.1</td></tr>
+</table></center>
+
+<p>The steps:
+
+<p><ol>
+  <li>Configure an <tt>"nvram"</tt> file (the new flash contents are saved
+	in the same file name with <tt>.flash</tt> appended; once that file
+	exists, it is used instead of the flash part of the ROM image), and
+	put the firmware CD in the CD-ROM drive (ID 4).
+  <p>
+
+  <li>At SRM's prompt, boot the CD:
+<pre>
+	&gt;&gt;&gt; <b>boot dka400</b>
+</pre>
+	The CD's loader names the platform and asks whether it is another
+	one with the same system type; for an AlphaStation 400 it asks
+	<i>Is this really an "AlphaServer 400"?</i>: answer <b>n</b>. It
+	shows the README (Ctrl-C skips it) and the default bootfile for the
+	machine (the newest one); press Return to use it, or type another
+	one from the table, e.g. <tt>[ALPHA400]AS400_V71_2.EXE</tt>.
+  <p>
+
+  <li>The update program starts (<i>AlphaStation 400 4/233 -- Firmware
+	Update</i>) with its <tt>Apu-&gt;</tt> prompt. Program the flash:
+<pre>
+	Apu-&gt; <b>update</b>
+	APU-I ARE YOU READY TO PROGRAM (SRM  ) ROM DEVICE ? (Y/N) <b>y</b>
+	APU-I PRECHARGING (SRM  ) ROM DEVICE
+	APU-I ERASING (SRM  ) ROM DEVICE
+	APU-I PROGRAMMING (SRM  ) ROM DEVICE
+	...
+	APU-I PROGRAMMING (ARC  /AlphaBIOS) ROM COMPLETED
+</pre>
+	It programs both consoles, SRM and ARC.
+  <p>
+
+  <li>Quit GXemul and start it again (the power cycle): the DROM starts the
+	new console from <tt>&lt;nvram file&gt;.flash</tt>. To go back to the
+	flash in the ROM image, delete that file.
+</ol>
+
 
 
 
