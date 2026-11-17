@@ -5863,3 +5863,14 @@ Changelog for GXemul:
 
 
 ==============  RELEASE 1.0.31  ==============
+
+20261116	Motorola M88K: preserve SNIP and SFIP on interrupt/trap in
+		  branch delay slots. In delay slots, SNIP holds the delay slot
+		  instruction and SFIP holds the branch destination.
+		  Decrementing SFIP corrupted return targets upon rte, causing
+		  kernel data faults and misaligned access panics during process
+		  cleanup (hat_unload/hat_ptfree) on Motorola System V/88.
+
+
+
+==============  RELEASE 1.0.32  ==============
