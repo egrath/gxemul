@@ -811,6 +811,7 @@ void dev_mvme393_init(struct machine *machine, struct mvme187_data *mvme187)
 
 	if (d->fb != NULL) {
 		int i;
+		d->fb->palette_in_vram = 1;
 		for (i = 0; i < 256; i++) {
 			int r = ((i >> 5) & 7) * 255 / 7;
 			int g = ((i >> 2) & 7) * 255 / 7;

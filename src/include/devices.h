@@ -360,6 +360,8 @@ struct vfb_data {
 
 	/*  RGB palette for <= 8 bit modes:  (r,g,b bytes for each)  */
 	unsigned char	rgb_palette[256 * 3];
+	/*  MVME393: the palette is kept in VRAM at 0xff000 (4 bytes/entry)  */
+	int		palette_in_vram;
 
 	char		*name;
 	char		*machine_name;	/*  NULL if the machine has none  */

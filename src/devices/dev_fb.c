@@ -396,7 +396,8 @@ DEVICE_TICK(fb)
 	 *  Synchronize RAMDAC palette if palette region (0xff000..0xff3ff)
 	 *  in framebuffer memory was modified:
 	 */
-	if (d->bit_depth == 8 && d->framebuffer != NULL && d->framebuffer_size >= 0x100000) {
+	if (d->palette_in_vram && d->bit_depth == 8 &&
+	    d->framebuffer != NULL && d->framebuffer_size >= 0x100000) {
 		uint8_t *pal = d->framebuffer + 0xff000;
 		int pal_changed = 0;
 		int i;
@@ -558,7 +559,8 @@ DEVICE_ACCESS(fb)
 	 *  or a few bytes that are read/written at a time.
 	 */
 	if (writeflag == MEM_WRITE) {
-		if (relative_addr >= 0xff000 && relative_addr < 0xff400) {
+		if (d->palette_in_vram &&
+		    relative_addr >= 0xff000 && relative_addr < 0xff400) {
 			size_t col = (relative_addr - 0xff000) >> 2;
 			if (col < 256 && len >= 4) {
 				d->rgb_palette[col * 3 + 0] = data[1];
