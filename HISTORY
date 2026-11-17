@@ -5874,3 +5874,12 @@ Changelog for GXemul:
 
 
 ==============  RELEASE 1.0.32  ==============
+
+20261117	Framebuffer: only the MVME393 takes its palette from VRAM at
+		  0xff000. Since 1.0.28 (MVME393 colormap changes) every 8-bit
+		  framebuffer of 1 MB or more did, which turned the DEC 3000's
+		  PMAGB-BA (and other cards) black except for the cursor.
+
+
+
+==============  RELEASE 1.0.33  ==============
