@@ -360,17 +360,17 @@ void cpu_list_available_types(void)
 	struct cpu_family *fp = first_cpu_family;
 
 	if (fp == NULL) {
-		debug("No CPUs defined!\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "No CPUs defined!\n");
 		return;
 	}
 
 	while (fp != NULL) {
-		debug("%s:\n", fp->name);
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "%s:\n", fp->name);
 		debug_indentation(1);
 		if (fp->list_available_types != NULL)
 			fp->list_available_types();
 		else
-			debug("(internal error: list_available_types"
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "(internal error: list_available_types"
 			    " = NULL)\n");
 		debug_indentation(-1);
 
@@ -420,10 +420,10 @@ void cpu_print_pc_indicator_in_disassembly(struct cpu *cpu, int running, uint64_
 {
 	if (!running && cpu->pc == dumpaddr) {
 		color_pc_indicator();
-		debug(" <- ");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, " <- ");
 		color_normal();
 	} else {
-		debug("    ");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "    ");
 	}
 }
 

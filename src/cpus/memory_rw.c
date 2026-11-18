@@ -364,7 +364,7 @@ not just the device in question.
 				 *  (Architecture specific.)
 				 */
 				if (res <= 0 && !no_exceptions) {
-					debug("[ %s device '%s' addr %08lx "
+					debugmsg(SUBSYS_CPU, "memory_rw", VERBOSITY_DEBUG, "[ %s device '%s' addr %08lx "
 					    "failed ]\n", writeflag?
 					    "writing to" : "reading from",
 					    mem->devices[i].name, (long)paddr);

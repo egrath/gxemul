@@ -221,7 +221,7 @@ void riscv_cpu_dumpinfo(struct cpu *cpu, bool verbose)
  */
 void riscv_cpu_list_available_types(void)
 {
-	debug("RV{32,64,128}EIMAFDGQLCBJTPVN\n");
+	debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "RV{32,64,128}EIMAFDGQLCBJTPVN\n");
 }
 
 
@@ -239,41 +239,41 @@ void riscv_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		uint64_t offset;
 		const char *symbol = get_symbol_name(&cpu->machine->symbol_context, cpu->pc, &offset);
 
-		debug("cpu%i:  pc  = ", cpu->cpu_id);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "cpu%i:  pc  = ", cpu->cpu_id);
 
 		if (cpu->is_32bit)
-			debug("0x%08" PRIx32, (uint32_t) cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t) cpu->pc);
 		else
-			debug("0x%016" PRIx64, (uint64_t) cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "0x%016" PRIx64, (uint64_t) cpu->pc);
 
-		debug("  <%s>\n", symbol != NULL? symbol : " no symbol ");
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
 		int n_regs_per_line = cpu->is_32bit ? 4 : 2;
 
 		for (int i = 0; i < N_RISCV_REGS; i++) {
 			if ((i % n_regs_per_line) == 0)
-				debug("cpu%i:", cpu->cpu_id);
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "cpu%i:", cpu->cpu_id);
 
-			debug("  ");
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "  ");
 
 			if (i == 0) {
-				debug("      ");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "      ");
 
 				if (cpu->is_32bit)
-					debug("          ");
+					debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "          ");
 				else
-					debug("                  ");
+					debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "                  ");
 			} else {
-				debug("%-3s = ", riscv_register_names[i]);
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "%-3s = ", riscv_register_names[i]);
 
 				if (cpu->is_32bit)
-					debug("0x%08" PRIx32, (uint32_t) cpu->cd.riscv.x[i]);
+					debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t) cpu->cd.riscv.x[i]);
 				else
-					debug("0x%016" PRIx64, (uint64_t) cpu->cd.riscv.x[i]);
+					debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "0x%016" PRIx64, (uint64_t) cpu->cd.riscv.x[i]);
 			}
 
 			if ((i % n_regs_per_line) == n_regs_per_line-1)
-				debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "\n");
 		}
 	}
 }
@@ -346,15 +346,15 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	const char *symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset == 0)
-		debug("<%s>\n", symbol);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debug("cpu%i:\t", cpu->cpu_id);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "cpu%i:\t", cpu->cpu_id);
 
 	if (cpu->is_32bit)
-		debug("%08" PRIx32": ", (uint32_t) dumpaddr);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "%08" PRIx32": ", (uint32_t) dumpaddr);
 	else
-		debug("%016" PRIx64": ", (uint64_t) dumpaddr);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "%016" PRIx64": ", (uint64_t) dumpaddr);
 
 	int instr_length_in_bytes = sizeof(uint16_t);
 	uint32_t iw;
@@ -375,7 +375,7 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		iw |= (iw2 << 16);
 
 		if (((iw >> 2) & 7) == 7) {
-			debug("longer than 32-bit instruction: TODO\n");
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "longer than 32-bit instruction: TODO\n");
 			return sizeof(uint32_t);	// actually wrong... :-(
 		}
 
@@ -383,9 +383,9 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	}
 
 	if (instr_length_in_bytes == sizeof(uint16_t))
-		debug("%04x    ", (uint32_t) iw);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "%04x    ", (uint32_t) iw);
 	else
-		debug("%08" PRIx32, (uint32_t) iw);
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t) iw);
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -399,7 +399,7 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	// in the same instruction implementation anyway.
 	if (instr_length_in_bytes == sizeof(uint16_t)) {
 		if (!(cpu->cd.riscv.extensions & RISCV_EXT_C))
-			debug("compressed (req. C ext)\t; ");
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "compressed (req. C ext)\t; ");
 
 		uint w13 = (iw >> 13) & 7;
 		uint w0 = (iw >> 0) & 3;
@@ -424,9 +424,9 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			      | (((iw >> 11) & 7) << 4);
 
 			if (nzimm == 0) {
-				debug("INVALID instruction");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "INVALID instruction");
 			} else {
-				debug("addi\t%s,%s,%lli",
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "addi\t%s,%s,%lli",
 				    riscv_register_names[rprim_2],
 				    riscv_register_names[RISCV_REG_SP],
 				    (long long) nzimm);
@@ -436,11 +436,11 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 1:	// c.addi
 			nzimm = nzimm5 | ((iw >> 2) & 31);
 			if (rs1rd == 0 && nzimm == 0)
-				debug("nop");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "nop");
 			else if (rs1rd == 0)
-				debug("addi\tTODO: rs1rd = 0 but nzimm = %lli?", (long long) nzimm);
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "addi\tTODO: rs1rd = 0 but nzimm = %lli?", (long long) nzimm);
 			else
-				debug("addi\t%s,%s,%lli", riscv_register_names[rs1rd], riscv_register_names[rs1rd], (long long) nzimm);
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "addi\t%s,%s,%lli", riscv_register_names[rs1rd], riscv_register_names[rs1rd], (long long) nzimm);
 			break;
 
 		case 13:	// c.lui
@@ -448,13 +448,13 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			      | (((iw >> 12) & 1) << 17);
 
 			if (nzimm == 0) {
-				debug("INVALID lui?");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "INVALID lui?");
 			} else if (rs1rd == 0) {
-				debug("INVALID lui, rs1rd = 0?");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "INVALID lui, rs1rd = 0?");
 			} else if (rs1rd == RISCV_REG_SP) {
-				debug("TODO: c.addi16sp");
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "TODO: c.addi16sp");
 			} else {
-				debug("lui\t%s,0x%x",
+				debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "lui\t%s,0x%x",
 				    riscv_register_names[rs1rd],
 				    (int) (nzimm >> 12));
 			}
@@ -466,7 +466,7 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			imm = (((iw >> 2) & 7) << 6)
 			      | (((iw >> 5) & 3) << 3)
 			      | (((iw >> 12) & 1) << 5);
-			debug("ld\t%s,%i(%s)",
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "ld\t%s,%i(%s)",
 			    riscv_register_names[rs1rd],
 			    imm,
 			    riscv_register_names[RISCV_REG_SP]);
@@ -475,22 +475,22 @@ int riscv_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 30:	// c.sdsp
 			// TODO: RV64/128 only
 			imm = (hi_imm53 << 3) + (hi_imm86 << 6);
-			debug("sd\t%s,%i(%s)",
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "sd\t%s,%i(%s)",
 			    riscv_register_names[rs2],
 			    imm,
 			    riscv_register_names[RISCV_REG_SP]);
 			break;
 
 		default:
-			debug("UNIMPLEMENTED compressed op %i", op);
+			debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "UNIMPLEMENTED compressed op %i", op);
 		}
 	} else if (instr_length_in_bytes == sizeof(uint32_t)) {
-		debug("TODO: 32-bit wide instruction words");
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "TODO: 32-bit wide instruction words");
 	} else {
-		debug("TODO");
+		debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "TODO");
 	}
 	
-	debug("\n");
+	debugmsg(SUBSYS_CPU, "cpu_riscv", VERBOSITY_DEBUG, "\n");
 
 	return instr_length_in_bytes;
 }

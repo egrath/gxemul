@@ -281,7 +281,7 @@ void i960_cpu_dumpinfo(struct cpu *cpu, bool verbose)
  */
 void i960_cpu_list_available_types(void)
 {
-	debug("i960CA\ti960Jx\n");
+	debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "i960CA\ti960Jx\n");
 }
 
 
@@ -302,28 +302,28 @@ void i960_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 	if (gprs) {
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    cpu->pc, &offset);
-		debug("cpu%i:  ip  = 0x%08" PRIx32, x, (uint32_t)cpu->pc);
-		debug("  <%s>\n", symbol != NULL? symbol : " no symbol ");
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:  ip  = 0x%08" PRIx32, x, (uint32_t)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
-		debug("cpu%i:  ac  = 0x%08" PRIx32 "\n", x, cpu->cd.i960.ac);
-		debug("cpu%i:  pc  = 0x%08" PRIx32 "\n", x, cpu->cd.i960.i960_pc);
-		debug("cpu%i:  tc  = 0x%08" PRIx32 "\n", x, cpu->cd.i960.tc);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:  ac  = 0x%08" PRIx32 "\n", x, cpu->cd.i960.ac);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:  pc  = 0x%08" PRIx32 "\n", x, cpu->cd.i960.i960_pc);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:  tc  = 0x%08" PRIx32 "\n", x, cpu->cd.i960.tc);
 
 		for (i=0; i<N_I960_REGS; i++) {
 			if ((i % 4) == 0)
-				debug("cpu%i:", x);
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:", x);
 
-			debug("  %-3s = 0x%08" PRIx32,
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "  %-3s = 0x%08" PRIx32,
 			    i960_regnames[i], cpu->cd.i960.r[i]);
 
 			if ((i % 4) == 3)
-				debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\n");
 		}
 	}
 
 	if (coprocs) {
 		for (i = 0; i < cpu->cd.i960.nr_of_valid_sfrs; i++) {
-			debug("cpu%i:  sfr%i = 0x%08" PRIx32 "\n", x, i, cpu->cd.i960.sfr[i]);
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:  sfr%i = 0x%08" PRIx32 "\n", x, i, cpu->cd.i960.sfr[i]);
 		}
 	}
 }
@@ -396,12 +396,12 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	const char *symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset == 0)
-		debug("<%s>\n", symbol);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debug("cpu%i:\t", cpu->cpu_id);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "cpu%i:\t", cpu->cpu_id);
 
-	debug("%08" PRIx32": ", (uint32_t) dumpaddr);
+	debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%08" PRIx32": ", (uint32_t) dumpaddr);
 
 	uint32_t iw;
 
@@ -455,7 +455,7 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			is_64bit_long_instruction = true;		
 	}
 
-	debug("%08 " PRIx32, (uint32_t) iw);
+	debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%08 " PRIx32, (uint32_t) iw);
 
 	if (is_64bit_long_instruction) {
 		if (cpu->byte_order == EMUL_LITTLE_ENDIAN)
@@ -463,9 +463,9 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		else
 			iw2 = ib[7] + (ib[6]<<8) + (ib[5]<<16) + (ib[4]<<24);
 
-		debug(" %08" PRIx32, (uint32_t) iw2);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, " %08" PRIx32, (uint32_t) iw2);
 	} else {
-		debug("         ");
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "         ");
 	}
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
@@ -499,9 +499,9 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				"faulto"		/*  0x1f  */
 			};
 
-		debug("%s", mnemonics[opcode - 0x08]);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", mnemonics[opcode - 0x08]);
 		if (CTRL_t)
-			debug(".f");
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ".f");
 
 		bool hasDisplacement = opcode < 0x18 && opcode != 0x0a;
 		if (hasDisplacement) {
@@ -514,9 +514,9 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    addr, &offset);
 			if (symbol != NULL)
-				debug("\t0x%08x\t; <%s>", addr, symbol);
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\t0x%08x\t; <%s>", addr, symbol);
 			else
-				debug("\t0x%08x", addr);
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\t0x%08x", addr);
 		}
 	} else if (opcode >= 0x20 && opcode <= 0x3f) {
 		/*  COBR:  */
@@ -558,29 +558,29 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				"cmpibo",		/*  0x3f  */
 			};
 
-		debug("%s", mnemonics[opcode - 0x20]);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", mnemonics[opcode - 0x20]);
 		if (COBR_t)
-			debug(".f");
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ".f");
 
 		bool src1isBitpos = opcode == 0x30 || opcode == 0x37;
 
 		if (opcode <= 0x27) {
-			debug("\t%s", regname_or_literal(COBR_src_dst, 0, COBR_s2));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\t%s", regname_or_literal(COBR_src_dst, 0, COBR_s2));
 		} else {
 			uint32_t targ = COBR_disp << 2;
 			if (targ & 0x00001000)
 				targ |= 0xffffe000;
 			targ += dumpaddr;
 
-			debug("\t%s", regname_or_literal(COBR_src_dst, src1isBitpos ? 1 : COBR_m1, 0));
-			debug(",%s", regname_or_literal(COBR_src_2, 0, COBR_s2));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\t%s", regname_or_literal(COBR_src_dst, src1isBitpos ? 1 : COBR_m1, 0));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ",%s", regname_or_literal(COBR_src_2, 0, COBR_s2));
 
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    targ, &offset);
 			if (symbol != NULL)
-				debug(",0x%08x\t; <%s>", targ, symbol);
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ",0x%08x\t; <%s>", targ, symbol);
 			else
-				debug(",0x%08x", targ);
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ",0x%08x", targ);
 		}
 	} else if (opcode >= 0x58 && opcode <= 0x7f) {
 		/*  REG:  */
@@ -597,9 +597,9 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		bool has_src1 = true, has_src2 = true, has_dst = true, has_src3 = false;
 
 		if (rinstr == NULL) {
-			debug("unknown_reg_0x%02x:0x%x", opcode, REG_opcode2);
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "unknown_reg_0x%02x:0x%x", opcode, REG_opcode2);
 		} else {
-			debug("%s", rinstr->mnemonic);
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", rinstr->mnemonic);
 			has_src1 = rinstr->has_src1;
 			has_src2 = rinstr->has_src2;
 			has_dst = rinstr->has_dst;
@@ -607,18 +607,18 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		}
 
 		if (has_src1)
-			debug("\t%s", regname_or_literal(REG_src1, REG_m1, REG_sfr1));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\t%s", regname_or_literal(REG_src1, REG_m1, REG_sfr1));
 
 		if (has_src2) {
 			if (has_src1)
-				debug(",");
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ",");
 
-			debug("%s", regname_or_literal(REG_src2, REG_m2, REG_sfr2));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", regname_or_literal(REG_src2, REG_m2, REG_sfr2));
 		}
 		
 		if (has_dst) {
 			if (has_src1 || has_src2)
-				debug(",");
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ",");
 
 			if (REG_m3) {
 				/*
@@ -632,11 +632,11 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				 *   modify, extract, modpc)."
 				 */
 				if (has_src3)
-					debug("%s", regname_or_literal(REG_src_dst, 1, 0));
+					debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", regname_or_literal(REG_src_dst, 1, 0));
 				else
-					debug("%s", regname_or_literal(REG_src_dst, 0, 1));
+					debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", regname_or_literal(REG_src_dst, 0, 1));
 			} else
-				debug("%s", regname_or_literal(REG_src_dst, 0, 0));
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s", regname_or_literal(REG_src_dst, 0, 0));
 		}
 	} else if (opcode >= 0x80 && opcode <= 0xcf) {
 		/*  MEM:  */
@@ -747,72 +747,72 @@ int i960_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				db = stvml */
 			};
 
-		debug("%s\t", mnemonics[opcode - 0x80]);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s\t", mnemonics[opcode - 0x80]);
 
 		bool usesDst = opcode != 0x84 && opcode != 0x86;
 		bool isStore = !!(opcode & 2);
 
 		if (usesDst && isStore)
-			debug("%s,", regname_or_literal(MEMB_src_dst, 0, 0));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "%s,", regname_or_literal(MEMB_src_dst, 0, 0));
 
 		if (iw & 0x1000) {
 			/*  MEMB:  */
 			int scale = 1 << MEMB_scale;
 			switch (MEMB_mode) {
 			case 0x4:
-				debug("(%s)", regname_or_literal(MEMB_abase, 0, 0));
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "(%s)", regname_or_literal(MEMB_abase, 0, 0));
 				break;
 			case 0x5:
 				{
 					uint32_t offset32 = iw2 + 8;
-					debug("0x%x(ip)", offset32);
+					debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "0x%x(ip)", offset32);
 				}
 				break;
 			case 0x7:
 				// (reg1)[reg2 * scale]
-				debug("(%s)", regname_or_literal(MEMB_abase, 0, 0));
-				debug("[%s*%i]", regname_or_literal(MEMB_index, 0, 0), scale);
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "(%s)", regname_or_literal(MEMB_abase, 0, 0));
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "[%s*%i]", regname_or_literal(MEMB_index, 0, 0), scale);
 				break;
 			case 0xc:
 			case 0xd:
 				{
 					uint32_t offset32 = iw2;
-					debug("0x%x", offset32);
+					debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "0x%x", offset32);
 					if (MEMB_mode == 0xd)
-						debug("(%s)", regname_or_literal(MEMB_abase, 0, 0));
+						debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "(%s)", regname_or_literal(MEMB_abase, 0, 0));
 				}
 				break;
 			case 0xe:
 			case 0xf:
 				{
 					uint32_t offset32 = iw2;
-					debug("0x%x", offset32);
+					debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "0x%x", offset32);
 					if (MEMB_mode == 0xf)
-						debug("(%s)", regname_or_literal(MEMB_abase, 0, 0));
+						debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "(%s)", regname_or_literal(MEMB_abase, 0, 0));
 
-					debug("[%s*%i]", regname_or_literal(MEMB_index, 0, 0), scale);
+					debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "[%s*%i]", regname_or_literal(MEMB_index, 0, 0), scale);
 				}
 				break;
 			default:
-				debug("unimplemented MEMB mode!");
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "unimplemented MEMB mode!");
 			}
 		} else {
 			/*  MEMA:  */
-			debug("0x%x", MEMA_offset);
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "0x%x", MEMA_offset);
 
 			if (MEMA_md)
-				debug("(%s)", regname_or_literal(MEMA_abase, 0, 0));
+				debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "(%s)", regname_or_literal(MEMA_abase, 0, 0));
 		}
 
 		if (usesDst && !isStore)
-			debug(",%s", regname_or_literal(MEMB_src_dst, 0, 0));
+			debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, ",%s", regname_or_literal(MEMB_src_dst, 0, 0));
 	} else if (iw == 0) {
-		debug("--");
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "--");
 	} else {
-		debug("unimplemented opcode %i", opcode);
+		debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "unimplemented opcode %i", opcode);
 	}
 
-	debug("\n");
+	debugmsg(SUBSYS_CPU, "cpu_i960", VERBOSITY_DEBUG, "\n");
 
 	return is_64bit_long_instruction ? sizeof(uint64_t) : sizeof(uint32_t);
 }

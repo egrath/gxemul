@@ -289,7 +289,7 @@ int DYNTRANS_RUN_INSTR_DEF(struct cpu *cpu)
 		 */
 		struct DYNTRANS_IC *ic = cpu->cd.DYNTRANS_ARCH.next_ic;
 		if (cpu->machine->register_dump) {
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_dyntrans", VERBOSITY_DEBUG, "\n");
 			cpu_register_dump(cpu->machine, cpu, 1, 0x1);
 		}
 		if (single_step || cpu->machine->instruction_trace) {
@@ -1312,7 +1312,7 @@ void DYNTRANS_INVALIDATE_TC(struct cpu *cpu, uint64_t addr, int flags)
 			}
 
 		if (n > 1)
-			debug("[ DYNTRANS_INVALIDATE_TC: CACHE COLLISION vaddr 0x%016llx! ]\n",
+			debugmsg(SUBSYS_CPU, "cpu_dyntrans", VERBOSITY_DEBUG, "[ DYNTRANS_INVALIDATE_TC: CACHE COLLISION vaddr 0x%016llx! ]\n",
 				(long long)addr_page);
 #endif
 
