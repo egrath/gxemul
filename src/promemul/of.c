@@ -53,6 +53,7 @@
 
 #include "console.h"
 #include "cpu.h"
+#include "debugger.h"
 #include "device.h"
 #include "devices.h"
 #include "diskimage.h"
