@@ -59,16 +59,16 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0x200;		/*  TODO  */
 		break;
 	case 1:			/*  halt(int mode)  */
-		debug("[ SIFBIOS halt(0x%" PRIx64") ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS halt(0x%" PRIx64") ]\n",
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A1]);
 		cpu->running = 0;
 		break;
 	case 2:			/*  setdve(int mode)  */
-		debug("[ SIFBIOS setdve(0x%" PRIx64") ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS setdve(0x%" PRIx64") ]\n",
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A1]);
 		break;
 	case 3:			/*  putchar(int ch)  */
-		/*  debug("[ SIFBIOS putchar(0x%x) ]\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS putchar(0x%x) ]\n",
 		    (char)cpu->cd.mips.gpr[MIPS_GPR_A1]);  */
 		console_putchar(cpu->machine->main_console_handle,
 		    cpu->cd.mips.gpr[MIPS_GPR_A1]);

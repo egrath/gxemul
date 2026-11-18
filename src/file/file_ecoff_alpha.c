@@ -96,7 +96,7 @@ static void file_load_ecoff_alpha_symbols(struct machine *m, FILE *f,
 
 	ea_read(f, filename, symptr, hdr, sizeof(hdr), "symbolic header");
 	if (ea_le16(hdr) != ECOFF_ALPHA_SYMMAGIC) {
-		debug("unknown symbolic header magic 0x%04x, no symbols\n",
+		debugmsg(SUBSYS_DISK, "file_ecoff_alpha", VERBOSITY_DEBUG, "unknown symbolic header magic 0x%04x, no symbols\n",
 		    ea_le16(hdr));
 		return;
 	}
@@ -129,7 +129,7 @@ static void file_load_ecoff_alpha_symbols(struct machine *m, FILE *f,
 		n ++;
 	}
 
-	debug("%i symbols\n", n);
+	debugmsg(SUBSYS_DISK, "file_ecoff_alpha", VERBOSITY_DEBUG, "%i symbols\n", n);
 	free(ext);
 	free(strings);
 }
@@ -173,10 +173,10 @@ static void file_load_ecoff_alpha(struct machine *m, struct memory *mem,
 	a_entry = ea_le64(ah + 32);
 	a_gp = ea_le64(ah + 72);
 
-	debug("Alpha ECOFF, %i sections, a.out magic 0%o, entry 0x%016"
+	debugmsg(SUBSYS_DISK, "file_ecoff_alpha", VERBOSITY_DEBUG, "Alpha ECOFF, %i sections, a.out magic 0%o, entry 0x%016"
 	    PRIx64 ", gp 0x%016" PRIx64 "\n", f_nscns, ea_le16(ah),
 	    a_entry, a_gp);
-	debug("text 0x%" PRIx64 " bytes @ 0x%016" PRIx64 ", data 0x%" PRIx64
+	debugmsg(SUBSYS_DISK, "file_ecoff_alpha", VERBOSITY_DEBUG, "text 0x%" PRIx64 " bytes @ 0x%016" PRIx64 ", data 0x%" PRIx64
 	    " bytes @ 0x%016" PRIx64 ", bss 0x%" PRIx64 " bytes @ 0x%016"
 	    PRIx64 "\n", ea_le64(ah + 8), ea_le64(ah + 40), ea_le64(ah + 16),
 	    ea_le64(ah + 48), ea_le64(ah + 24), ea_le64(ah + 56));
@@ -196,7 +196,7 @@ static void file_load_ecoff_alpha(struct machine *m, struct memory *mem,
 		s_scnptr = ea_le64(sh + 32);
 		s_flags = ea_le32(sh + 60);
 
-		debug("section %-8s 0x%08" PRIx64 " bytes @ 0x%016" PRIx64
+		debugmsg(SUBSYS_DISK, "file_ecoff_alpha", VERBOSITY_DEBUG, "section %-8s 0x%08" PRIx64 " bytes @ 0x%016" PRIx64
 		    ", file offset 0x%" PRIx64 ", flags 0x%x\n", name, s_size,
 		    s_vaddr, s_scnptr, s_flags);
 

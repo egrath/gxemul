@@ -1529,27 +1529,27 @@ void console_debug_dump(struct machine *machine)
 	if (verbose < 2)
 		return;
 
-	debug("console slaves (telnet): %s\n", allow_slaves?
+	debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, "console slaves (telnet): %s\n", allow_slaves?
 	    "yes" : "no");
 
-	debug("console handles:\n");
+	debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, "console handles:\n");
 	debug_indentation(iadd);
 
 	for (i=0; i<n_console_handles; i++) {
 		if (!console_handles[i].in_use)
 			continue;
-		debug("%i: \"%s\"", i, console_handles[i].name);
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, "%i: \"%s\"", i, console_handles[i].name);
 		if (console_handles[i].using_telnet)
-			debug(" [telnet port %i]", console_handles[i].port);
+			debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, " [telnet port %i]", console_handles[i].port);
 		if (console_handles[i].inputonly)
-			debug(" [inputonly]");
+			debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, " [inputonly]");
 		if (console_handles[i].outputonly)
-			debug(" [outputonly]");
+			debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, " [outputonly]");
 		if (i == machine->main_console_handle) {
-			debug(" [MAIN CONSOLE]");
+			debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, " [MAIN CONSOLE]");
 			listed_main = 1;
 		}
-		debug("\n");
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_DEBUG, "\n");
 	}
 
 	debug_indentation(-iadd);

@@ -53,17 +53,17 @@ void net_debugaddr(void *addr, int type)
 
 	case NET_ADDR_IPV4:
 		for (i=0; i<4; i++)
-			debug("%s%i", i? "." : "", p[i]);
+			debugmsg(SUBSYS_NET, "net_misc", VERBOSITY_DEBUG, "%s%i", i? "." : "", p[i]);
 		break;
 
 	case NET_ADDR_IPV6:
 		for (i=0; i<16; i+=2)
-			debug("%s%4x", i? ":" : "", p[i] * 256 + p[i+1]);
+			debugmsg(SUBSYS_NET, "net_misc", VERBOSITY_DEBUG, "%s%4x", i? ":" : "", p[i] * 256 + p[i+1]);
 		break;
 
 	case NET_ADDR_ETHERNET:
 		for (i=0; i<6; i++)
-			debug("%s%02x", i? ":" : "", p[i]);
+			debugmsg(SUBSYS_NET, "net_misc", VERBOSITY_DEBUG, "%s%02x", i? ":" : "", p[i]);
 		break;
 
 	default:

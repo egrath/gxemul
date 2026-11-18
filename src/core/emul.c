@@ -117,10 +117,10 @@ static void add_breakpoints(struct machine *m)
 
 		m->breakpoints.addr[i] = dp;
 
-		debug("breakpoint %i: 0x%" PRIx64, i, dp);
+		debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, "breakpoint %i: 0x%" PRIx64, i, dp);
 		if (string_flag)
-			debug(" (%s)", m->breakpoints.string[i]);
-		debug("\n");
+			debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, " (%s)", m->breakpoints.string[i]);
+		debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, "\n");
 	}
 }
 
@@ -524,7 +524,7 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 				int tmpfile_handle;
 				char *new_temp_name;
 
-				debug("gunziping %s\n", name_to_load);
+				debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, "gunziping %s\n", name_to_load);
 
 				/*
 				 *  gzip header found.  Gunzip into a new temp
@@ -569,7 +569,7 @@ bool emul_machine_setup(struct machine *m, int n_load, char **load_names,
 		    cpu->cpu_family->arch, &gp, &byte_order, &toc);
 
 		if (remove_after_load) {
-			debug("removing %s\n", name_to_load);
+			debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, "removing %s\n", name_to_load);
 			unlink(name_to_load);
 		}
 
@@ -898,14 +898,14 @@ void emul_run(struct emul *emul)
 		print_separator_line();
 
 		for (int k = 0; k < emul->n_debugger_cmds; k ++) {
-			debug("> %s\n", emul->debugger_cmds[k]);
+			debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, "> %s\n", emul->debugger_cmds[k]);
 			debugger_execute_cmd(emul->debugger_cmds[k],
 			    strlen(emul->debugger_cmds[k]));
 		}
 	}
 
 	print_separator_line();
-	debug("\n");
+	debugmsg(SUBSYS_EMUL, "emul", VERBOSITY_DEBUG, "\n");
 
 
 	/*

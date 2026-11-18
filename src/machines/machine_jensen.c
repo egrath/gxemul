@@ -154,7 +154,7 @@ int jensen_load_rom(struct machine *machine, const char *filename,
 		return 0;
 	}
 
-	debug("Jensen ROM at offset 0x%lx (size %ld bytes)\n", rom_start, rom_len);
+	debugmsg(SUBSYS_MACHINE, "machine_jensen", VERBOSITY_DEBUG, "Jensen ROM at offset 0x%lx (size %ld bytes)\n", rom_start, rom_len);
 	dev_jensen_set_rom(d, buf + rom_start, rom_len);
 	free(buf);
 

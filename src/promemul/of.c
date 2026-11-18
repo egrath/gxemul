@@ -612,17 +612,17 @@ static void of_dump_devices(struct of_data *ofd, int parent)
 			continue;
 		}
 		
-		debug("\"%s\"", od->name);
-		debug(" (handle %i)\n", od->handle);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "\"%s\"", od->name);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, " (handle %i)\n", od->handle);
 		debug_indentation(1);
 		
 		while (pr != NULL) {
-			debug("(%s: ", pr->name);
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "(%s: ", pr->name);
 			if (pr->flags == OF_PROP_STRING)
-				debug("\"%s\"", pr->data);
+				debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "\"%s\"", pr->data);
 			else
-				debug("%i bytes", pr->len);
-			debug(")\n");
+				debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "%i bytes", pr->len);
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, ")\n");
 			pr = pr->next;
 		}
 		
@@ -642,7 +642,7 @@ static void of_dump_all(struct of_data *ofd)
 {
 	struct of_service *os;
 
-	debug("openfirmware debug dump:\n");
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "openfirmware debug dump:\n");
 	debug_indentation(1);
 
 	/*  Devices:  */
@@ -651,21 +651,21 @@ static void of_dump_all(struct of_data *ofd)
 	/*  Services:  */
 	os = ofd->of_services;
 	while (os != NULL) {
-		debug("service '%s'", os->name);
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "service '%s'", os->name);
 		if (os->n_ret_args > 0 || os->n_args > 0) {
-			debug(" (");
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, " (");
 			if (os->n_args > 0) {
-				debug("%i arg%s", os->n_args,
+				debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "%i arg%s", os->n_args,
 				    os->n_args > 1? "s" : "");
 				if (os->n_ret_args > 0)
-					debug(", ");
+					debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, ", ");
 			}
 			if (os->n_ret_args > 0)
-				debug("%i return value%s", os->n_ret_args,
+				debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "%i return value%s", os->n_ret_args,
 				    os->n_ret_args > 1? "s" : "");
-			debug(")");
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, ")");
 		}
-		debug("\n");
+		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "\n");
 		os = os->next;
 	}
 
@@ -1111,12 +1111,12 @@ int of_emul(struct cpu *cpu)
 
 	readstr(cpu, ptr, service, sizeof(service));
 
-	debug("[ of: %s(", service);
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "[ of: %s(", service);
 	ofs = 12;
 	for (i=0; i<nargs; i++) {
 		int x;
 		if (i > 0)
-			debug(", ");
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, ", ");
 		if (i >= OF_N_MAX_ARGS) {
 			fatal_error(SUBSYS_PROMEMUL, "of", "TOO MANY ARGS!");
 			continue;
@@ -1129,17 +1129,17 @@ int of_emul(struct cpu *cpu)
 
 		x = ptr;
 		if (x > -256 && x < 256) {
-			debug("%i", x);
+			debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "%i", x);
 		} else {
 			readstr(cpu, ptr, arg[i], OF_ARG_MAX_LEN);
 			if (arg[i][0])
-				debug("\"%s\"", arg[i]);
+				debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "\"%s\"", arg[i]);
 			else
-				debug("0x%x", x);
+				debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "0x%x", x);
 		}
 		ofs += sizeof(uint32_t);
 	}
-	debug(") ]\n");
+	debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, ") ]\n");
 
 	/*  Note: base + ofs points to the first return slot.  */
 

@@ -74,7 +74,7 @@ int apple_load_bootblock(struct machine *m, struct cpu *cpu,
 		length = ((uint64_t)buf[ofs+12] << 24) + (buf[ofs + 13] << 16) +
 		    (buf[ofs + 14] << 8) + buf[ofs + 15];
 
-		debug("partition %i: '%s', type '%s', start %i, length %i\n",
+		debugmsg(SUBSYS_DISK, "bootblock_apple", VERBOSITY_DEBUG, "partition %i: '%s', type '%s', start %i, length %i\n",
 		    partnr, buf + ofs + 0x10, buf + ofs + 0x30,
 		    start, length);
 

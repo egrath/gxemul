@@ -352,12 +352,12 @@ void file_load(struct machine *machine, struct memory *mem,
 		char *tmp_filename = (char *) malloc(strlen(filename) + 100);
 		snprintf(tmp_filename, strlen(filename) + 100,
 		    "%s.descrambled", filename);
-		debug("descrambling into %s\n", tmp_filename);
+		debugmsg(SUBSYS_DISK, "file", VERBOSITY_DEBUG, "descrambling into %s\n", tmp_filename);
 		dreamcast_descramble(filename, tmp_filename);
 
 		snprintf(tmp_filename, strlen(filename) + 100,
 		    "0x8c010000:%s.descrambled", filename);
-		debug("loading descrambled Dreamcast binary\n");
+		debugmsg(SUBSYS_DISK, "file", VERBOSITY_DEBUG, "loading descrambled Dreamcast binary\n");
 		file_load_raw(machine, mem, tmp_filename, entrypointp);
 
 		snprintf(tmp_filename, strlen(filename) + 100,

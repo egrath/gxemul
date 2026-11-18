@@ -69,7 +69,7 @@ static void file_load_srec(struct machine *m, struct memory *mem,
 
 		if (buf[0] != 'S') {
 			if (!warning)
-				debug("WARNING! non-S-record found\n");
+				debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "WARNING! non-S-record found\n");
 			warning = 1;
 			continue;
 		}
@@ -78,7 +78,7 @@ static void file_load_srec(struct machine *m, struct memory *mem,
 
 		if (buf_len < 10) {
 			if (!warning_len)
-				debug("WARNING! invalid S-record found\n");
+				debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "WARNING! invalid S-record found\n");
 			warning_len = 1;
 			continue;
 		}
@@ -112,20 +112,20 @@ static void file_load_srec(struct machine *m, struct memory *mem,
 		}
 
 		count = buf[2] * 16 + buf[3];
-		/*  debug("count=%i j=%i\n", count, j);  */
+		/*  debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "count=%i j=%i\n", count, j);  */
 		/*  count is j - 1.  */
 
 		switch (buf[1]) {
 		case 0:
-			debug("SREC \"");
+			debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "SREC \"");
 			for (i=2; i<count-1; i++) {
 				ch = bytes[i];
 				if (ch >= ' ' && ch < 127)
-					debug("%c", ch);
+					debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "%c", ch);
 				else
-					debug("?");
+					debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "?");
 			}
-			debug("\"\n");
+			debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "\"\n");
 			break;
 		case 1:
 		case 2:
@@ -163,19 +163,19 @@ static void file_load_srec(struct machine *m, struct memory *mem,
 				break;
 			}
 			entry_set = 1;
-			debug("entry point 0x%08x\n", (unsigned int)entry);
+			debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "entry point 0x%08x\n", (unsigned int)entry);
 			break;
 		default:
-			debug("unimplemented S-record type %i\n", buf[1]);
+			debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "unimplemented S-record type %i\n", buf[1]);
 		}
 	}
 
-	debug("0x%x bytes loaded\n", total_bytes_loaded);
+	debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "0x%x bytes loaded\n", total_bytes_loaded);
 
 	fclose(f);
 
 	if (!entry_set)
-		debug("WARNING! no entrypoint found!\n");
+		debugmsg(SUBSYS_DISK, "file_srec", VERBOSITY_DEBUG, "WARNING! no entrypoint found!\n");
 	else
 		*entrypointp = entry;
 

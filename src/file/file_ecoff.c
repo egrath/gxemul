@@ -147,25 +147,25 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 	unencode(f_nscns,  &exechdr.f.f_nscns,  uint16_t);
 	unencode(f_symptr, &exechdr.f.f_symptr, uint32_t);
 	unencode(f_nsyms,  &exechdr.f.f_nsyms,  uint32_t);
-	debug("ECOFF, %s, %i sections, %i symbols @ 0x%lx\n",
+	debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "ECOFF, %s, %i sections, %i symbols @ 0x%lx\n",
 	    format_name, f_nscns, f_nsyms, (long)f_symptr);
 
 	unencode(a_magic, &exechdr.a.magic, uint16_t);
 	unencode(a_tsize, &exechdr.a.tsize, uint32_t);
 	unencode(a_dsize, &exechdr.a.dsize, uint32_t);
 	unencode(a_bsize, &exechdr.a.bsize, uint32_t);
-	debug("magic 0x%04x, tsize 0x%x, dsize 0x%x, bsize 0x%x\n",
+	debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "magic 0x%04x, tsize 0x%x, dsize 0x%x, bsize 0x%x\n",
 	    a_magic, (int)a_tsize, (int)a_dsize, (int)a_bsize);
 
 	unencode(a_tstart, &exechdr.a.text_start, uint32_t);
 	unencode(a_dstart, &exechdr.a.data_start, uint32_t);
 	unencode(a_bstart, &exechdr.a.bss_start,  uint32_t);
-	debug("text @ 0x%08x, data @ 0x%08x, bss @ 0x%08x\n",
+	debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "text @ 0x%08x, data @ 0x%08x, bss @ 0x%08x\n",
 	    (int)a_tstart, (int)a_dstart, (int)a_bstart);
 
 	unencode(a_entry, &exechdr.a.entry,    uint32_t);
 	unencode(a_gp,    &exechdr.a.gp_value, uint32_t);
-	debug("entrypoint 0x%08x, gp = 0x%08x\n",
+	debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "entrypoint 0x%08x, gp = 0x%08x\n",
 	    (int)a_entry, (int)a_gp);
 
 	/*
@@ -190,7 +190,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			where += len;
 			total_len += len;
 		}
-		debug("MACH/pmax hack (!), read 0x%x bytes\n", total_len);
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "MACH/pmax hack (!), read 0x%x bytes\n", total_len);
 	}
 
 	off_t sectionHeadersPos = ftello(f);
@@ -209,13 +209,13 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			    "header %i", filename, secn);
 		}
 
-		debug("section %i: ", secn);
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "section %i: ", secn);
 		for (size_t i=0; i<sizeof(scnhdr.s_name); i++)
 			if (scnhdr.s_name[i] >= 32 && scnhdr.s_name[i] < 127)
-				debug("%c", scnhdr.s_name[i]);
+				debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%c", scnhdr.s_name[i]);
 			else
 				break;
-		debug(" (");
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, " (");
 
 		unencode(s_paddr,   &scnhdr.s_paddr,   uint32_t);
 		unencode(s_vaddr,   &scnhdr.s_vaddr,   uint32_t);
@@ -225,7 +225,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		unencode(s_nreloc,  &scnhdr.s_nreloc,  uint16_t);
 		unencode(s_flags,   &scnhdr.s_flags,   uint32_t);
 
-		debug("0x%x bytes @ vaddr 0x%08x, file offset 0x%lx, %i relocations @ 0x%lx, flags 0x%x)\n",
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "0x%x bytes @ vaddr 0x%08x, file offset 0x%lx, %i relocations @ 0x%lx, flags 0x%x)\n",
 		    (int)s_size, (int)s_vaddr, (long)s_scnptr,
 		    (int)s_nreloc, (long)s_relptr, (int)s_flags);
 
@@ -251,7 +251,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			}
 			
 			if (!relocated) {
-				debug("relocating from base 0x%08x to 0x%08x\n",
+				debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "relocating from base 0x%08x to 0x%08x\n",
 					a_tstart, relocationTarget);
 				a_tstart += relocationOffset;
 				a_dstart += relocationOffset;
@@ -291,7 +291,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			struct ms_sym *sym;
 			int n_real_symbols = 0;
 
-			debug("bad symbol magic, assuming Microsoft format: ");
+			debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "bad symbol magic, assuming Microsoft format: ");
 
 			/*
 			 *  See http://www.lisoleg.net/lisoleg/elfandlib/
@@ -308,9 +308,9 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			for (sym_nr=0; sym_nr<f_nsyms; sym_nr++) {
 				char name[300];
 				uint32_t v, t, altname;
-				/*  debug("sym %5i: '", sym_nr);
+				/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "sym %5i: '", sym_nr);
 				for (i=0; i<8 && sym->name[i]; i++)
-					debug("%c", sym->name[i]);  */
+					debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%c", sym->name[i]);  */
 				v = sym->value[0] + (sym->value[1] << 8)
 				    + (sym->value[2] << 16)
 				    + ((uint64_t)sym->value[3] << 24);
@@ -319,7 +319,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 				    + ((uint64_t)sym->name[3] << 24);
 				t = (sym->type[1] << 8) + sym->type[0];
 				/*  TODO: big endian COFF?  */
-				/*  debug("' value=0x%x type=0x%04x", v, t);  */
+				/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "' value=0x%x type=0x%04x", v, t);  */
 
 				if (t == 0x20 && sym->name[0]) {
 					memcpy(name, sym->name, 8);
@@ -336,7 +336,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 						fatal_error(SUBSYS_DISK, "file_ecoff",  "error reading symbol from %s", filename);
 					}
 					name[sizeof(name)-1] = '\0';
-					/*  debug(" [altname=0x%x '%s']",
+					/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, " [altname=0x%x '%s']",
 					    altname, name);  */
 					add_symbol_name(&m->symbol_context,
 					    v, 0, name, 0, -1);
@@ -346,29 +346,29 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 
 				if (sym->n_aux_syms) {
 					int n = sym->n_aux_syms;
-					/*  debug(" aux='");  */
+					/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, " aux='");  */
 					while (n-- > 0) {
 						sym ++; sym_nr ++;
 						/*  for (i=0; i<8 &&
 						    sym->name[i]; i++)
-							debug("%c",
+							debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%c",
 							    sym->name[i]);  */
 					}
-					/*  debug("'");  */
+					/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "'");  */
 				}
-				/*  debug("\n");  */
+				/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "\n");  */
 				sym ++;
 			}
 
-			debug("%i symbols\n", n_real_symbols);
+			debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%i symbols\n", n_real_symbols);
 			free(ms_sym_buf);
 
 			goto skip_normal_coff_symbols;
 		}
 
-		debug("symbol header: magic = 0x%x\n", sym_magic);
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "symbol header: magic = 0x%x\n", sym_magic);
 
-		debug("%i symbols @ 0x%08x (strings @ 0x%08x)\n",
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%i symbols @ 0x%08x (strings @ 0x%08x)\n",
 		    iextMax, cbExtOffset, cbSsExtOffset);
 
 		CHECK_ALLOCATION(symbol_data = (char *) malloc(issExtMax + 2));
@@ -402,7 +402,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 		}
 
 		for (sym_nr=0; sym_nr<nsymbols; sym_nr++) {
-			/*  debug("symbol%6i: 0x%08x = %s\n",
+			/*  debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "symbol%6i: 0x%08x = %s\n",
 			    sym_nr, (int)extsyms[sym_nr].es_value,
 			    symbol_data + extsyms[sym_nr].es_strindex);  */
 
@@ -457,7 +457,7 @@ skip_normal_coff_symbols:
 					len = s_size - total_len;
 				len = fread(buf, 1, chunk_size, f);
 				if (len == 0) {
-					debug("!!! total_len = %i, "
+					debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "!!! total_len = %i, "
 					    "chunk_size = %i, len = %i\n",
 					    total_len, chunk_size, len);
 					break;

@@ -94,13 +94,13 @@ static void file_load_android(struct machine *m, struct memory *mem,
 	}
 
 	unencode(page_size, &android_header.page_size, uint32_t);
-	debug("Android boot.img format, page size 0x%x\n", page_size);
+	debugmsg(SUBSYS_DISK, "file_android", VERBOSITY_DEBUG, "Android boot.img format, page size 0x%x\n", page_size);
 
 	unencode(kernel_size, &android_header.kernel_size, uint32_t);
 	unencode(kernel_addr, &android_header.kernel_addr, uint32_t);
 	kernel_pages = (kernel_size + (page_size - 1)) / page_size;
 	if (kernel_size > 0) {
-		debug("kernel: 0x%x bytes (%i pages) at addr 0x%08x\n", kernel_size, kernel_pages, kernel_addr);
+		debugmsg(SUBSYS_DISK, "file_android", VERBOSITY_DEBUG, "kernel: 0x%x bytes (%i pages) at addr 0x%08x\n", kernel_size, kernel_pages, kernel_addr);
 
 		fseek(f, page_size * 1, SEEK_SET);
 
@@ -141,7 +141,7 @@ static void file_load_android(struct machine *m, struct memory *mem,
 	unencode(ramdisk_addr, &android_header.ramdisk_addr, uint32_t);
 	ramdisk_pages = (ramdisk_size + (page_size - 1)) / page_size;
 	if (ramdisk_size > 0) {
-		debug("ramdisk: 0x%x bytes (%i pages) at addr 0x%08x\n", ramdisk_size, ramdisk_pages, ramdisk_addr);
+		debugmsg(SUBSYS_DISK, "file_android", VERBOSITY_DEBUG, "ramdisk: 0x%x bytes (%i pages) at addr 0x%08x\n", ramdisk_size, ramdisk_pages, ramdisk_addr);
 
 		fseek(f, page_size * (1 + kernel_pages), SEEK_SET);
 
@@ -180,7 +180,7 @@ static void file_load_android(struct machine *m, struct memory *mem,
 	unencode(second_addr, &android_header.second_addr, uint32_t);
 	second_pages = (second_size + (page_size - 1)) / page_size;
 	if (second_size > 0) {
-		debug("second: 0x%x bytes (%i pages) at addr 0x%08x\n", second_size, second_pages, second_addr);
+		debugmsg(SUBSYS_DISK, "file_android", VERBOSITY_DEBUG, "second: 0x%x bytes (%i pages) at addr 0x%08x\n", second_size, second_pages, second_addr);
 
 		fseek(f, page_size * (1 + kernel_pages + ramdisk_pages), SEEK_SET);
 

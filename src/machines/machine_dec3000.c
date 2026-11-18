@@ -147,7 +147,7 @@ int dec3000_load_rom(struct machine *machine, const char *filename,
 			}
 
 		if ((sys && n_sys == 0) || (!sys && n_io == 0)) {
-			debug("%s ROM %.8s %.8s at offset 0x%lx\n",
+			debugmsg(SUBSYS_MACHINE, "machine_dec3000", VERBOSITY_DEBUG, "%s ROM %.8s %.8s at offset 0x%lx\n",
 			    sys? "system" : "I/O", buf + start + 8,
 			    buf + start + 0x18, start);
 			dev_dec3000_set_rom(d, sys, buf + start, end - start);
@@ -164,7 +164,7 @@ int dec3000_load_rom(struct machine *machine, const char *filename,
 		return 0;
 
 	if (n_sys > 1)
-		debug("(%i system ROM images; using the first)\n", n_sys);
+		debugmsg(SUBSYS_MACHINE, "machine_dec3000", VERBOSITY_DEBUG, "(%i system ROM images; using the first)\n", n_sys);
 
 	*entrypointp = dev_dec3000_srom(d, machine->cpus[machine->bootstrap_cpu]);
 	return 1;

@@ -333,7 +333,7 @@ void symbol_readfile(struct symbol_context *sc, char *fname)
 
 	fclose(f);
 
-	debug("%i symbols\n", sc->n_symbols - cur_n_symbols);
+	debugmsg(SUBSYS_EMUL, "symbol", VERBOSITY_DEBUG, "%i symbols\n", sc->n_symbols - cur_n_symbols);
 }
 
 

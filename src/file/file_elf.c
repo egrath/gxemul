@@ -360,29 +360,29 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 
 		if (p_memsz != 0 && (p_type == PT_LOAD ||
 		    (p_type & PF_MASKPROC) == PT_MIPS_REGINFO)) {
-			debug("chunk %i (", i);
+			debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "chunk %i (", i);
 			if (p_type == PT_LOAD)
-				debug("load");
+				debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "load");
 			else
-				debug("0x%08" PRIx32, (uint32_t) p_type);
+				debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t) p_type);
 
-			debug(") @ 0x%" PRIx64", vaddr 0x", (uint64_t) p_offset);
+			debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, ") @ 0x%" PRIx64", vaddr 0x", (uint64_t) p_offset);
 
 			if (elf64)
-				debug("%016" PRIx64, (uint64_t) p_vaddr);
+				debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t) p_vaddr);
 			else
-				debug("%08" PRIx32, (uint32_t) p_vaddr);
+				debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t) p_vaddr);
 
-			debug(" len=0x%" PRIx64"\n", (uint64_t) p_memsz);
+			debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, " len=0x%" PRIx64"\n", (uint64_t) p_memsz);
 
 			if (p_vaddr != p_paddr) {
 				if (elf64)
-					debug("NOTE: vaddr (0x%" PRIx64") and "
+					debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "NOTE: vaddr (0x%" PRIx64") and "
 					    "paddr (0x%" PRIx64") differ; using "
 					    "vaddr\n", (uint64_t) p_vaddr,
 					    (uint64_t) p_paddr);
 				else
-					debug("NOTE: vaddr (0x%08" PRIx32") and "
+					debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "NOTE: vaddr (0x%08" PRIx32") and "
 					    "paddr (0x%08" PRIx32") differ; usin"
 					    "g vaddr\n", (uint32_t) p_vaddr,
 					    (uint32_t)p_paddr);
@@ -456,7 +456,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		off_t sh_offset;
 		int n_entries;	/*  for reading the symbol / string tables  */
 
-		/*  debug("section header %i at %016" PRIx64"\n", i,
+		/*  debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "section header %i at %016" PRIx64"\n", i,
 		    (uint64_t) eshoff+i*eshentsize);  */
 
 		fseek(f, eshoff + i * eshentsize, SEEK_SET);
@@ -481,7 +481,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 			unencode(sh_entsize,   &shdr32.sh_entsize, Elf32_Word);
 		}
 
-		/*  debug("sh_name=%04lx, sh_type=%08lx, sh_flags=%08lx"
+		/*  debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "sh_name=%04lx, sh_type=%08lx, sh_flags=%08lx"
 		    " sh_size=%06lx sh_entsize=%03lx\n",
 		    (long)sh_name, (long)sh_type, (long)sh_flags,
 		    (long)sh_size, (long)sh_entsize);  */
@@ -523,7 +523,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 				    "%s", filename);
 			}
 
-			debug("%i symbol entries at 0x%" PRIx64"\n",
+			debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "%i symbol entries at 0x%" PRIx64"\n",
 			    (int) n_entries, (uint64_t) sh_offset);
 
 			n_symbols = n_entries;
@@ -550,7 +550,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 				    "%s", filename);
 			}
 
-			debug("%i bytes of symbol strings at 0x%" PRIx64"\n",
+			debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "%i bytes of symbol strings at 0x%" PRIx64"\n",
 			    (int) sh_size, (uint64_t) sh_offset);
 
 			symbol_strings[sh_size] = '\0';
@@ -577,7 +577,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 				unencode(size,    &sym32.st_size, Elf32_Word);
 			}
 
-			/*  debug("symbol info=0x%02x addr=0x%016" PRIx64
+			/*  debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "symbol info=0x%02x addr=0x%016" PRIx64
 			    " (%i) '%s'\n", st_info, (uint64_t) addr,
 			    st_name, symbol_strings + st_name);  */
 
@@ -586,7 +586,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 
 			if (addr != 0) /* && ((st_info >> 4) & 0xf)
 			    >= STB_GLOBAL) */ {
-				/*  debug("symbol info=0x%02x addr=0x%016" PRIx64
+				/*  debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "symbol info=0x%02x addr=0x%016" PRIx64
 				    " '%s'\n", st_info, (uint64_t) addr,
 				    symbol_strings + st_name);  */
 				add_symbol_name(&m->symbol_context,
@@ -595,11 +595,11 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 			}
 
 			if (strcmp(symbol_strings + st_name, "_gp") == 0) {
-				debug("found _gp address: 0x");
+				debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "found _gp address: 0x");
 				if (elf64)
-					debug("%016" PRIx64"\n", (uint64_t)addr);
+					debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "%016" PRIx64"\n", (uint64_t)addr);
 				else
-					debug("%08" PRIx32"\n", (uint32_t)addr);
+					debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "%08" PRIx32"\n", (uint32_t)addr);
 				*gpp = addr;
 			}
 		}
@@ -627,12 +627,12 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		unsigned char b[sizeof(uint64_t)];
 		uint64_t toc_base;
 
-		debug("PPC64: ");
+		debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "PPC64: ");
 
 		res = m->cpus[0]->memory_rw(m->cpus[0], mem, eentry, b,
 		    sizeof(b), MEM_READ, NO_EXCEPTIONS);
 		if (!res)
-			debug(" [WARNING: could not read memory?] ");
+			debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, " [WARNING: could not read memory?] ");
 
 		/*  PPC are always big-endian:  */
 		*entrypointp = ((uint64_t)b[0] << 56) +
@@ -652,7 +652,7 @@ static void file_load_elf(struct machine *m, struct memory *mem,
 		    ((uint64_t)b[5] << 16) + ((uint64_t)b[6] << 8) +
 		    (uint64_t)b[7];
 
-		debug("entrypoint 0x%016" PRIx64", toc_base 0x%016" PRIx64"\n",
+		debugmsg(SUBSYS_DISK, "file_elf", VERBOSITY_DEBUG, "entrypoint 0x%016" PRIx64", toc_base 0x%016" PRIx64"\n",
 		    (uint64_t) *entrypointp, (uint64_t) toc_base);
 		if (tocp != NULL)
 			*tocp = toc_base;

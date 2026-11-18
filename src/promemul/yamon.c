@@ -166,7 +166,7 @@ int yamon_emul(struct cpu *cpu)
 		/*
 		 *  exit
 		 */
-		debug("[ yamon_emul(): exit ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "[ yamon_emul(): exit ]\n");
 		cpu->running = 0;
 		break;
 
@@ -202,7 +202,7 @@ int yamon_emul(struct cpu *cpu)
 			if (psize == sizeof(uint32_t)) {
 				uint32_t freq = cpu->machine->emulated_hz;
 
-				debug("[ yamon_emul(): reporting CPU "
+				debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "[ yamon_emul(): reporting CPU "
 				    "frequency of %u ]\n", (unsigned int)
 				    freq);
 

@@ -101,7 +101,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 
 		CHECK_ALLOCATION(bootblock_buf = (unsigned char *) malloc(32768));
 
-		debug("loading Dreamcast IP.BIN from %s id %i to 0x8c008000\n",
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "loading Dreamcast IP.BIN from %s id %i to 0x8c008000\n",
 		    diskimage_types[boot_disk_type], boot_disk_id);
 
 		res = diskimage_access(m, boot_disk_id, boot_disk_type,
@@ -155,7 +155,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			    strdup((char *)bootblock_buf + 0x60));
 		}
 
-		debug("Dreamcast boot filename: %s (to be loaded to 0x8c010000)\n",
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "Dreamcast boot filename: %s (to be loaded to 0x8c010000)\n",
 		    cpu->machine->boot_kernel_filename);
 
 		free(bootblock_buf);
@@ -189,7 +189,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 				    (disklabel[ofs+6] << 8) +
 				    (disklabel[ofs+7]);
 				if (nsectors > 0) {
-					debug("%c: %i sectors at offset %i\n",
+					debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "%c: %i sectors at offset %i\n",
 					    'a' + i, nsectors, offset);
 				}
 			}
@@ -291,7 +291,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			if (n_blocks < 1)
 				break;
 
-			debug(readofs == 0x18? "%i" : " + %i", n_blocks);
+			debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, readofs == 0x18? "%i" : " + %i", n_blocks);
 
 			if (n_blocks * 512 > 65536)
 				fatal_error(SUBSYS_DISK, "bootblock", "\nWARNING! Unusually large bootblock "
@@ -315,7 +315,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			readofs += 8;
 		}
 
-		debug(readofs == 0x18? " no blocks?\n" : " blocks\n");
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, readofs == 0x18? " no blocks?\n" : " blocks\n");
 		debug_indentation(-1);
 		return 1;
 
@@ -352,11 +352,11 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			}
 		}
 
-		debug("SGI boot block:\n");
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "SGI boot block:\n");
 		debug_indentation(1);
-		debug("root partition: %i\n", sgi_root);
-		debug("swap partition: %i\n", sgi_swap);
-		debug("bootfile: %s\n", sgi_bootfile);
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "root partition: %i\n", sgi_root);
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "swap partition: %i\n", sgi_swap);
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "bootfile: %s\n", sgi_bootfile);
 
 		// TODO: this should be in sync with what's in arcbios.cc,
 		// in one direction or the other. Hardcoded for now...
@@ -370,7 +370,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		int32_t found_osloader_block = -1;
 		int32_t found_osloader_bytes = -1;
 
-		debug("voldir:\n");
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "voldir:\n");
 		debug_indentation(1);
 		for (size_t vi = 0; vi < SGI_BOOT_BLOCK_MAXVOLDIRS; ++vi) {
 			char voldir_name[sizeof(sgi_boot_block.voldir[0].name) + 1];
@@ -397,7 +397,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 				}
 
 				const char* found_suffix = found? " [FOUND OSLoader]" : "";
-				debug("name: %s (%i bytes, block %i)%s\n",
+				debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "name: %s (%i bytes, block %i)%s\n",
 					voldir_name, voldir_bytes, voldir_block, found_suffix);
 			}
 		}
@@ -411,7 +411,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		}
 		debug_indentation(-1);
 
-		debug("partitions:\n");
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "partitions:\n");
 		debug_indentation(1);
 		for (size_t pi = 0; pi < SGI_BOOT_BLOCK_MAXPARTITIONS; ++pi) {
 			int32_t partitions_blocks = ntohl(sgi_boot_block.partitions[pi].blocks);
@@ -419,14 +419,14 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			int32_t partitions_type = ntohl(sgi_boot_block.partitions[pi].type);
 
 			if (partitions_blocks != 0)
-				debug("partition %i: %i blocks at %i (type %i)\n",
+				debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "partition %i: %i blocks at %i (type %i)\n",
 					pi, partitions_blocks, partitions_first, partitions_type);
 		}
 		debug_indentation(-1);
 
 		// Read OSLoader binary into emulated RAM. (Typically "sash.")
 		uint64_t diskoffset = found_osloader_block * 512;
-		debug("Loading voldir entry \"%s\", 0x%x bytes from disk offset 0x%x\n",
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "Loading voldir entry \"%s\", 0x%x bytes from disk offset 0x%x\n",
 			found_osloader, found_osloader_bytes, diskoffset);
 
 		CHECK_ALLOCATION(bootblock_buf = (unsigned char *) malloc(found_osloader_bytes));
@@ -456,7 +456,7 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 		close(tmpfile_handle);
 		free(bootblock_buf);
 
-		debug("extracted %i bytes into %s\n", found_osloader_bytes, tmpfname);
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "extracted %i bytes into %s\n", found_osloader_bytes, tmpfname);
 
 		/*  Add the temporary filename to the load_namesp array:  */
 		(*n_loadp)++;

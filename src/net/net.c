@@ -116,28 +116,28 @@ static void net_arp(struct net *net, struct nic_data *nic,
 
 	/*  TODO: This debug dump assumes ethernet->IPv4 translation:  */
 	if (reverse)
-		debug("[ net: RARP: ");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "[ net: RARP: ");
 	else
-		debug("[ net: ARP: ");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "[ net: ARP: ");
 	for (i=0; i<2; i++)
-		debug("%02x", packet[i]);
-	debug(" ");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[i]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " ");
 	for (i=2; i<4; i++)
-		debug("%02x", packet[i]);
-	debug(" ");
-	debug("%02x", packet[4]);
-	debug(" ");
-	debug("%02x", packet[5]);
-	debug(" req=");
-	debug("%02x", packet[6]);	/*  Request type  */
-	debug("%02x", packet[7]);
-	debug(" from=");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[i]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " ");
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[4]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " ");
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[5]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " req=");
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[6]);	/*  Request type  */
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[7]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " from=");
 	for (i=8; i<18; i++)
-		debug("%02x", packet[i]);
-	debug(" to=");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[i]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " to=");
 	for (i=18; i<28; i++)
-		debug("%02x", packet[i]);
-	debug(" ]\n");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "%02x", packet[i]);
+	debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " ]\n");
 
 	if (packet[0] == 0x00 && packet[1] == 0x01 &&
 	    packet[2] == 0x08 && packet[3] == 0x00 &&
@@ -579,7 +579,7 @@ static void parse_resolvconf(struct net *net)
 			 *  "x.y.z.w" (non-digit)
 			 */
 
-			/*  debug("found nameserver at offset %i\n", i);  */
+			/*  debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "found nameserver at offset %i\n", i);  */
 			i += 10;
 			while (i<len && (buf[i]==' ' || buf[i]=='\t'))
 				i++;
@@ -697,43 +697,43 @@ void net_dumpinfo(struct net *net)
 	debug_indentation(iadd);
 
 	if (!net->gateway)
-		debug("no gateway: frames only go to the other NICs, and to "
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "no gateway: frames only go to the other NICs, and to "
 		    "the remote emulators, if any\n");
 	else {
 		net_debugaddr(&net->netmask_ipv4, NET_ADDR_IPV4);
-		debug("/%i", net->netmask_ipv4_len);
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "/%i", net->netmask_ipv4_len);
 
-		debug(" (max outgoing: TCP=%i, UDP=%i)\n",
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " (max outgoing: TCP=%i, UDP=%i)\n",
 		    MAX_TCP_CONNECTIONS, MAX_UDP_CONNECTIONS);
 
-		debug("gateway+nameserver: ");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "gateway+nameserver: ");
 		net_debugaddr(&net->gateway_ipv4_addr, NET_ADDR_IPV4);
-		debug(" (");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " (");
 		net_debugaddr(&net->gateway_ethernet_addr, NET_ADDR_ETHERNET);
-		debug(")\n");
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, ")\n");
 
 		if (!net->nameserver_known) {
-			debug("(could not determine the host's nameserver)\n");
+			debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "(could not determine the host's nameserver)\n");
 		} else {
-			debug("nameserver uses real nameserver ");
+			debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "nameserver uses real nameserver ");
 			net_debugaddr(&net->nameserver_ipv4, NET_ADDR_IPV4);
-			debug("\n");
+			debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "\n");
 		}
 	}
 
 	rnp = net->remote_nets;
 	if (net->local_port != 0)
-		debug("distributed network: local port = %i\n",
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "distributed network: local port = %i\n",
 		    net->local_port);
 	if (net->l2tp)
-		debug("L2TPv3: session %u, %i byte cookie, %s\n",
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "L2TPv3: session %u, %i byte cookie, %s\n",
 		    (unsigned)net->l2tp_session, (int)net->l2tp_cookie_len,
 		    net->l2tp_counter ? "counter" : "no counter");
 	debug_indentation(iadd);
 	while (rnp != NULL) {
-		debug("remote \"%s\": ", rnp->name);
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "remote \"%s\": ", rnp->name);
 		net_debugaddr(&rnp->ipv4_addr, NET_ADDR_IPV4);
-		debug(" port %i\n", rnp->portnr);
+		debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, " port %i\n", rnp->portnr);
 		rnp = rnp->next;
 	}
 	debug_indentation(-iadd);
@@ -856,7 +856,7 @@ struct net *net_init(struct emul *emul, int init_flags,
 		while ((n_remote--) != 0) {
 			struct hostent *hp;
 
-			/*  debug("adding '%s'\n", remote[n_remote]);  */
+			/*  debugmsg(SUBSYS_NET, "net", VERBOSITY_DEBUG, "adding '%s'\n", remote[n_remote]);  */
 			CHECK_ALLOCATION(rnp = (struct remote_net *)
 			    malloc(sizeof(struct remote_net)));
 			memset(rnp, 0, sizeof(struct remote_net));

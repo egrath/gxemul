@@ -3032,7 +3032,7 @@ static char *rom_without_failing_tests(const char *path)
 			    "image as it is\n", err);
 			free(err);
 		} else
-			debug("[ %s: %i failing self-test%s skipped ]\n",
+			debugmsg(SUBSYS_EMUL, "machine_config", VERBOSITY_DEBUG, "[ %s: %i failing self-test%s skipped ]\n",
 			    path, patched, patched == 1 ? "" : "s");
 	}
 	free(buf);

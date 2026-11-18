@@ -1319,44 +1319,44 @@ void diskimage_dump_info(struct machine *machine)
 
 		switch (d->type) {
 		case DISKIMAGE_SCSI:
-			debug("SCSI");
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "SCSI");
 			break;
 		case DISKIMAGE_IDE:
-			debug("IDE");
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "IDE");
 			break;
 		case DISKIMAGE_FLOPPY:
-			debug("FLOPPY");
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "FLOPPY");
 			break;
 		default:
-			debug("UNKNOWN type %i", d->type);
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "UNKNOWN type %i", d->type);
 		}
 
-		debug(" %s", d->is_a_tape? "TAPE" :
+		debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " %s", d->is_a_tape? "TAPE" :
 			(d->is_a_cdrom? "CD-ROM" : "DISK"));
-		debug(" id %i, ", d->id);
-		debug("%s, ", d->writable? "read/write" : "read-only");
+		debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " id %i, ", d->id);
+		debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "%s, ", d->writable? "read/write" : "read-only");
 
 		int64_t s = d->nr_of_logical_blocks * d->logical_block_size;
 
 		if (d->type == DISKIMAGE_FLOPPY)
-			debug("%lli KB", (long long) (s / 1024));
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "%lli KB", (long long) (s / 1024));
 		else
-			debug("%lli MB", (long long) (s / 1048576));
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "%lli MB", (long long) (s / 1048576));
 
 		if (d->type == DISKIMAGE_FLOPPY || d->chs_override)
-			debug(" (CHS=%i,%i,%i)", d->cylinders, d->heads,
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " (CHS=%i,%i,%i)", d->cylinders, d->heads,
 			    d->sectors_per_track);
 		else
-			debug(" (%lli %i-byte blocks)", (long long)d->nr_of_logical_blocks, d->logical_block_size);
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " (%lli %i-byte blocks)", (long long)d->nr_of_logical_blocks, d->logical_block_size);
 
 		if (d->is_boot_device)
-			debug(" (BOOT)");
-		debug("\n");
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " (BOOT)");
+		debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "\n");
 
 		debug_indentation(1);
 
 		for (int i=0; i<d->nr_of_overlays; i++) {
-			debug("overlay %i: %s\n",
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "overlay %i: %s\n",
 			    i, d->overlays[i].overlay_basename);
 		}
 

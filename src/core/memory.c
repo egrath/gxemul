@@ -380,7 +380,7 @@ void memory_device_register(struct memory *mem, const char *device_name,
 
 	if (verbose >= 2) {
 		/*  (40 bits of physical address is displayed)  */
-		debug("device at 0x%010" PRIx64": %s", (uint64_t) baseaddr,
+		debugmsg(SUBSYS_EMUL, "memory", VERBOSITY_DEBUG, "device at 0x%010" PRIx64": %s", (uint64_t) baseaddr,
 		    device_name);
 
 		if (flags & (DM_DYNTRANS_OK | DM_DYNTRANS_WRITE_OK)
@@ -392,10 +392,10 @@ void memory_device_register(struct memory *mem, const char *device_name,
 		}
 
 		if (flags & (DM_DYNTRANS_OK | DM_DYNTRANS_WRITE_OK)) {
-			debug(" (dyntrans %s)",
+			debugmsg(SUBSYS_EMUL, "memory", VERBOSITY_DEBUG, " (dyntrans %s)",
 			    (flags & DM_DYNTRANS_WRITE_OK)? "R/W" : "R");
 		}
-		debug("\n");
+		debugmsg(SUBSYS_EMUL, "memory", VERBOSITY_DEBUG, "\n");
 	}
 
 	for (i=0; i<mem->n_mmapped_devices; i++) {
@@ -700,9 +700,9 @@ void dump_mem_string(struct cpu *cpu, uint64_t addr)
 		if (ch == '\0')
 			return;
 		if (ch >= ' ' && ch < 126)
-			debug("%c", ch);  
+			debugmsg(SUBSYS_EMUL, "memory", VERBOSITY_DEBUG, "%c", ch);  
 		else
-			debug("[%02x]", ch);
+			debugmsg(SUBSYS_EMUL, "memory", VERBOSITY_DEBUG, "[%02x]", ch);
 	}
 }
 

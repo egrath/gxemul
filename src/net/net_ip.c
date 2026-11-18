@@ -466,7 +466,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	net_ip_tcp_checksum(packet + 34, 16, len - 34,
 		packet + 26, packet + 30, 0);
 	if (packet[50] * 256 + packet[51] != checksum) {
-		debug("TCP: dropping packet because of checksum mismatch "
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "TCP: dropping packet because of checksum mismatch "
 		    "(0x%04x != 0x%04x)\n", packet[50] * 256 + packet[51],
 		    checksum);
 
@@ -495,7 +495,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	 *  TODO:  Send back RST?
 	 */
 	if (con_id < 0 && !syn) {
-		debug("[ net: TCP: dropping packet from unknown connection,"
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: TCP: dropping packet from unknown connection,"
 		    " %i.%i.%i.%i:%i -> %i.%i.%i.%i:%i %s%s%s%s%s]\n",
 		    packet[26], packet[27], packet[28], packet[29], srcport,
 		    packet[30], packet[31], packet[32], packet[33], dstport,
@@ -506,7 +506,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 
 	/*  Known connection, and SYN? Then ignore the packet.  */
 	if (con_id >= 0 && syn) {
-		debug("[ net: TCP: ignoring redundant SYN packet from known"
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: TCP: ignoring redundant SYN packet from known"
 		    " connection, %i.%i.%i.%i:%i -> %i.%i.%i.%i:%i ]\n",
 		    packet[26], packet[27], packet[28], packet[29], srcport,
 		    packet[30], packet[31], packet[32], packet[33], dstport);
@@ -517,7 +517,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	 *  A new outgoing connection?
 	 */
 	if (con_id < 0 && syn) {
-		debug("[ net: TCP: new outgoing connection, %i.%i.%i.%i:%i"
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: TCP: new outgoing connection, %i.%i.%i.%i:%i"
 		    " -> %i.%i.%i.%i:%i ]\n",
 		    packet[26], packet[27], packet[28], packet[29], srcport,
 		    packet[30], packet[31], packet[32], packet[33], dstport);
@@ -591,7 +591,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 			return;
 		}
 
-		debug("[ new tcp outgoing socket=%i ]\n",
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ new tcp outgoing socket=%i ]\n",
 		    net->tcp_connections[con_id].socket);
 
 		net->tcp_connections[con_id].in_use = 1;
@@ -624,7 +624,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	}
 
 	if (rst) {
-		debug("[ 'rst': disconnecting TCP connection %i ]\n", con_id);
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ 'rst': disconnecting TCP connection %i ]\n", con_id);
 		net_ip_tcp_connectionreply(net, nic, con_id, 0, NULL, 0, 1);
 		tcp_closeconnection(net, con_id);
 		return;
@@ -632,7 +632,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 
 	if (ack && net->tcp_connections[con_id].state
 	    == TCP_OUTSIDE_DISCONNECTED2) {
-		debug("[ 'ack': guestOS's final termination of TCP "
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ 'ack': guestOS's final termination of TCP "
 		    "connection %i ]\n", con_id);
 
 		/*  Send an RST?  (TODO, this is wrong...)  */
@@ -645,7 +645,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 
 	if (fin && net->tcp_connections[con_id].state
 	    == TCP_OUTSIDE_DISCONNECTED) {
-		debug("[ 'fin': response to outside's disconnection of "
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ 'fin': response to outside's disconnection of "
 		    "TCP connection %i ]\n", con_id);
 
 		/*  Send an ACK:  */
@@ -659,7 +659,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 		struct tcp_connection *c = &net->tcp_connections[con_id];
 		int32_t ofs = (int32_t) (c->outside_acknr - seqnr);
 
-		debug("[ 'fin': guestOS disconnecting TCP connection %i ]\n",
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ 'fin': guestOS disconnecting TCP connection %i ]\n",
 		    con_id);
 
 		/*  The FIN can come with the last of the guest's data (or
@@ -732,7 +732,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 
 
 	if (net->tcp_connections[con_id].state != TCP_OUTSIDE_CONNECTED) {
-		debug("[ not connected to outside ]\n");
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ not connected to outside ]\n");
 		return;
 	}
 
@@ -750,16 +750,16 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 	send_ofs += ((int32_t)net->tcp_connections[con_id].outside_acknr
 	    - (int32_t)seqnr);
 #if 1
-	debug("[ %i bytes of tcp data to be sent, beginning at seqnr %u, ",
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ %i bytes of tcp data to be sent, beginning at seqnr %u, ",
 	    len - data_offset, seqnr);
-	debug("outside is at acknr %u ==> %i actual bytes to be sent ]\n",
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "outside is at acknr %u ==> %i actual bytes to be sent ]\n",
 	    net->tcp_connections[con_id].outside_acknr, len - send_ofs);
 #endif
 
 	/*  Drop outgoing packet if the guest OS' seqnr is not
 	    the same as we have acked. (We have missed something, perhaps.)  */
 	if (seqnr != net->tcp_connections[con_id].outside_acknr) {
-		debug("!! outgoing TCP packet dropped (seqnr = %u, "
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "!! outgoing TCP packet dropped (seqnr = %u, "
 		    "outside_acknr = %u)\n", seqnr,
 		    net->tcp_connections[con_id].outside_acknr);
 		goto ret;
@@ -776,7 +776,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 		if (res < 1) {
 			net->tcp_connections[con_id].state =
 			    TCP_OUTSIDE_DISCONNECTED;
-			debug("[ TCP: disconnect on select for writing ]\n");
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ TCP: disconnect on select for writing ]\n");
 			goto ret;
 		}
 
@@ -789,12 +789,12 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 			/*  Just ignore this attempt.  */
 			return;
 		} else {
-			debug("[ error writing %i bytes to TCP connection %i:"
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ error writing %i bytes to TCP connection %i:"
 			    " error %i ]\n", len - send_ofs, con_id,
 			    socket_error());
 			net->tcp_connections[con_id].state =
 			    TCP_OUTSIDE_DISCONNECTED;
-			debug("[ TCP: disconnect on write() ]\n");
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ TCP: disconnect on write() ]\n");
 			goto ret;
 		}
 	}
@@ -963,15 +963,15 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 	udp_len = (packet[38] << 8) + packet[39];
 	/*  chksum at offset 40 and 41  */
 
-	debug("[ net: UDP: ");
-	debug("srcport=%i dstport=%i len=%i ", srcport, dstport, udp_len);
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: UDP: ");
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "srcport=%i dstport=%i len=%i ", srcport, dstport, udp_len);
 	for (i=42; i<len; i++) {
 		if (packet[i] >= ' ' && packet[i] < 127)
-			debug("%c", packet[i]);
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "%c", packet[i]);
 		else
-			debug("[%02x]", packet[i]);
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[%02x]", packet[i]);
 	}
-	debug(" ]\n");
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, " ]\n");
 
 	/*  Is this "connection" new, or a currently ongoing one?  */
 	con_id = free_con_id = -1;
@@ -990,17 +990,17 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 		}
 	}
 
-	debug("&& UDP connection is ");
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "&& UDP connection is ");
 	if (con_id >= 0)
-		debug("ONGOING");
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "ONGOING");
 	else {
-		debug("NEW");
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "NEW");
 		if (free_con_id < 0) {
 			int64_t oldest = net->
 			    udp_connections[0].last_used_timestamp;
 			free_con_id = 0;
 
-			debug(", NO FREE SLOTS, REUSING OLDEST ONE");
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, ", NO FREE SLOTS, REUSING OLDEST ONE");
 			for (int j=0; j<MAX_UDP_CONNECTIONS; j++)
 				if (net->udp_connections[j].last_used_timestamp < oldest) {
 					oldest = net->udp_connections[j].last_used_timestamp;
@@ -1030,7 +1030,7 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 			return;
 		}
 
-		debug(" {socket=%i}", net->udp_connections[con_id].socket);
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, " {socket=%i}", net->udp_connections[con_id].socket);
 
 		if (srcport < 1024)
 			udp_bind_reserved(net->udp_connections[con_id].socket,
@@ -1048,7 +1048,7 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 		socket_set_nonblocking(net->udp_connections[con_id].socket);
 	}
 
-	debug(", connection id %i\n", con_id);
+	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, ", connection id %i\n", con_id);
 
 	net->timestamp ++;
 	net->udp_connections[con_id].last_used_timestamp = net->timestamp;
@@ -1079,9 +1079,9 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 	    sizeof(remote_ip));
 
 	if (res != len-42)
-		debug("[ net: UDP: unable to send %i bytes ]\n", len-42);
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: UDP: unable to send %i bytes ]\n", len-42);
 	else
-		debug("[ net: UDP: OK!!! ]\n");
+		debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ net: UDP: OK!!! ]\n");
 }
 
 
@@ -1704,7 +1704,7 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 				err = socket_error();
 
 			if (err != 0) {
-				debug("[ TCP: connection %i failed (error "
+				debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ TCP: connection %i failed (error "
 				    "%i) ]\n", con_id, err);
 
 				/*  Answer the guest's SYN with a RST:  */
@@ -1719,7 +1719,7 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 
 			net->tcp_connections[con_id].state =
 			    TCP_OUTSIDE_CONNECTED;
-			debug("CHANGING TO TCP_OUTSIDE_CONNECTED\n");
+			debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "CHANGING TO TCP_OUTSIDE_CONNECTED\n");
 			net_ip_tcp_connectionreply(net, nic, con_id, 1,
 			    NULL, 0, 0);
 			net->tcp_connections[con_id].incoming_buf_len = 0;
@@ -1752,7 +1752,7 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 						c->incoming_buf_len += res;
 					else {
 						if (res < 0)
-							debug("[ TCP: read "
+							debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ TCP: read "
 							    "error %i ]\n",
 							    socket_error());
 						c->outside_eof = 1;
@@ -1765,7 +1765,7 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 			if (c->outside_seqnr != c->incoming_buf_seqnr &&
 			    c->incoming_buf_len != 0 &&
 			    now - c->last_progress_ms > TCP_RETRANSMIT_MS) {
-				debug("[ TCP: resending from %u (was at "
+				debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "[ TCP: resending from %u (was at "
 				    "%u) ]\n", c->incoming_buf_seqnr,
 				    c->outside_seqnr);
 				c->outside_seqnr = c->incoming_buf_seqnr;
@@ -1804,7 +1804,7 @@ void net_tcp_rx_avail(struct net *net, struct nic_data *nic)
 			if (c->outside_eof && c->incoming_buf_len == 0) {
 				c->state = TCP_OUTSIDE_DISCONNECTED;
 				c->last_progress_ms = now;
-				debug("CHANGING TO TCP_OUTSIDE_DISCONNECTED\n");
+				debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, "CHANGING TO TCP_OUTSIDE_DISCONNECTED\n");
 				net_ip_tcp_connectionreply(net, nic, con_id, 0,
 				    NULL, 0, 0);
 			}

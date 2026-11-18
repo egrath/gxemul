@@ -282,8 +282,8 @@ void print_separator_line(void)
 {
         int i = 79; 
         while (i-- > 0)
-                debug("-");
-        debug("\n");
+                debugmsg(SUBSYS_EMUL, "misc", VERBOSITY_DEBUG, "-");
+        debugmsg(SUBSYS_EMUL, "misc", VERBOSITY_DEBUG, "\n");
 }
 
 

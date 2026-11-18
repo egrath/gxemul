@@ -273,12 +273,12 @@ int decstation_prom_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = i - 1;
 		break;
 	case 0x24:		/*  getchar()  */
-		/*  debug("[ DEC PROM getchar() ]\n");  */
+		/*  debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM getchar() ]\n");  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = console_readchar(
 		    cpu->machine->main_console_handle);
 		break;
 	case 0x28:		/*  gets()  */
-		/*  debug("[ DEC PROM gets() ]\n");  */
+		/*  debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM gets() ]\n");  */
 		// tmpaddr = cpu->cd.mips.gpr[MIPS_GPR_A0];
 		i = 0;
 
@@ -336,7 +336,7 @@ int decstation_prom_emul(struct cpu *cpu)
 	case 0x30:		/*  printf()  */
 		if (cpu->machine->register_dump ||
 		    cpu->machine->instruction_trace)
-			debug("PROM printf(0x%08lx): \n",
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "PROM printf(0x%08lx): \n",
 			    (long)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 
 		i = 0; ch = -1; argreg = MIPS_GPR_A1;
@@ -431,12 +431,12 @@ int decstation_prom_emul(struct cpu *cpu)
 		}
 		if (cpu->machine->register_dump ||
 		    cpu->machine->instruction_trace)
-			debug("\n");
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "\n");
 		fflush(stdout);
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x54:		/*  bootinit()  */
-		/*  debug("[ DEC PROM bootinit(0x%08x): TODO ]\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM bootinit(0x%08x): TODO ]\n",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
@@ -457,7 +457,7 @@ int decstation_prom_emul(struct cpu *cpu)
 			uint32_t dst = cpu->cd.mips.gpr[MIPS_GPR_A1];
 			int32_t len = cpu->cd.mips.gpr[MIPS_GPR_A2];
 
-			debug("[ DEC PROM bootread(0x%x, 0x%08x, 0x%x) ]\n",
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM bootread(0x%x, 0x%08x, 0x%x) ]\n",
 			    (int)b, (int)dst, (int)len);
 
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
@@ -500,7 +500,7 @@ int decstation_prom_emul(struct cpu *cpu)
 			uint32_t src = cpu->cd.mips.gpr[MIPS_GPR_A1];
 			int32_t len = cpu->cd.mips.gpr[MIPS_GPR_A2];
 
-			debug("[ DEC PROM bootwrite(0x%x, 0x%08x, 0x%x) ]\n",
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM bootwrite(0x%x, 0x%08x, 0x%x) ]\n",
 			    (int)b, (int)src, (int)len);
 
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = (uint64_t) -1;
@@ -539,7 +539,7 @@ int decstation_prom_emul(struct cpu *cpu)
 			    cpu->cd.mips.gpr[MIPS_GPR_A0] + i, &buf[i],
 			    sizeof(char), MEM_READ, CACHE_DATA | NO_EXCEPTIONS);
 		buf[sizeof(buf)-1] = '\0';
-		debug("[ DEC PROM getenv(\"%s\") ]\n", buf);
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM getenv(\"%s\") ]\n", buf);
 		for (i=0; i<0x1000; i++) {
 			/*  Matching string at offset i?  */
 			int nmatches = 0;
@@ -567,7 +567,7 @@ int decstation_prom_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x6c:		/*  ulong slot_address(int sn)  */
-		debug("[ DEC PROM slot_address(%i) ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM slot_address(%i) ]\n",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		/*  TODO:  This is too hardcoded.  */
 		/*  TODO 2:  Should these be physical or virtual addresses?  */
@@ -597,18 +597,18 @@ int decstation_prom_emul(struct cpu *cpu)
 		    cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		break;
 	case 0x70:		/*  wbflush()  */
-		debug("[ DEC PROM wbflush(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM wbflush(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x7c:		/*  clear_cache(addr, len)  */
-		debug("[ DEC PROM clear_cache(0x%x,%i) ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM clear_cache(0x%x,%i) ]\n",
 		    (uint32_t)cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A1]);
 		/*  TODO  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;	/*  ?  */
 		break;
 	case 0x80:		/*  getsysid()  */
-		/*  debug("[ DEC PROM getsysid() ]\n");  */
+		/*  debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM getsysid() ]\n");  */
 		/*  TODO:  why did I add the 0x82 stuff???  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = ((uint32_t)0x82 << 24)
 		    + (cpu->machine->machine_subtype << 16) + (0x3 << 8);
@@ -616,7 +616,7 @@ int decstation_prom_emul(struct cpu *cpu)
 		    (int64_t)(int32_t)cpu->cd.mips.gpr[MIPS_GPR_V0];
 		break;
 	case 0x84:		/*  getbitmap()  */
-		debug("[ DEC PROM getbitmap(0x%08x) ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM getbitmap(0x%08x) ]\n",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		store_buf(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (char *)cpu->machine->md.pmax->memmap,
@@ -625,15 +625,15 @@ int decstation_prom_emul(struct cpu *cpu)
 		    sizeof(cpu->machine->md.pmax->memmap->bitmap);
 		break;
 	case 0x88:		/*  disableintr()  */
-		debug("[ DEC PROM disableintr(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM disableintr(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x8c:		/*  enableintr()  */
-		debug("[ DEC PROM enableintr(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM enableintr(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x9c:		/*  halt()  */
-		debug("[ DEC PROM halt() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM halt() ]\n");
 		cpu->running = 0;
 		break;
 	case 0xa4:		/*  gettcinfo()  */
@@ -667,15 +667,15 @@ int decstation_prom_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0xac:		/*  rex()  */
-		debug("[ DEC PROM rex('%c') ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[ DEC PROM rex('%c') ]\n",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		switch ((int32_t)cpu->cd.mips.gpr[MIPS_GPR_A0]) {
 		case 'h':
-			debug("DEC PROM: rex('h') ==> halt\n");
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "DEC PROM: rex('h') ==> halt\n");
 			cpu->running = 0;
 			break;
 		case 'b':
-			debug("DEC PROM: rex('b') ==> reboot: TODO "
+			debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "DEC PROM: rex('b') ==> reboot: TODO "
 			    "(halting CPU instead)\n");
 			cpu->running = 0;
 			break;

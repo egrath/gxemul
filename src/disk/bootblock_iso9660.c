@@ -68,7 +68,7 @@ static void debug_print_volume_id_and_filename(int iso_type,
 	while (i >= 0 && str[i]==' ')
 		str[i--] = '\0';
 	if (str[0])
-		debug("\"%s\"", str);
+		debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "\"%s\"", str);
 	else {
 		/*  System ID:  */
 		ofs = iso_type == 3? 16 : 8;
@@ -77,12 +77,12 @@ static void debug_print_volume_id_and_filename(int iso_type,
 		while (i >= 0 && str[i]==' ')
 			str[i--] = '\0';
 		if (str[0])
-			debug("\"%s\"", str);
+			debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "\"%s\"", str);
 		else
-			debug("(no ID)");
+			debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "(no ID)");
 	}
 
-	debug(":%s\n", filename);
+	debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, ":%s\n", filename);
 }
 
 
@@ -113,7 +113,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 	CHECK_ALLOCATION(filename = strdup(cpu->machine->boot_kernel_filename));
 	filename_orig = filename;
 
-	debug("ISO9660 boot:\n");
+	debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "ISO9660 boot:\n");
 	debug_indentation(1);
 
 	debug_print_volume_id_and_filename(iso_type, buf, filename);
@@ -151,7 +151,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 		suggestedBaseOffset *= 2048;
 		if (currentBaseOffset == 0 && suggestedBaseOffset != currentBaseOffset) 
 		{
-			debug("NOTE: automagically adjusting to use base offset %lli\n", (long long)suggestedBaseOffset);
+			debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "NOTE: automagically adjusting to use base offset %lli\n", (long long)suggestedBaseOffset);
 			diskimage_set_baseoffset(m, disk_id, disk_type, suggestedBaseOffset);
 		}
 	}
@@ -169,7 +169,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 	    ((uint64_t)buf[0x8f] << 24)) * 2048;
 
 #ifdef ISO_DEBUG
-	debug("root = %i bytes at 0x%llx\n", dirlen, (long long)dirofs);
+	debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "root = %i bytes at 0x%llx\n", dirlen, (long long)dirofs);
 #endif
 
 	CHECK_ALLOCATION(dirbuf = (unsigned char *) malloc(dirlen));
@@ -201,19 +201,19 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 			p = strchr(filename, '\\');
 
 #ifdef ISO_DEBUG
-		debug("%i%s: %i, %i, \"", filenr, filenr == found_dir?
+		debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "%i%s: %i, %i, \"", filenr, filenr == found_dir?
 		    " [CURRENT]" : "", x, y);
 #endif
 		for (i=0; i<nlen && i<sizeof(direntry)-1; i++)
 			if (dp[i]) {
 				direntry[i] = dp[i];
 #ifdef ISO_DEBUG
-				debug("%c", dp[i]);
+				debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "%c", dp[i]);
 #endif
 			} else
 				break;
 #ifdef ISO_DEBUG
-		debug("\"\n");
+		debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "\"\n");
 #endif
 		direntry[i] = '\0';
 
@@ -253,7 +253,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 		goto ret;
 	}
 
-	/*  debug("dirofs = 0x%llx\n", (long long)dirofs);  */
+	/*  debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "dirofs = 0x%llx\n", (long long)dirofs);  */
 
 	/*  Free the old dirbuf, and allocate a new one:  */
 	free(dirbuf);
@@ -265,10 +265,10 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 		/*  Too close to another sector? Then realign.  */
 		if ((dirofs & 2047) + 70 > 2047) {
 			dirofs = (dirofs | 2047) + 1;
-			/*  debug("realign dirofs = 0x%llx\n", dirofs);  */
+			/*  debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "realign dirofs = 0x%llx\n", dirofs);  */
 		}
 
-		// debug("dirofs = %lli\n", (long long)dirofs);
+		// debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "dirofs = %lli\n", (long long)dirofs);
 		res2 = diskimage_access(m, disk_id, disk_type, 0, dirofs,
 		    dirbuf, 256);
 		if (!res2) {
@@ -279,7 +279,7 @@ int iso_load_bootblock(struct machine *m, struct cpu *cpu,
 		dp = dirbuf;
 		len = dp[0];
 		if (len < 2) {
-			// debug("dir too short\n");
+			// debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "dir too short\n");
 			break;
 		}
 
@@ -347,7 +347,7 @@ printf("\n");
 	    (match_entry[12] << 16) + ((uint64_t)match_entry[13] << 24);
 	fileofs *= 2048;
 
-	/*  debug("filelen=%llx fileofs=%llx\n", (long long)filelen,
+	/*  debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "filelen=%llx fileofs=%llx\n", (long long)filelen,
 	    (long long)fileofs);  */
 
 	CHECK_ALLOCATION(filebuf = (unsigned char *) malloc(filelen));
@@ -376,7 +376,7 @@ printf("\n");
 
 	close(tmpfile_handle);
 
-	debug("extracted %lli bytes into %s\n", (long long)filelen, tmpfname);
+	debugmsg(SUBSYS_DISK, "bootblock_iso9660", VERBOSITY_DEBUG, "extracted %lli bytes into %s\n", (long long)filelen, tmpfname);
 
 	/*  Add the temporary filename to the load_namesp array:  */
 	(*n_loadp)++;

@@ -604,10 +604,10 @@ void machine_dumpinfo(struct machine *m)
 {
 	int i;
 
-	debug("serial nr: %i", m->serial_nr);
+	debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "serial nr: %i", m->serial_nr);
 	if (m->nr_of_nics > 0)
-		debug("  (nr of NICs: %i)", m->nr_of_nics);
-	debug("\n");
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "  (nr of NICs: %i)", m->nr_of_nics);
+	debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "\n");
 
 	char meminfo[2000];
 	snprintf(meminfo, sizeof(meminfo), "%i MB", m->physical_ram_in_mb);
@@ -622,34 +622,34 @@ void machine_dumpinfo(struct machine *m)
 	debugmsg(SUBSYS_MACHINE, "memory", VERBOSITY_INFO, "%s", meminfo);
 
 	if (!m->prom_emulation)
-		debug("PROM emulation disabled\n");
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "PROM emulation disabled\n");
 
 	for (i=0; i<m->ncpus; i++)
 		cpu_dumpinfo(m, m->cpus[i], true);
 
 	if (m->ncpus > 1)
-		debug("Bootstrap cpu is nr %i\n", m->bootstrap_cpu);
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "Bootstrap cpu is nr %i\n", m->bootstrap_cpu);
 
 	if (m->display_md.in_use) {
-		debug("Using framebuffer windows");
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "Using framebuffer windows");
 		if (m->display_md.scaledown > 1)
-			debug(", scaledown %i", m->display_md.scaledown);
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, ", scaledown %i", m->display_md.scaledown);
 		if (m->display_md.scaleup > 1)
-			debug(", scaleup %i", m->display_md.scaleup);
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, ", scaleup %i", m->display_md.scaleup);
 		if (m->display_md.n_display_names > 0) {
 			for (i=0; i<m->display_md.n_display_names; i++) {
-				debug(i? ", " : " (");
-				debug("\"%s\"", m->display_md.display_names[i]);
+				debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, i? ", " : " (");
+				debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "\"%s\"", m->display_md.display_names[i]);
 			}
-			debug(")");
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, ")");
 		}
-		debug("\n");
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "\n");
 	}
 
 	diskimage_dump_info(m);
 
 	if (m->force_netboot)
-		debug("Forced netboot\n");
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "Forced netboot\n");
 }
 
 
@@ -1152,13 +1152,13 @@ void machine_list_available_types_and_cpus(void)
 	struct machine_entry *me;
 	int iadd = 2;
 
-	debug("Available CPU types:\n\n");
+	debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "Available CPU types:\n\n");
 
 	debug_indentation(iadd);
 	cpu_list_available_types();
 	debug_indentation(-iadd);  
 
-	debug("\nMost of the CPU types are bogus, and not really implemented."
+	debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "\nMost of the CPU types are bogus, and not really implemented."
 	    " The main effect of\nselecting a specific CPU type is to choose "
 	    "what kind of 'id' it will have.\n\nAvailable machine types (with "
 	    "aliases) and their subtypes:\n\n");
@@ -1173,21 +1173,21 @@ void machine_list_available_types_and_cpus(void)
 	while (me != NULL) {
 		int i, j, iadd2 = 1;
 
-		debug("%s (", me->name);
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "%s (", me->name);
 		for (i=0; i<me->n_aliases; i++)
-			debug("%s\"%s\"", i? ", " : "", me->aliases[i]);
-		debug(")\n");
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "%s\"%s\"", i? ", " : "", me->aliases[i]);
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, ")\n");
 
 		debug_indentation(iadd2);
 		for (i=0; i<me->n_subtypes; i++) {
 			struct machine_entry_subtype *mes;
 			mes = me->subtype[i];
-			debug("- %s", mes->name);
-			debug(" (");
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "- %s", mes->name);
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, " (");
 			for (j=0; j<mes->n_aliases; j++)
-				debug("%s\"%s\"", j? ", " : "",
+				debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "%s\"%s\"", j? ", " : "",
 				    mes->aliases[j]);
-			debug(")\n");
+			debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, ")\n");
 		}
 		debug_indentation(-iadd2);
 
@@ -1195,12 +1195,12 @@ void machine_list_available_types_and_cpus(void)
 	}
 	debug_indentation(-iadd);
 
-	debug("\nMost of the machine types are bogus too. Please read the "
+	debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "\nMost of the machine types are bogus too. Please read the "
 	    "GXemul documentation\nfor information about which machine types "
 	    "that actually work. Use the alias\nwhen selecting a machine type "
 	    "or subtype, not the real name.\n");
 
-	debug("\n");
+	debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_DEBUG, "\n");
 }
 
 

@@ -88,9 +88,9 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 	unencode(sizeofcmds, &buf[20], uint32_t);
 	unencode(flags,      &buf[24], uint32_t);
 
-	/*  debug("cputype=0x%x cpusubtype=0x%x filetype=0x%x\n",
+	/*  debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "cputype=0x%x cpusubtype=0x%x filetype=0x%x\n",
 	    cputype, cpusubtype, filetype);
-	    debug("ncmds=%i sizeofcmds=0x%08x flags=0x%08x\n",
+	    debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "ncmds=%i sizeofcmds=0x%08x flags=0x%08x\n",
 	    ncmds, sizeofcmds, flags);  */
 
 	/*
@@ -128,32 +128,32 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 		unencode(cmd_len,  &buf[pos+4], uint32_t);
 
 #if 0
-		debug("cmd %i, len=%i\n", cmd_type, cmd_len);
+		debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "cmd %i, len=%i\n", cmd_type, cmd_len);
 		for (i=8; i<cmd_len; i++) {
 			unsigned char ch = buf[pos+i];
 			if (ch >= ' ' && ch < 127)
-				debug("%c", ch);
+				debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "%c", ch);
 			else
-				debug(".");
+				debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, ".");
 		}
 #endif
 		switch (cmd_type) {
 		case 1:	/*  LC_SEGMENT  */
-			debug("seg ");
+			debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "seg ");
 			for (i=0; i<16; i++) {
 				if (buf[pos + 8 + i] == 0)
 					break;
-				debug("%c", buf[pos + 8 + i]);
+				debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "%c", buf[pos + 8 + i]);
 			}
 			unencode(vmaddr,   &buf[pos+8+16+0], uint32_t);
 			unencode(vmsize,   &buf[pos+8+16+4], uint32_t);
 			unencode(fileoff,  &buf[pos+8+16+8], uint32_t);
 			unencode(filesize, &buf[pos+8+16+12], uint32_t);
-			debug(": vmaddr=0x%x size=0x%x fileoff=0x%x",
+			debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, ": vmaddr=0x%x size=0x%x fileoff=0x%x",
 			    (int)vmaddr, (int)vmsize, (int)fileoff);
 
 			if (filesize == 0) {
-				debug("\n");
+				debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "\n");
 				break;
 			}
 
@@ -194,7 +194,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 				filesize -= lenRead;
 			}
 
-			debug("\n");
+			debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "\n");
 			break;
 
 		case 2:	/*  LC_SYMTAB  */
@@ -202,7 +202,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 			unencode(nsyms,   &buf[pos+12], uint32_t);
 			unencode(stroff,  &buf[pos+16], uint32_t);
 			unencode(strsize, &buf[pos+20], uint32_t);
-			debug("symtable: %i symbols @ 0x%x (strings at "
+			debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "symtable: %i symbols @ 0x%x (strings at "
 			    "0x%x)\n", nsyms, symoff, stroff);
 
 			CHECK_ALLOCATION(symbols = (char *) malloc(12 * nsyms));
@@ -222,7 +222,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 				uint32_t n_value;
 				unencode(n_strx,  &symbols[i*12+0], int32_t);
 				unencode(n_value, &symbols[i*12+8], uint32_t);
-				/*  debug("%i: strx=%i type=%i sect=%i desc=%i"
+				/*  debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "%i: strx=%i type=%i sect=%i desc=%i"
 				    " value=0x%x\n", i, n_strx, n_type,
 				    n_sect, n_desc, n_value);  */
 				add_symbol_name(&m->symbol_context,
@@ -233,7 +233,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 			free(strings);
 			break;
 
-		case 5:	debug("unix thread context: ");
+		case 5:	debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "unix thread context: ");
 			/*  See http://cvs.sf.net/viewcvs.py/hte/
 			    HT%20Editor/machostruc.h or similar for details
 			    on the thread struct.  */
@@ -248,7 +248,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 
 			unencode(entry, &buf[pos+16], uint32_t);
 			entry_set = 1;
-			debug("pc=0x%x\n", (int)entry);
+			debugmsg(SUBSYS_DISK, "file_macho", VERBOSITY_DEBUG, "pc=0x%x\n", (int)entry);
 
 			for (i=1; i<40; i++) {
 				uint32_t x;

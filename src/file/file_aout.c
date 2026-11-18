@@ -91,12 +91,12 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		}
 
 		unencode(entry, &bout_header.a_entry, uint32_t);
-		debug("b.out, entry point 0x%08lx\n", (long)entry);
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "b.out, entry point 0x%08lx\n", (long)entry);
 		vaddr = entry;
 
 		unencode(textsize, &bout_header.a_text, uint32_t);
 		unencode(datasize, &bout_header.a_data, uint32_t);
-		debug("text + data = %i + %i bytes\n", textsize, datasize);
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "text + data = %i + %i bytes\n", textsize, datasize);
 
 		unencode(symbsize, &bout_header.a_syms, uint32_t);
 	} else if (flags & AOUT_FLAG_DECOSF1) {
@@ -107,7 +107,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		    (buf[18] << 16) + ((uint64_t)buf[19] << 24);
 		entry = buf[20] + (buf[21] << 8) +
 		    (buf[22] << 16) + ((uint64_t)buf[23] << 24);
-		debug("OSF1 a.out, load address 0x%08lx, "
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "OSF1 a.out, load address 0x%08lx, "
 		    "entry point 0x%08x\n", (long)vaddr, (long)entry);
 		symbsize = 0;
 		fseek(f, 0, SEEK_END);
@@ -129,7 +129,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		}
 
 		unencode(entry, &aout_header.a_entry, uint32_t);
-		debug("a.out, entry point 0x%08lx\n", (long)entry);
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "a.out, entry point 0x%08lx\n", (long)entry);
 		vaddr = entry;
 
 		if (flags & AOUT_FLAG_VADDR_ZERO_HACK)
@@ -137,7 +137,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 
 		unencode(textsize, &aout_header.a_text, uint32_t);
 		unencode(datasize, &aout_header.a_data, uint32_t);
-		debug("text + data = %i + %i bytes\n", textsize, datasize);
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "text + data = %i + %i bytes\n", textsize, datasize);
 
 		unencode(symbsize, &aout_header.a_syms, uint32_t);
 	}
@@ -191,7 +191,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		char *string_symbols;
 		off_t oldpos;
 
-		debug("symbols: %i bytes @ 0x%x\n", symbsize, (int)ftello(f));
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "symbols: %i bytes @ 0x%x\n", symbsize, (int)ftello(f));
 		CHECK_ALLOCATION(syms = (unsigned char *) malloc(symbsize));
 		len = fread(syms, 1, symbsize, f);
 		if (len != symbsize) {
@@ -203,7 +203,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 		fseek(f, 0, SEEK_END);
 		strings_len = ftello(f) - oldpos;
 		fseek(f, oldpos, SEEK_SET);
-		debug("strings: %i bytes @ 0x%x\n", strings_len,(int)ftello(f));
+		debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "strings: %i bytes @ 0x%x\n", strings_len,(int)ftello(f));
 		CHECK_ALLOCATION(string_symbols = (char *) malloc(strings_len));
 		if (fread(string_symbols, 1, strings_len, f) != strings_len) {
 			fatal_error(SUBSYS_DISK, "file_aout",  "Could not read symbols from %s?", filename);
@@ -219,7 +219,7 @@ static void file_load_aout(struct machine *m, struct memory *mem,
 			unencode(type, &aout_symbol_ptr[i].type, uint32_t);
 			unencode(addr, &aout_symbol_ptr[i].addr, uint32_t);
 
-			/*  debug("symbol type 0x%04x @ 0x%08x: %s\n",
+			/*  debugmsg(SUBSYS_DISK, "file_aout", VERBOSITY_DEBUG, "symbol type 0x%04x @ 0x%08x: %s\n",
 			    type, addr, string_symbols + str_index);  */
 
 			if (type != 0 && addr != 0)

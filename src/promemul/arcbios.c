@@ -73,7 +73,7 @@ void arcbios_add_string_to_component(struct machine *machine,
 	CHECK_ALLOCATION(machine->md.arc->string_to_component[machine->
 	    md.arc->n_string_to_components] = strdup(str));
 
-	debug("adding ARC component mapping: 0x%08x = %s\n",
+	debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "adding ARC component mapping: 0x%08x = %s\n",
 	    (int)component, str);
 
 	machine->md.arc->string_to_component_value[
@@ -448,7 +448,7 @@ void arcbios_add_memory_descriptor(struct cpu *cpu,
 	struct arcbios_mem64 arcbios_mem64;
 
 	if (verbose >= 2)
-		debug("arcbios_add_memory_descriptor: base=0x%llx len=0x%llx arctype=%i\n",
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "arcbios_add_memory_descriptor: base=0x%llx len=0x%llx arctype=%i\n",
 			(long long)base, (long long)len, arctype);
 
 	base /= 4096;
@@ -555,7 +555,7 @@ static uint64_t arcbios_addchild(struct cpu *cpu,
 		uint32_t eparent, echild, epeer, tmp;
 		unsigned char buf[4];
 
-		/*  debug("[ addchild: peeraddr = 0x%08x ]\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ addchild: peeraddr = 0x%08x ]\n",
 		    (int)peeraddr);  */
 
 		cpu->memory_rw(cpu, cpu->mem,
@@ -588,21 +588,21 @@ static uint64_t arcbios_addchild(struct cpu *cpu,
 		}
 		eparent = buf[0] + (buf[1]<<8) + (buf[2]<<16) + (buf[3]<<24);
 
-		/*  debug("  epeer=%x echild=%x eparent=%x\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "  epeer=%x echild=%x eparent=%x\n",
 		    (int)epeer,(int)echild,(int)eparent);  */
 
 		if ((uint32_t)eparent == (uint32_t)parent &&
 		    (uint32_t)epeer == 0) {
 			epeer = a;
 			store_32bit_word(cpu, peeraddr + 0x00, epeer);
-			/*  debug("[ addchild: adding 0x%08x as peer "
+			/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ addchild: adding 0x%08x as peer "
 			    "to 0x%08x ]\n", (int)a, (int)peeraddr);  */
 		}
 		if ((uint32_t)peeraddr == (uint32_t)parent &&
 		    (uint32_t)echild == 0) {
 			echild = a;
 			store_32bit_word(cpu, peeraddr + 0x04, echild);
-			/*  debug("[ addchild: adding 0x%08x as "
+			/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ addchild: adding 0x%08x as "
 			    "child to 0x%08x ]\n", (int)a, (int)peeraddr);  */
 		}
 
@@ -706,7 +706,7 @@ static uint64_t arcbios_addchild64(struct cpu *cpu,
 		uint64_t eparent, echild, epeer, tmp;
 		unsigned char buf[8];
 
-		/*  debug("[ addchild: peeraddr = 0x%016" PRIx64" ]\n",
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ addchild: peeraddr = 0x%016" PRIx64" ]\n",
 		    (uint64_t) peeraddr);  */
 
 		cpu->memory_rw(cpu, cpu->mem,
@@ -751,7 +751,7 @@ static uint64_t arcbios_addchild64(struct cpu *cpu,
 		    + ((uint64_t)buf[4] << 32) + ((uint64_t)buf[5] << 40)
 		    + ((uint64_t)buf[6] << 48) + ((uint64_t)buf[7] << 56);
 
-		/*  debug("  epeer=%" PRIx64" echild=%" PRIx64" eparent=%" PRIx64
+		/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "  epeer=%" PRIx64" echild=%" PRIx64" eparent=%" PRIx64
 		    "\n", (uint64_t) epeer, (uint64_t) echild,
 		    (uint64_t) eparent);  */
 
@@ -759,7 +759,7 @@ static uint64_t arcbios_addchild64(struct cpu *cpu,
 			epeer = a;
 			store_64bit_word(cpu, peeraddr + 0 *
 			    machine->md.arc->wordlen, epeer);
-			/*  debug("[ addchild: adding 0x%016" PRIx64" as peer "
+			/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ addchild: adding 0x%016" PRIx64" as peer "
 			    "to 0x%016" PRIx64" ]\n", (uint64_t) a,
 			    (uint64_t) peeraddr);  */
 		}
@@ -767,7 +767,7 @@ static uint64_t arcbios_addchild64(struct cpu *cpu,
 			echild = a;
 			store_64bit_word(cpu, peeraddr + 1 *
 			    machine->md.arc->wordlen, echild);
-			/*  debug("[ addchild: adding 0x%016" PRIx64" as child "
+			/*  debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ addchild: adding 0x%016" PRIx64" as child "
 			    "to 0x%016" PRIx64" ]\n", (uint64_t) a,
 			    (uint64_t) peeraddr);  */
 		}
@@ -1197,9 +1197,9 @@ void arcbios_sgi_emul(struct cpu *cpu)
 
 	default:
 		cpu_register_dump(cpu->machine, cpu, 1, 0x1);
-		debug("a0 points to: ");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
-		debug("\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n");
 		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented SGI vector 0x%x", vector);
 		cpu->running = 0;
 	}
@@ -1341,7 +1341,7 @@ int arcbios_emul(struct cpu *cpu)
 				cpu->cd.mips.gpr[MIPS_GPR_V0] = (int64_t)
 				    (int32_t) cpu->cd.mips.gpr[MIPS_GPR_V0];
 		}
-		debug("[ ARCBIOS GetPeer(node 0x%016" PRIx64"): 0x%016" PRIx64
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetPeer(node 0x%016" PRIx64"): 0x%016" PRIx64
 		    " ]\n", (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_V0]);
 		break;
@@ -1392,7 +1392,7 @@ int arcbios_emul(struct cpu *cpu)
 				cpu->cd.mips.gpr[MIPS_GPR_V0] = (int64_t)
 				    (int32_t)cpu->cd.mips.gpr[MIPS_GPR_V0];
 		}
-		debug("[ ARCBIOS GetChild(node 0x%016" PRIx64"): 0x%016"
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetChild(node 0x%016" PRIx64"): 0x%016"
 		    PRIx64" ]\n", (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_V0]);
 		break;
@@ -1441,7 +1441,7 @@ int arcbios_emul(struct cpu *cpu)
 				cpu->cd.mips.gpr[MIPS_GPR_V0] = (int64_t)
 				    (int32_t) cpu->cd.mips.gpr[MIPS_GPR_V0];
 		}
-		debug("[ ARCBIOS GetParent(node 0x%016" PRIx64"): 0x%016"
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetParent(node 0x%016" PRIx64"): 0x%016"
 		    PRIx64" ]\n", (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_V0]);
 		break;
@@ -1474,9 +1474,9 @@ int arcbios_emul(struct cpu *cpu)
 		}
 		break;
 	case 0x3c:		/*  GetComponent(char *name)  */
-		debug("[ ARCBIOS GetComponent(\"");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetComponent(\"");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
-		debug("\") ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\") ]\n");
 
 		if (cpu->cd.mips.gpr[MIPS_GPR_A0] == 0) {
 			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetComponent: NULL ptr ]\n");
@@ -1553,18 +1553,18 @@ int arcbios_emul(struct cpu *cpu)
 		}
 		break;
 	case 0x50:		/*  GetTime()  */
-		debug("[ ARCBIOS GetTime() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetTime() ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0xffffffff80001000ULL;
 		/*  TODO!  */
 		break;
 	case 0x54:		/*  GetRelativeTime()  */
-		debug("[ ARCBIOS GetRelativeTime() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetRelativeTime() ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = (int64_t)(int32_t)time(NULL);
 		break;
 	case 0x5c:  /*  Open(char *path, uint32_t mode, uint32_t *fileID)  */
-		debug("[ ARCBIOS Open(\"");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Open(\"");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
-		debug("\",0x%x,0x%x)", (int)cpu->cd.mips.gpr[MIPS_GPR_A0],
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\",0x%x,0x%x)", (int)cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A1],
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A2]);
 
@@ -1608,12 +1608,12 @@ int arcbios_emul(struct cpu *cpu)
 		}
 
 		if (cpu->cd.mips.gpr[MIPS_GPR_V0] == ARCBIOS_ESUCCESS) {
-			debug(" = handle %i ]\n", (int)handle);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, " = handle %i ]\n", (int)handle);
 			store_32bit_word(cpu, cpu->cd.mips.gpr[MIPS_GPR_A2],
 			    handle);
 			machine->md.arc->file_handle_in_use[handle] = 1;
 		} else
-			debug(" = ERROR %i ]\n",
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, " = ERROR %i ]\n",
 			    (int)cpu->cd.mips.gpr[MIPS_GPR_V0]);
 		break;
 	case 0x60:		/*  Close(uint32_t handle)  */
@@ -1736,7 +1736,7 @@ int arcbios_emul(struct cpu *cpu)
 				    cpu->cd.mips.gpr[MIPS_GPR_A2];
 				cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 			} else {
-				debug("[ ... res = %i ]\n", res);
+				debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ... res = %i ]\n", res);
 				cpu->cd.mips.gpr[MIPS_GPR_V0] = ARCBIOS_EIO;
 			}
 			free(tmp_buf);
@@ -1778,7 +1778,7 @@ int arcbios_emul(struct cpu *cpu)
 			arcbios_handle_to_start_and_size(machine,
 			    handleTmp, &partition_offset, &size);
 
-			debug("[ ARCBIOS Write(%i,0x%08" PRIx64",%i,0x%08"
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Write(%i,0x%08" PRIx64",%i,0x%08"
 			    PRIx64") ]\n", (int) cpu->cd.mips.gpr[MIPS_GPR_A0],
 			    (uint64_t) cpu->cd.mips.gpr[MIPS_GPR_A1],
 			    (int) cpu->cd.mips.gpr[MIPS_GPR_A2],
@@ -1825,7 +1825,7 @@ int arcbios_emul(struct cpu *cpu)
 		break;
 	case 0x70:	/*  Seek(uint32_t handle, int64_t *ofs,
 				 uint32_t whence): uint32_t  */
-		debug("[ ARCBIOS Seek(%i,0x%08" PRIx64",%i): ",
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Seek(%i,0x%08" PRIx64",%i): ",
 		    (int) cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (uint64_t)cpu->cd.mips.gpr[MIPS_GPR_A1],
 		    (int) cpu->cd.mips.gpr[MIPS_GPR_A2]);
@@ -1859,7 +1859,7 @@ int arcbios_emul(struct cpu *cpu)
 			    
 			machine->md.arc->current_seek_offset[
 			    cpu->cd.mips.gpr[MIPS_GPR_A0]] = ofs;
-			debug("%016" PRIx64" ]\n", (uint64_t) ofs);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "%016" PRIx64" ]\n", (uint64_t) ofs);
 		}
 
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;	/*  Success.  */
@@ -1899,39 +1899,39 @@ int arcbios_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x7c:		/*  SetEnvironmentVariable(char *, char *)  */
-		debug("[ ARCBIOS SetEnvironmentVariable(\"");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS SetEnvironmentVariable(\"");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
-		debug("\",\"");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\",\"");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A1]);
-		debug("\") ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\") ]\n");
 		/*  TODO: This is a dummy.  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = ARCBIOS_ESUCCESS;
 		break;
 	case 0x80:		/*  GetFileInformation()  */
-		debug("[ ARCBIOS GetFileInformation(%i,0x%x): ",
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetFileInformation(%i,0x%x): ",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0],
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A1]);
 
 		if (cpu->cd.mips.gpr[MIPS_GPR_A0] >= ARC_MAX_HANDLES) {
-			debug("invalid file handle ]\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "invalid file handle ]\n");
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = ARCBIOS_EINVAL;
 		} else if (!machine->md.arc->file_handle_in_use[cpu->cd.
 		    mips.gpr[MIPS_GPR_A0]]) {
-			debug("file handle not in use! ]\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "file handle not in use! ]\n");
 			cpu->cd.mips.gpr[MIPS_GPR_V0] = ARCBIOS_EBADF;
 		} else {
-			debug("'%s' ]\n", machine->md.arc->file_handle_string[
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "'%s' ]\n", machine->md.arc->file_handle_string[
 			    cpu->cd.mips.gpr[MIPS_GPR_A0]]);
 			cpu->cd.mips.gpr[MIPS_GPR_V0] =
 			    arcbios_getfileinformation(cpu);
 		}
 		break;
 	case 0x88:		/*  FlushAllCaches()  */
-		debug("[ ARCBIOS FlushAllCaches(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS FlushAllCaches(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 0x90:		/*  void *GetDisplayStatus(handle)  */
-		debug("[ ARCBIOS GetDisplayStatus(%i) ]\n",
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS GetDisplayStatus(%i) ]\n",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		/*  TODO:  handle different values of 'handle'?  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = ARC_DSPSTAT_ADDR;
@@ -1940,7 +1940,7 @@ int arcbios_emul(struct cpu *cpu)
 		/*
 		 *  Undocumented, used by IRIX.
 		 */
-		debug("[ ARCBIOS: IRIX 0x100 (?) ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS: IRIX 0x100 (?) ]\n");
 		/*  TODO  */
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
@@ -1956,9 +1956,9 @@ int arcbios_emul(struct cpu *cpu)
 	default:
 		quiet_mode = 0;
 		cpu_register_dump(machine, cpu, 1, 0x1);
-		debug("a0 points to: ");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
-		debug("\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n");
 		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented vector 0x%x", vector);
 		cpu->running = 0;
 	}
@@ -2879,7 +2879,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 	switch (machine->machine_type) {
 
 	case MACHINE_SGI:
-		debug("ARCS:\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "ARCS:\n");
 		debug_indentation(1);
 
 		CHECK_ALLOCATION(name = (char *) malloc(alloclen));
@@ -2892,7 +2892,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 		break;
 
 	case MACHINE_ARC:
-		debug("ARC:\n");
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "ARC:\n");
 		debug_indentation(1);
 
 		switch (machine->machine_subtype) {
@@ -2915,7 +2915,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 
 	system = arcbios_addchild_manual(cpu, COMPONENT_CLASS_SystemClass,
 	    COMPONENT_TYPE_ARC, 0,1,2,0, 0xffffffff, name, 0/*ROOT*/, NULL, 0);
-	debug("system @ 0x%" PRIx64" (\"%s\")\n", (uint64_t) system, name);
+	debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "system @ 0x%" PRIx64" (\"%s\")\n", (uint64_t) system, name);
 
 
 	/*
@@ -3026,18 +3026,18 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 			    0xffffffff, NULL, cpuaddr, NULL, 0);
 		}
 
-		debug("cpu%i @ 0x%" PRIx64, i, (uint64_t) cpuaddr);
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "cpu%i @ 0x%" PRIx64, i, (uint64_t) cpuaddr);
 
 		if (fpu != 0)
-			debug(" (fpu @ 0x%" PRIx64")\n", (uint64_t) fpu);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, " (fpu @ 0x%" PRIx64")\n", (uint64_t) fpu);
 		else
-			debug("\n");
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n");
 
-		debug("    picache @ 0x%" PRIx64", pdcache @ 0x%" PRIx64"\n",
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "    picache @ 0x%" PRIx64", pdcache @ 0x%" PRIx64"\n",
 		    (uint64_t) picache, (uint64_t) pdcache);
 
 		if (cpu->cd.mips.cache_secondary >= 12)
-			debug("    sdcache @ 0x%" PRIx64"\n",
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "    sdcache @ 0x%" PRIx64"\n",
 			    (uint64_t) sdcache);
 
 		if (machine->machine_type == MACHINE_SGI) {
@@ -3046,7 +3046,7 @@ void arcbios_init(struct machine *machine, int is64bit, uint64_t sgi_ram_offset,
 			    COMPONENT_CLASS_MemoryClass,
 			    COMPONENT_TYPE_MemoryUnit, 0, 1, 2, 0,
 			    0xffffffff, "memory", cpuaddr, NULL, 0);
-			debug("memory @ 0x%" PRIx64"\n", (uint64_t) memory);
+			debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "memory @ 0x%" PRIx64"\n", (uint64_t) memory);
 		}
 	}
 
