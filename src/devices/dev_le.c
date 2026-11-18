@@ -87,7 +87,6 @@
 #define	LE_TICK_SHIFT		14
 
 
-extern int quiet_mode;
 
 #define	LE_MODE_PROM		0x8000
 #define	LE_MODE_INTL		0x0040

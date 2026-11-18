@@ -44,7 +44,6 @@
 
 
 extern int verbose;
-extern int quiet_mode;
 
 
 /*

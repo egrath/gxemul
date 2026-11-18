@@ -326,8 +326,7 @@ void ppc_exception(struct cpu *cpu, int exception_nr)
 	else
 		cpu->cd.ppc.spr[SPR_SRR1] = (cpu->cd.ppc.msr & 0x87c0ffff);
 
-	if (!quiet_mode)
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ PPC Exception 0x%x; pc=0x%" PRIx64" ]",
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ PPC Exception 0x%x; pc=0x%" PRIx64" ]",
 		    exception_nr, cpu->pc);
 
 	/*  Disable External Interrupts, Recoverable Interrupt Mode,

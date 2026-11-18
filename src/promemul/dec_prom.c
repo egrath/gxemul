@@ -53,7 +53,6 @@
 #include "thirdparty/dec_kn03.h"
 
 
-extern int quiet_mode;
 
 
 /*

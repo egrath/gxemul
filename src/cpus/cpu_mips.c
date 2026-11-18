@@ -1752,7 +1752,7 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 		    "waking up from halted state");
 	}
 
-	if (!quiet_mode) {
+	{
 		uint64_t offset;
 		int x;
 		char *symbol = get_symbol_name(&cpu->machine->symbol_context,

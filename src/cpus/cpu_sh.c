@@ -58,7 +58,6 @@
 #include "tmp_sh_head.c"
 
 
-extern int quiet_mode;
 
 void sh_pc_to_pointers(struct cpu *);
 
@@ -626,18 +625,17 @@ void sh_exception(struct cpu *cpu, int expevt, int intevt, uint32_t vaddr)
 {
 	uint32_t vbr = cpu->cd.sh.vbr;
 
-	if (!quiet_mode) {
 		if (intevt > 0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "[ interrupt 0x%03x", intevt);
-		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "[ exception 0x%03x", expevt);
+		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "[ interrupt 0x%03x", intevt);
+	else
+		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "[ exception 0x%03x", expevt);
 
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, ", pc=0x%08" PRIx32" ", (uint32_t)cpu->pc);
-		if (intevt == 0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "vaddr=0x%08" PRIx32" ", vaddr);
+	debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, ", pc=0x%08" PRIx32" ", (uint32_t)cpu->pc);
+	if (intevt == 0)
+		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "vaddr=0x%08" PRIx32" ", vaddr);
 
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " ]\n");
-	}
+	debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " ]\n");
+
 
 	if (cpu->cd.sh.sr & SH_SR_BL) {
 		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ sh_exception(): BL bit already set. ]\n");

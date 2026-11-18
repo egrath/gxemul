@@ -1842,12 +1842,8 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 		for (i=0; i<cpu->machine->breakpoints.n; i++)
 			if (curpc == (MODE_uint_t)
 			    cpu->machine->breakpoints.addr[i]) {
-				if (!cpu->machine->instruction_trace) {
-					int tmp_old_quiet_mode = quiet_mode;
-					quiet_mode = 0;
+				if (!cpu->machine->instruction_trace)
 					DISASSEMBLE(cpu, ib, 1, 0);
-					quiet_mode = tmp_old_quiet_mode;
-				}
 #ifdef MODE32
 				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "BREAKPOINT: pc = 0x%" PRIx32"\n(The "
 				    "instruction has not yet executed.)",

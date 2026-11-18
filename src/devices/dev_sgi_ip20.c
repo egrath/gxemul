@@ -39,7 +39,6 @@
 #include "misc.h"
 
 
-extern int quiet_mode;
 
 
 DEVICE_ACCESS(sgi_ip20)
@@ -66,7 +65,6 @@ DEVICE_ACCESS(sgi_ip20)
 			 *  obviously pretty bad.  This must be fixed some day.
 			 */
 
-			/*  instruction_trace = 1;  quiet_mode = 0;  */
 			odata = random() & 0xff;
 
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip20", VERBOSITY_DEBUG, "[ sgi_ip20: read from address 0x%x: 0x%x ]\n",

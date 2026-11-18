@@ -491,9 +491,9 @@ static void debugger_cmd_itrace(struct machine *m, char *args)
 	m->instruction_trace = !m->instruction_trace;
 
 	if (m->instruction_trace)
-		verbose ++;
+		debugmsg_add_verbosity_level(SUBSYS_ALL, 1);
 	else
-		verbose --;
+		debugmsg_add_verbosity_level(SUBSYS_ALL, -1);
 
 	printf("instruction_trace = %s\n", m->instruction_trace? "ON":"OFF");
 }
@@ -870,50 +870,27 @@ static void debugger_cmd_put(struct machine *m, char *args)
  */
 static void debugger_cmd_quiet(struct machine *m, char *args)
 {
-	int toggle = 1;
-	int previous_mode = old_quiet_mode;
+	int on;
 
-	if (args[0] != '\0') {
-		while (args[0] != '\0' && args[0] == ' ')
-			args ++;
-		switch (args[0]) {
-		case '0':
-			toggle = 0;
-			old_quiet_mode = 0;
-			break;
-		case '1':
-			toggle = 0;
-			old_quiet_mode = 1;
-			break;
-		case 'o':
-		case 'O':
-			toggle = 0;
-			switch (args[1]) {
-			case 'n':
-			case 'N':
-				old_quiet_mode = 1;
-				break;
-			default:
-				old_quiet_mode = 0;
-			}
-			break;
-		default:
-			printf("syntax: quiet [on|off]\n");
-			return;
-		}
+	while (args[0] != '\0' && args[0] == ' ')
+		args ++;
+
+	if (args[0] == '\0')
+		on = debugmsg_is_active(SUBSYS_ALL, VERBOSITY_WARNING) ? 0 : 1;	/*  toggle  */
+	else if (strcasecmp(args, "on") == 0 || strcmp(args, "1") == 0)
+		on = 1;
+	else if (strcasecmp(args, "off") == 0 || strcmp(args, "0") == 0)
+		on = 0;
+	else {
+		printf("syntax: quiet [on|off]\n");
+		return;
 	}
 
-	if (toggle)
-		old_quiet_mode = 1 - old_quiet_mode;
-
-	printf("quiet_mode = %s", old_quiet_mode? "ON" : "OFF");
-	if (old_quiet_mode != previous_mode)
-		printf(" (was: %s)", previous_mode? "ON" : "OFF");
-	printf("; setting verbosity for all subsystems to %s\n",
-	    old_quiet_mode ? "ERROR" : "WARNING");
-
 	debugmsg_set_verbosity_level(SUBSYS_ALL,
-	    old_quiet_mode ? VERBOSITY_ERROR : VERBOSITY_WARNING);
+	    on ? VERBOSITY_ERROR : VERBOSITY_WARNING);
+	printf("quiet mode %s; all subsystem verbosity set to %s\n",
+	    on ? "ON" : "OFF",
+	    debugmsg_level_name(on ? VERBOSITY_ERROR : VERBOSITY_WARNING));
 }
 
 
@@ -1544,7 +1521,7 @@ static struct cmd cmds[] = {
 		"modify emulated memory contents" },
 
 	{ "quiet", "[on|off]", 0, debugger_cmd_quiet,
-		"toggle quiet_mode on or off" },
+		"toggle quiet mode (all subsystems to ERROR/WARNING)" },
 
 	{ "quit", "", 0, debugger_cmd_quit,
 		"quit the emulator" },

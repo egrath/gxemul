@@ -264,8 +264,7 @@ int ppc_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 	if (flags & FLAG_NOEXCEPTIONS)
 		return 0;
 
-	if (!quiet_mode)
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ memory_ppc: exception! vaddr=0x%" PRIx64" pc=0x%" PRIx64
+			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ memory_ppc: exception! vaddr=0x%" PRIx64" pc=0x%" PRIx64
 		    " instr=%i user=%i wf=%i ]", (uint64_t) vaddr,
 		    (uint64_t) cpu->pc, instr, user, writeflag);
 

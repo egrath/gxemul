@@ -59,7 +59,6 @@ extern int extra_argc;
 extern char **extra_argv;
 extern struct settings *global_settings;
 
-extern int quiet_mode;
 extern int verbose;
 
 
@@ -78,7 +77,6 @@ volatile int single_step_breakpoint = 0;
 extern bool emul_shutdown;
 extern bool emul_executing;
 
-int old_quiet_mode = 0;
 
 static int debugger_n_steps_left_before_interaction = 0;
 static volatile bool exit_debugger;
@@ -1021,7 +1019,6 @@ void debugger(void)
 	}
 
 	single_step = false;
-	quiet_mode = old_quiet_mode;
 }
 
 

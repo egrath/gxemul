@@ -55,7 +55,6 @@
 #include "thirdparty/arcbios_other.h"
 
 
-extern int quiet_mode;
 extern int verbose;
 
 
@@ -1949,12 +1948,10 @@ int arcbios_emul(struct cpu *cpu)
 		 *  Magical crash if there is no exception handling code.
 		 */
 		fatal_error(SUBSYS_PROMEMUL, "arcbios", "EXCEPTION, but no exception handler installed yet.\n");
-		quiet_mode = 0;
 		cpu_register_dump(machine, cpu, 1, 0x1);
 		cpu->running = 0;
 		break;
 	default:
-		quiet_mode = 0;
 		cpu_register_dump(machine, cpu, 1, 0x1);
 		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);

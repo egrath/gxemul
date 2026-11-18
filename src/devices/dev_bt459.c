@@ -42,7 +42,6 @@
 #include "thirdparty/bt459.h"
 
 
-extern int quiet_mode;
 
 
 /*  #define BT459_DEBUG  */

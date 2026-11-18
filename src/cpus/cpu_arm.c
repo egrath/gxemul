@@ -601,7 +601,7 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 
 	retaddr = cpu->pc;
 
-	if (!quiet_mode) {
+	{
 		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "[ arm_exception(): ");
 		switch (exception_nr) {
 		case ARM_EXCEPTION_RESET:

@@ -53,7 +53,6 @@
 #include "symbol.h"
 
 
-extern int quiet_mode;
 extern int verbose;
 
 
@@ -123,7 +122,6 @@ void file_load(struct machine *machine, struct memory *mem,
 	char *filename, uint64_t *entrypointp,
 	int arch, uint64_t *gpp, int *byte_orderp, uint64_t *tocp)
 {
-	int old_quiet_mode;
 	FILE *f;
 	const char *tmpdir = temp_dir();
 	unsigned char buf[12];
@@ -150,10 +148,6 @@ void file_load(struct machine *machine, struct memory *mem,
 
 	debugmsg(SUBSYS_MACHINE, "file", VERBOSITY_INFO, "loading %s%s", filename, verbose >= 2? ":" : "");
 	debug_indentation(1);
-
-	old_quiet_mode = quiet_mode;
-	if (verbose < 1)
-		quiet_mode = 1;
 
 	f = fopen(filename, "rb");
 	if (f == NULL) {
@@ -403,6 +397,5 @@ void file_load(struct machine *machine, struct memory *mem,
 
 ret:
 	debug_indentation(-1);
-	quiet_mode = old_quiet_mode;
 }
 

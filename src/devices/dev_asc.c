@@ -75,11 +75,9 @@
 /*  #define ASC_DEBUG  */
 /*  #define debug fatal  */
 /*  #define ASC_FULL_REGISTER_ACCESS_DEBUG  */
-/*  static int quiet_mode = 0;  */
 
 #define	ASC_TICK_SHIFT		15
 
-extern int quiet_mode;
 
 
 #define	ASC_FIFO_LEN		16

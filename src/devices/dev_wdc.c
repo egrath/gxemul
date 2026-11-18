@@ -47,7 +47,6 @@
 #define	WDC_MAX_SECTORS		512
 #define	WDC_INBUF_SIZE		(512*(WDC_MAX_SECTORS+1))
 
-extern int quiet_mode;
 
 /*  #define debug fatal  */
 

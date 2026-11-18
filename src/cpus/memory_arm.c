@@ -42,7 +42,6 @@
 #include "thirdparty/armreg.h"
 
 
-extern int quiet_mode;
 
 
 /*
@@ -254,12 +253,11 @@ exception_return:
 	if (no_exceptions)
 		return 0;
 
-	if (!quiet_mode) {
 		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ arm memory fault: vaddr=0x%08x domain=%i dav=%i ap=%i "
-		    "access=%i user=%i", (int)vaddr, domain, dav, ap,
-		    access, user);
-		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " d=0x%08x d2=0x%08x pc=0x%08x }", d, d2, (int)cpu->pc);
-	}
+	    "access=%i user=%i", (int)vaddr, domain, dav, ap,
+	    access, user);
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " d=0x%08x d2=0x%08x pc=0x%08x }", d, d2, (int)cpu->pc);
+
 
 	if (instr)
 		arm_exception(cpu, ARM_EXCEPTION_PREF_ABT);
