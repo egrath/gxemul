@@ -52,7 +52,6 @@
  *  TODO:
  *	New debugger commands:
  *		command for showing debug output in new xterms?
- *		command for enabling breakpoints for subsystem output?
  *
  *	Make sure that all the hardcoded subsystems are actually used, and/or
  *	move registering to individual subsystems.
@@ -95,38 +94,9 @@ static FILE *debugmsg_logfile = NULL;
 static int default_verbosity = VERBOSITY_WARNING;
 
 static size_t debug_indent = 0;
-static bool debug_old_currently_at_start_of_line = true;
 
 #define	DEBUG_BUFSIZE		2048
 #define	DEBUG_INDENTATION	4
-
-
-/*
- *  va_debug():
- *
- *  Used internally by the old debug() and fatal() functions.
- */
-static void va_debug(va_list argp, const char *fmt)
-{
-	char buf[DEBUG_BUFSIZE + 1];
-	buf[0] = buf[DEBUG_BUFSIZE] = 0;
-	vsnprintf(buf, DEBUG_BUFSIZE, fmt, argp);
-
-	char* s = buf;
-	while (*s) {
-		if (debug_old_currently_at_start_of_line) {
-			for (size_t i = 0; i < debug_indent * DEBUG_INDENTATION; i++)
-				printf(" ");
-		}
-
-		printf("%c", *s);
-
-		debug_old_currently_at_start_of_line = false;
-		if (*s == '\n' || *s == '\r')
-			debug_old_currently_at_start_of_line = true;
-		s++;
-	}
-}
 
 
 /*
@@ -376,8 +346,7 @@ void debugmsg_cpu(struct cpu* cpu, int subsystem, const char *name,
  *  Modify the debug indentation. diff should be +1 to increase, and -1 to
  *  decrease after printing something.
  *
- *  This affects both the older debug() and fatal() functions, and the new
- *  debugmsg/debugmsg_cpu() functions.
+ *  This affects the debugmsg/debugmsg_cpu() functions.
  */
 void debug_indentation(int diff)
 {
@@ -387,113 +356,6 @@ void debug_indentation(int diff)
 		fprintf(stderr, "WARNING: debug_indent too low!\n");
 		debug_indent = 0;
 	}
-}
-
-
-/*
- *  legacy_log():
- *
- *  Lines printed by the older debug() and fatal() functions, as log events
- *  on the control socket. A line is often printed a piece at a time, so
- *  the pieces are collected until a newline; a line with any fatal() part
- *  is a warning, else it is at the debug level. "[ name: message ]" gives
- *  the name and the message.
- */
-static char legacy_line[DEBUG_BUFSIZE];
-static size_t legacy_len = 0;
-static int legacy_level = VERBOSITY_DEBUG;
-
-static void legacy_log(int verbosity, va_list argp, const char *fmt)
-{
-	char buf[DEBUG_BUFSIZE];
-
-	vsnprintf(buf, sizeof(buf), fmt, argp);
-	if (verbosity < legacy_level)
-		legacy_level = verbosity;
-
-	for (char *s = buf; *s; s++) {
-		if (*s != '\n') {
-			if (*s != '\r' && legacy_len < sizeof(legacy_line) - 1)
-				legacy_line[legacy_len++] = *s;
-			continue;
-		}
-
-		legacy_line[legacy_len] = '\0';
-		char *msg = legacy_line, *name = NULL;
-		while (*msg == ' ')
-			msg ++;
-
-		size_t len = strlen(msg);
-		if (msg[0] == '[' && msg[1] == ' ' && len >= 4 &&
-		    strcmp(msg + len - 2, " ]") == 0) {
-			msg[len - 2] = '\0';
-			msg += 2;
-
-			char *colon = strstr(msg, ": ");
-			if (colon != NULL && colon - msg < 32 &&
-			    memchr(msg, ' ', colon - msg) == NULL) {
-				*colon = '\0';
-				name = msg;
-				msg = colon + 2;
-			}
-		}
-
-		if (*msg != '\0' && legacy_level <= control_log_level)
-			control_log(NULL, "legacy", name, legacy_level, msg);
-
-		legacy_len = 0;
-		legacy_level = VERBOSITY_DEBUG;
-	}
-}
-
-
-/*
- *  debug() and fatal():
- *
- *  These are here because of all the legacy code that uses them. Basically,
- *  debug() is mapped to something that is only displayed with verbosity
- *  at the default level, and fatal() is used to always print stuff. With some
- *  hacks to make it work reasonable with -q and when executing normally or
- *  when executing single-stepping.
- */
-void debug(const char *fmt, ...)
-{
-	va_list argp;
-	bool ss = single_step || about_to_enter_single_step;
-	int v = verbose;
-
-	if (control_log_level >= VERBOSITY_WARNING) {
-		va_start(argp, fmt);
-		legacy_log(VERBOSITY_DEBUG, argp, fmt);
-		va_end(argp);
-	}
-	if (emul_executing)
-		v--;
-	if (ss)
-		v++;
-
-	if ((quiet_mode && !ss) || v < 0)
-		return;
-
-	va_start(argp, fmt);
-	va_debug(argp, fmt);
-	va_end(argp);
-}
-
-
-void fatal(const char *fmt, ...)
-{
-	va_list argp;
-
-	if (control_log_level >= VERBOSITY_WARNING) {
-		va_start(argp, fmt);
-		legacy_log(VERBOSITY_WARNING, argp, fmt);
-		va_end(argp);
-	}
-
-	va_start(argp, fmt);
-	va_debug(argp, fmt);
-	va_end(argp);
 }
 
 

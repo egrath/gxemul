@@ -82,29 +82,29 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 			    cpu->machine->main_console_handle);
 		break;
 	case 16:		/*  dma_init()  */
-		debug("[ SIFBIOS dma_init() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS dma_init() ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;		/*  TODO  */
 		break;
 	case 17:		/*  dma_exit()  */
-		debug("[ SIFBIOS dma_exit() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS dma_exit() ]\n");
 		break;
 	case 32:		/*  cmd_init()  */
-		debug("[ SIFBIOS cmd_init() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS cmd_init() ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;		/*  TODO  */
 		break;
 	case 33:		/*  cmd_exit()  */
-		debug("[ SIFBIOS cmd_exit() ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS cmd_exit() ]\n");
 		break;
 	case 48:
-		debug("[ SIFBIOS rpc_init(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS rpc_init(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;		/*  TODO  */
 		break;
 	case 49:
-		debug("[ SIFBIOS rpc_exit(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS rpc_exit(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;		/*  TODO  */
 		break;
 	case 51:
-		debug("[ SIFBIOS rpc_bind(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS rpc_bind(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 1;		/*  TODO  */
 		break;
 	case 64:
@@ -218,7 +218,7 @@ int playstation2_sifbios_emul(struct cpu *cpu)
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;
 		break;
 	case 66:
-		debug("[ SIFBIOS iopmem_free(): TODO ]\n");
+		debugmsg(SUBSYS_PROMEMUL, "ps2_bios", VERBOSITY_DEBUG, "[ SIFBIOS iopmem_free(): TODO ]\n");
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 0;		/*  TODO  */
 		break;
 	default:

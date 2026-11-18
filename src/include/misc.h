@@ -251,8 +251,6 @@ extern int *debugmsg_current_verbosity;
 extern size_t debugmsg_nr_of_subsystems;
 
 void debug_indentation(int diff);
-void debug(const char *fmt, ...);
-void fatal(const char *fmt, ...);
 extern bool fatal_error_dropped;
 void fatal_error(int subsystem, const char *name, const char *fmt, ...);
 void debugmsg_init(void);
