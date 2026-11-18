@@ -44,9 +44,11 @@ struct machine_config;
  *  was closed.  config_ui_available() is false if there is no window
  *  system.  With running, the configuration is that of a machine which is
  *  running (in another gxemul): the editor only saves it, and the window
- *  closes when it is left.
+ *  closes when it is left.  A problem, if given, is shown as an error (e.g.
+ *  why the machine couldn't be started).
  */
 bool config_ui_available(void);
-struct machine_config *config_ui_run(const char *edit_path, bool running);
+struct machine_config *config_ui_run(const char *edit_path, bool running,
+	const char *problem);
 
 #endif	/*  CONFIG_UI_H  */

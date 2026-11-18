@@ -976,9 +976,51 @@ int main(int argc, char *argv[])
 			fatal_error(SUBSYS_STARTUP, "main", "--edit needs a window system.");
 				return 1;
 		}
-		chosen = config_ui_run(edit_path, edit_no_start);
+		chosen = config_ui_run(edit_path, edit_no_start, NULL);
 		if (chosen == NULL)
 			return 0;
+	}
+
+	/*
+	 *  A configuration file that can't be read, or that names a file
+	 *  which isn't there (e.g. a disk image that was moved): show the
+	 *  problem in the configuration window, with the configuration in
+	 *  the editor, instead of exiting.  Not for a machine that a script
+	 *  runs (with --control or --vnc), or without a window system.
+	 */
+	if (config_file != NULL && !want_ui && control_spec == NULL &&
+	    vnc_spec == NULL && config_ui_available()) {
+		char *err = NULL, problem[1000];
+		struct machine_config *c = machine_config_load(config_file,
+		    &err);
+
+		if (c != NULL)
+			err = machine_config_check(c);
+		if (err != NULL) {
+			/*  (The error of machine_config_load() names the
+			    file already.)  */
+			if (c != NULL)
+				snprintf(problem, sizeof(problem),
+				    "Can't start %s: %s", config_file, err);
+			else
+				snprintf(problem, sizeof(problem),
+				    "Can't start: %s", err);
+			/*  (The function: the debugmsg() macro shows nothing
+			    until the verbosity has been set up, below.)  */
+			(debugmsg)(SUBSYS_STARTUP, "main", VERBOSITY_ERROR,
+			    "%s", problem);
+			fflush(NULL);
+			chosen = config_ui_run(c != NULL ? config_file : NULL,
+			    false, problem);
+			machine_config_free(c);
+			free(err);
+			if (chosen == NULL)
+				return 1;
+			/*  As if chosen in the window to begin with (e.g. for
+			    Reset, which starts the chosen one again):  */
+			want_ui = true;
+		} else
+			machine_config_free(c);
 	}
 
 	// -q means that only errors should be shown.

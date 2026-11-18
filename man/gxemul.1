@@ -475,6 +475,15 @@ Configuration file startup:
 .It Ar machine.json
 Start the machine described by
 .Ar machine.json .
+If it can't be read, or a file it names (such as a ROM or a drive image)
+isn't there, the configuration window opens with the problem, and with
+.Ar machine.json
+in its editor if it could be read, instead of gxemul exiting.
+It doesn't with
+.Fl -control
+or
+.Fl -vnc ,
+or without a window system.
 .It Fl -edit Op Ar machine.json
 Open the configuration window, with
 .Ar machine.json

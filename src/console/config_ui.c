@@ -70,10 +70,12 @@ bool config_ui_available(void)
 	return false;
 }
 
-struct machine_config *config_ui_run(const char *edit_path, bool running)
+struct machine_config *config_ui_run(const char *edit_path, bool running,
+	const char *problem)
 {
 	(void) edit_path;
 	(void) running;
+	(void) problem;
 	return NULL;
 }
 
@@ -2910,7 +2912,8 @@ bool config_ui_available(void)
 }
 
 
-struct machine_config *config_ui_run(const char *edit_path, bool running)
+struct machine_config *config_ui_run(const char *edit_path, bool running,
+	const char *problem)
 {
 	SDL_Event ev;
 
@@ -2927,6 +2930,21 @@ struct machine_config *config_ui_run(const char *edit_path, bool running)
 		    SDL_GetError());
 		return NULL;
 	}
+	/*  Without a window system (e.g. over ssh), SDL falls back to a
+	    driver that draws nowhere; nobody would see the window, so don't
+	    wait for it to be closed (unless that driver was asked for):  */
+	{
+		const char *drv = SDL_GetCurrentVideoDriver();
+		if (drv != NULL && getenv("SDL_VIDEODRIVER") == NULL &&
+		    (strcmp(drv, "offscreen") == 0 ||
+		    strcmp(drv, "dummy") == 0)) {
+			fprintf(stderr, "No window system to show the "
+			    "configuration window on.\n");
+			SDL_Quit();
+			return NULL;
+		}
+	}
+
 	/*  SDL2 inhibits the screensaver by default; don't.  */
 	SDL_EnableScreenSaver();
 
@@ -2996,6 +3014,8 @@ struct machine_config *config_ui_run(const char *edit_path, bool running)
 		set_message(false, "The machine is running: the changes take "
 		    "effect when it is restarted");
 	}
+	if (problem != NULL)
+		set_message(true, "%s", problem);
 
 	while (!ui.quit && ui.result == NULL) {
 		if (SDL_WaitEventTimeout(&ev, ui.exporting != NULL ? 1 : 50)) {
