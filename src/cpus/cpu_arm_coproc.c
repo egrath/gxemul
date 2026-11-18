@@ -109,13 +109,13 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			cpu->cd.arm.auxctrl = cpu->cd.arm.r[rd];
 			if ((old_control & ARM_AUXCTRL_MD) !=
 			    (cpu->cd.arm.auxctrl & ARM_AUXCTRL_MD)) {
-				debug("[ setting the minidata cache attribute"
+				debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ setting the minidata cache attribute"
 				    " to 0x%x ]\n", (cpu->cd.arm.auxctrl &
 				    ARM_AUXCTRL_MD) >> ARM_AUXCTRL_MD_SHIFT);
 			}
 			if ((old_control & ARM_AUXCTRL_K) !=
 			    (cpu->cd.arm.auxctrl & ARM_AUXCTRL_K)) {
-				debug("[ %s write buffer coalescing ]\n",
+				debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ %s write buffer coalescing ]\n",
 				    cpu->cd.arm.auxctrl & ARM_AUXCTRL_K?
 				    "Disabling" : "Enabling");
 			}
@@ -134,7 +134,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		cpu->cd.arm.control = cpu->cd.arm.r[rd];
 		if ((old_control & ARM_CONTROL_MMU) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_MMU)) {
-			debug("[ %s the MMU ]\n", cpu->cd.arm.control &
+			debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ %s the MMU ]\n", cpu->cd.arm.control &
 			    ARM_CONTROL_MMU? "enabling" : "disabling");
 			cpu->translate_v2p =
 			    cpu->cd.arm.control & ARM_CONTROL_MMU?
@@ -142,15 +142,15 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		}
 		if ((old_control & ARM_CONTROL_ALIGN) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_ALIGN))
-			debug("[ %s alignment checks ]\n", cpu->cd.arm.control &
+			debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ %s alignment checks ]\n", cpu->cd.arm.control &
 			    ARM_CONTROL_ALIGN? "enabling" : "disabling");
 		if ((old_control & ARM_CONTROL_CACHE) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_CACHE))
-			debug("[ %s the [data] cache ]\n", cpu->cd.arm.control &
+			debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ %s the [data] cache ]\n", cpu->cd.arm.control &
 			    ARM_CONTROL_CACHE? "enabling" : "disabling");
 		if ((old_control & ARM_CONTROL_WBUFFER) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_WBUFFER))
-			debug("[ %s the write buffer ]\n", cpu->cd.arm.control &
+			debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ %s the write buffer ]\n", cpu->cd.arm.control &
 			    ARM_CONTROL_WBUFFER? "enabling" : "disabling");
 
 		old_control &= ~ARM_CONTROL_BIG;
@@ -164,7 +164,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		}
 		if ((old_control & ARM_CONTROL_ICACHE) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_ICACHE))
-			debug("[ %s the icache ]\n", cpu->cd.arm.control &
+			debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ %s the icache ]\n", cpu->cd.arm.control &
 			    ARM_CONTROL_ICACHE? "enabling" : "disabling");
 		/*  TODO: More bits.  */
 		break;
@@ -209,7 +209,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: attempt to read cr7? ]\n");
 			return;
 		}
-		/*  debug("[ arm_coproc_15: cache op: TODO ]\n");  */
+		/*  debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ arm_coproc_15: cache op: TODO ]\n");  */
 		/*  TODO:  */
 		break;
 
@@ -235,7 +235,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 
 	case 13:/*  Process ID Register:  */
 		if (opcode2 != 0)
-			debug("[ arm_coproc_15: PID access, but opcode2 "
+			debugmsg(SUBSYS_CPU, "cpu_arm_coproc", VERBOSITY_DEBUG, "[ arm_coproc_15: PID access, but opcode2 "
 			    "= %i? (should be 0) ]\n", opcode2);
 		if (crm != 0)
 			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ arm_coproc_15: PID access, but crm "

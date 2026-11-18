@@ -317,12 +317,12 @@ void arm_cpu_list_available_types(void)
 
 	i = 0;
 	while (tdefs[i].name != NULL) {
-		debug("%s", tdefs[i].name);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s", tdefs[i].name);
 		for (j=13 - strlen(tdefs[i].name); j>0; j--)
-			debug(" ");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " ");
 		i++;
 		if ((i % 5) == 0 || tdefs[i].name == NULL)
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 	}
 }
 
@@ -348,8 +348,8 @@ void arm_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 	if (gprs) {
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    cpu->pc, &offset);
-		debug("cpu%i:  cpsr = ", x);
-		debug("%s%s%s%s%s%s%s%s%s%s%s",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  cpsr = ", x);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s%s%s%s%s%s%s%s%s%s",
 		    (cpu->cd.arm.cpsr & ARM_FLAG_N)? "N" : "n",
 		    (cpu->cd.arm.cpsr & ARM_FLAG_Z)? "Z" : "z",
 		    (cpu->cd.arm.cpsr & ARM_FLAG_C)? "C" : "c",
@@ -362,134 +362,134 @@ void arm_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		    (cpu->cd.arm.cpsr & ARM_FLAG_F)? "F" : "f",
     		    (cpu->cd.arm.cpsr & ARM_FLAG_T)? "T" : "t");
 		if (mode < ARM_MODE_USR32)
-			debug("   pc =  0x%07x", (int)(cpu->pc & 0x03ffffff));
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "   pc =  0x%07x", (int)(cpu->pc & 0x03ffffff));
 		else
-			debug("   pc = 0x%08x", (int)cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "   pc = 0x%08x", (int)cpu->pc);
 
-		debug("  <%s>\n", symbol != NULL? symbol : " no symbol ");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
 		for (i=0; i<N_ARM_REGS; i++) {
 			if ((i % 4) == 0)
-				debug("cpu%i:", x);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:", x);
 			if (i != ARM_PC)
-				debug("  %s = 0x%08x", arm_regname[i],
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "  %s = 0x%08x", arm_regname[i],
 				    (int)cpu->cd.arm.r[i]);
 			if ((i % 4) == 3)
-				debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 	}
 
 	if (coprocs & 1) {
 		int m = cpu->cd.arm.cpsr & ARM_FLAG_MODE;
-		debug("cpu%i:  cpsr = 0x%08x (", x, cpu->cd.arm.cpsr);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  cpsr = 0x%08x (", x, cpu->cd.arm.cpsr);
 		switch (m) {
 		case ARM_MODE_USR32:
-			debug("USR32)\n"); break;
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "USR32)\n"); break;
 		case ARM_MODE_SYS32:
-			debug("SYS32)\n"); break;
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "SYS32)\n"); break;
 		case ARM_MODE_FIQ32:
-			debug("FIQ32)\n"); break;
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "FIQ32)\n"); break;
 		case ARM_MODE_IRQ32:
-			debug("IRQ32)\n"); break;
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "IRQ32)\n"); break;
 		case ARM_MODE_SVC32:
-			debug("SVC32)\n"); break;
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "SVC32)\n"); break;
 		case ARM_MODE_ABT32:
-			debug("ABT32)\n"); break;
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ABT32)\n"); break;
 		case ARM_MODE_UND32:
-			debug("UND32)\n"); break;
-		default:debug("unimplemented)\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UND32)\n"); break;
+		default:debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "unimplemented)\n");
 		}
 
 		if (m != ARM_MODE_USR32 && m != ARM_MODE_SYS32) {
-			debug("cpu%i:  usr r8-14:", x);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  usr r8-14:", x);
 			for (i=0; i<7; i++)
-				debug(" %08x", cpu->cd.arm.default_r8_r14[i]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " %08x", cpu->cd.arm.default_r8_r14[i]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 
 		if (m != ARM_MODE_FIQ32) {
-			debug("cpu%i:  fiq r8-14:", x);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  fiq r8-14:", x);
 			for (i=0; i<7; i++)
-				debug(" %08x", cpu->cd.arm.fiq_r8_r14[i]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " %08x", cpu->cd.arm.fiq_r8_r14[i]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 
 		if (m != ARM_MODE_IRQ32) {
-			debug("cpu%i:  irq r13-14:", x);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  irq r13-14:", x);
 			for (i=0; i<2; i++)
-				debug(" %08x", cpu->cd.arm.irq_r13_r14[i]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " %08x", cpu->cd.arm.irq_r13_r14[i]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 
 		if (m != ARM_MODE_SVC32) {
-			debug("cpu%i:  svc r13-14:", x);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  svc r13-14:", x);
 			for (i=0; i<2; i++)
-				debug(" %08x", cpu->cd.arm.svc_r13_r14[i]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " %08x", cpu->cd.arm.svc_r13_r14[i]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 
 		if (m != ARM_MODE_ABT32) {
-			debug("cpu%i:  abt r13-14:", x);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  abt r13-14:", x);
 			for (i=0; i<2; i++)
-				debug(" %08x", cpu->cd.arm.abt_r13_r14[i]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " %08x", cpu->cd.arm.abt_r13_r14[i]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 
 		if (m != ARM_MODE_UND32) {
-			debug("cpu%i:  und r13-14:", x);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  und r13-14:", x);
 			for (i=0; i<2; i++)
-				debug(" %08x", cpu->cd.arm.und_r13_r14[i]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " %08x", cpu->cd.arm.und_r13_r14[i]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 	}
 
 	if (coprocs & 2) {
-		debug("cpu%i:  control = 0x%08x\n", x, cpu->cd.arm.control);
-		debug("cpu%i:      MMU:               %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  control = 0x%08x\n", x, cpu->cd.arm.control);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      MMU:               %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_MMU? "enabled" : "disabled");
-		debug("cpu%i:      alignment checks:  %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      alignment checks:  %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_ALIGN? "enabled" : "disabled");
-		debug("cpu%i:      [data] cache:      %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      [data] cache:      %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_CACHE? "enabled" : "disabled");
-		debug("cpu%i:      instruction cache: %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      instruction cache: %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_ICACHE? "enabled" : "disabled");
-		debug("cpu%i:      write buffer:      %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      write buffer:      %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_WBUFFER? "enabled" : "disabled");
-		debug("cpu%i:      prog32:            %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      prog32:            %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_PROG32? "yes" : "no (using prog26)");
-		debug("cpu%i:      data32:            %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      data32:            %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_DATA32? "yes" : "no (using data26)");
-		debug("cpu%i:      endianness:        %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      endianness:        %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_BIG? "big endian" : "little endian");
-		debug("cpu%i:      high vectors:      %s\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      high vectors:      %s\n", x,
 		    cpu->cd.arm.control &
 		    ARM_CONTROL_V? "yes (0xffff0000)" : "no");
 
 		/*  TODO: auxctrl on which CPU types?  */
 		if (cpu->cd.arm.cpu_type.flags & ARM_XSCALE) {
-			debug("cpu%i:  auxctrl = 0x%08x\n", x,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  auxctrl = 0x%08x\n", x,
 			    cpu->cd.arm.auxctrl);
-			debug("cpu%i:      minidata cache attr = 0x%x\n", x,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      minidata cache attr = 0x%x\n", x,
 			    (cpu->cd.arm.auxctrl & ARM_AUXCTRL_MD)
 			    >> ARM_AUXCTRL_MD_SHIFT);
-			debug("cpu%i:      page table memory attr: %i\n", x,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      page table memory attr: %i\n", x,
 			    (cpu->cd.arm.auxctrl & ARM_AUXCTRL_P)? 1 : 0);
-			debug("cpu%i:      write buffer coalescing: %s\n", x,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:      write buffer coalescing: %s\n", x,
 			    (cpu->cd.arm.auxctrl & ARM_AUXCTRL_K)?
 			    "disabled" : "enabled");
 		}
 
-		debug("cpu%i:  ttb = 0x%08x  dacr = 0x%08x\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  ttb = 0x%08x  dacr = 0x%08x\n", x,
 		    cpu->cd.arm.ttb, cpu->cd.arm.dacr);
-		debug("cpu%i:  fsr = 0x%08x  far = 0x%08x\n", x,
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:  fsr = 0x%08x  far = 0x%08x\n", x,
 		    cpu->cd.arm.fsr, cpu->cd.arm.far);
 	}
 }
@@ -602,32 +602,32 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 	retaddr = cpu->pc;
 
 	if (!quiet_mode) {
-		debug("[ arm_exception(): ");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "[ arm_exception(): ");
 		switch (exception_nr) {
 		case ARM_EXCEPTION_RESET:
 			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "RESET: TODO");
 			break;
 		case ARM_EXCEPTION_UND:
-			debug("UNDEFINED");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNDEFINED");
 			break;
 		case ARM_EXCEPTION_SWI:
-			debug("SWI");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "SWI");
 			break;
 		case ARM_EXCEPTION_PREF_ABT:
-			debug("PREFETCH ABORT");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "PREFETCH ABORT");
 			break;
 		case ARM_EXCEPTION_IRQ:
-			debug("IRQ");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "IRQ");
 			break;
 		case ARM_EXCEPTION_FIQ:
-			debug("FIQ");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "FIQ");
 			break;
 		case ARM_EXCEPTION_DATA_ABT:
-			debug("DATA ABORT, far=0x%08x fsr=0x%02x",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "DATA ABORT, far=0x%08x fsr=0x%02x",
 			    cpu->cd.arm.far, cpu->cd.arm.fsr);
 			break;
 		}
-		debug(" ]\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " ]\n");
 	}
 
 	switch (exception_nr) {
@@ -753,7 +753,7 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		iw = ib[0] + (ib[1]<<8);
 	else
 		iw = ib[1] + (ib[0]<<8);
-	debug("%04x    \t", (int)iw);
+	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%04x    \t", (int)iw);
 
 	int main_opcode = (iw >> 12) & 15;
 	int r6 = (iw >> 6) & 7;
@@ -783,14 +783,14 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 	case 0x1:
 		if (op11 <= 2) {
 			// Move shifted register.
-			debug("%ss\tr%i,r%i,#%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%ss\tr%i,r%i,#%i\n",
 				op11 & 1 ? "lsr" : (op11 & 2 ? "asr" : "lsl"),
 				rd,
 				rs_rb,				
 				offset5);
 		} else {
 			// Add/subtract.
-			debug("%s\tr%i,r%i,%s%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\tr%i,r%i,%s%i\n",
 				addsub_op ? "subs" : "adds",
 				rd,
 				rs_rb,
@@ -804,12 +804,12 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		// Move/compare/add/subtract immediate.
 		rd = (iw >> 8) & 7;
 		if (op11 & 2) {
-			debug("%s\tr%i,r%i,#%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\tr%i,r%i,#%i\n",
 				op11 & 1 ? "subs" : "adds",
 				rd, rd,
 				iw & 0xff);
 		} else {
-			debug("%s\tr%i,#%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\tr%i,#%i\n",
 				op11 & 1 ? "cmp" : "movs",
 				rd,
 				iw & 0xff);
@@ -820,17 +820,17 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		switch (op10) {
 		case 0:
 			// ALU operations.
-			debug("%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\t%s,%s",
 				arm_thumb_dpiname[(iw >> 6) & 15],
 				arm_regname[rd],
 				arm_regname[rs_rb]);
 			
 			if (running) {
-				debug("\t\t; %s = 0x%x", arm_regname[rd], cpu->cd.arm.r[rd]);
-				debug(", %s = 0x%x", arm_regname[rs_rb], cpu->cd.arm.r[rs_rb]);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t\t; %s = 0x%x", arm_regname[rd], cpu->cd.arm.r[rd]);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", %s = 0x%x", arm_regname[rs_rb], cpu->cd.arm.r[rs_rb]);
 			}
 
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 
 		case 1:
@@ -844,36 +844,36 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 			case 1:
 			case 2:
 				if (h1 == 0 && h2 == 0) {
-					debug("TODO main_opcode = %i, op10 = %i, h1 AND h2 are zero?!\n", main_opcode, op10);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO main_opcode = %i, op10 = %i, h1 AND h2 are zero?!\n", main_opcode, op10);
 				} else {
 					if (op8 == 0)
-						debug("add\tr%i,r%i,r%i\n", rd, rd, rs_rb);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "add\tr%i,r%i,r%i\n", rd, rd, rs_rb);
 					else {
 						if (op8 == 2 && rd == rs_rb)
-							debug("nop\n");	// mov rX,rX
+							debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "nop\n");	// mov rX,rX
 						else {
-							debug("%s\t%s,%s",
+							debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\t%s,%s",
 							    op8 == 1 ? "cmp" : "mov",
 							    	arm_regname[rd],
 							    	arm_regname[rs_rb]);
 							if (running) {
-								debug("\t\t; %s = 0x%x", arm_regname[rd], cpu->cd.arm.r[rd]);
-								debug(", %s = 0x%x", arm_regname[rs_rb], cpu->cd.arm.r[rs_rb]);
+								debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t\t; %s = 0x%x", arm_regname[rd], cpu->cd.arm.r[rd]);
+								debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", %s = 0x%x", arm_regname[rs_rb], cpu->cd.arm.r[rs_rb]);
 							}
-							debug("\n");
+							debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 						}
 					}
 				}
 				break;
 			case 3:
 				if (h1 == 1) {
-					debug("TODO main_opcode = %i, op10 = %i, h1 set for BX?!\n", main_opcode, op10);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO main_opcode = %i, op10 = %i, h1 set for BX?!\n", main_opcode, op10);
 				} else {
-					debug("bx\t%s\n", arm_regname[rs_rb]);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "bx\t%s\n", arm_regname[rs_rb]);
 
 					// Extra newline when returning from function.
 					// if (running && rs_rb == ARM_LR)
-					//	debug("\n");
+					//	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 				}
 				break;
 			}
@@ -882,7 +882,7 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		case 2:
 		case 3:
 			// PC-relative load.
-			debug("ldr\t%s,[pc,#%i]\t; ",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldr\t%s,[pc,#%i]\t; ",
 				arm_regname[rd8],
 				(iw & 0xff) * 4);
 
@@ -890,12 +890,12 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 			// It works with real code, but is not the same as that of
 			// http://engold.ui.ac.ir/~nikmehr/Appendix_B2.pdf
 			tmp = (dumpaddr & ~3) + 4 + (iw & 0xff) * 4;
-			debug("0x%x", (int)tmp);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x", (int)tmp);
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    tmp, &offset);
 			if (symbol != NULL)
-				debug(" <%s>", symbol);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " <%s>", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 		break;
@@ -903,16 +903,16 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 	case 0x5:
 		// Load/Store with register offset.
 		switch ((iw >> 9) & 7) {
-		case 0:	debug("str"); break;
-		case 1:	debug("strh"); break;
-		case 2:	debug("strb"); break;
-		case 3:	debug("ldrsb"); break;
-		case 4:	debug("ldr"); break;
-		case 5:	debug("ldrh"); break;
-		case 6:	debug("ldrb"); break;
-		case 7:	debug("ldrsh"); break;
+		case 0:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "str"); break;
+		case 1:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "strh"); break;
+		case 2:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "strb"); break;
+		case 3:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldrsb"); break;
+		case 4:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldr"); break;
+		case 5:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldrh"); break;
+		case 6:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldrb"); break;
+		case 7:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldrsh"); break;
 		}
-		debug("\t%s,[%s,%s]\n",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t%s,[%s,%s]\n",
 			arm_regname[rd],
 			arm_regname[rs_rb],
 			arm_regname[r6]);
@@ -921,7 +921,7 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 	case 0x6:
 	case 0x7:
 		// Load/Store with immediate offset.
-		debug("%s%s\tr%i,[r%i,#%i]\n",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s\tr%i,[r%i,#%i]\n",
 			l_bit ? "ldr" : "str",
 			b_bit ? "b" : "",
 			rd,
@@ -931,7 +931,7 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 
 	case 0x8:
 		// Load/Store halfword.
-		debug("%sh\tr%i,[r%i,#%i]\n",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%sh\tr%i,[r%i,#%i]\n",
 			l_bit ? "ldr" : "str",
 			rd,
 			rs_rb,
@@ -940,7 +940,7 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 
 	case 0x9:
 		// Load/Store stack pointer relative.
-		debug("%s\t%s,[sp,#%i]\n",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\t%s,[sp,#%i]\n",
 			l_bit ? "ldr" : "str",
 			arm_regname[rd8],
 			4 * (iw & 0xff));
@@ -948,7 +948,7 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 
 	case 0xa:
 		// add rx, sp or pc plus imm
-		debug("add\t%s,%s,#%i\n",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "add\t%s,%s,#%i\n",
 			arm_regname[rd8],
 			iw & 0x0800 ? "sp" : "pc",
 			4 * (iw & 0xff));
@@ -959,54 +959,54 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		switch (condition_code) {
 		case 0x0:
 			tmp = (iw & 0x7f) << 2;
-			debug(iw & 0x80 ? "sub" : "add");
-			debug("\tsp,#%i\n", tmp);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, iw & 0x80 ? "sub" : "add");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\tsp,#%i\n", tmp);
 			break;
 		case 0x4:
 		case 0x5:
 		case 0xc:
 		case 0xd:
-			debug(condition_code & 8 ? "pop" : "push");
-			debug("\t{");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, condition_code & 8 ? "pop" : "push");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t{");
 			for (tmp=0; tmp<8; ++tmp) {
 				if (iw & (1 << tmp))
-					debug("%s,", arm_regname[tmp]);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[tmp]);
 			}
 			if (condition_code & 1) {			
 				if (condition_code & 8)
-					debug("pc");
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "pc");
 				else
-					debug("lr");
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "lr");
 			}
-			debug("}\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "}\n");
 
 			// Extra newline when returning from function.
 			// if (running && (condition_code & 8) && (condition_code & 1))
-			//	debug("\n");
+			//	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		default:
-			debug("TODO: unimplemented opcode 0x%x,0x%x\n", main_opcode, condition_code);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,0x%x\n", main_opcode, condition_code);
 		}
 		break;
 		
 	case 0xd:
 		if (condition_code < 0xe) {
 			// Conditional branch.
-			debug("b%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "b%s\t", condition);
 			tmp = (iw & 0xff) << 1;
 			if (tmp & 0x100)
 				tmp |= 0xfffffe00;
 			tmp = (int32_t)(dumpaddr + 4 + tmp);
-			debug("0x%x", (int)tmp);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x", (int)tmp);
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    tmp, &offset);
 			if (symbol != NULL)
-				debug(" \t<%s>", symbol);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		} else if (condition_code == 0xf) {
-			debug("swi\t#0x%x\n", iw & 0xff);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "swi\t#0x%x\n", iw & 0xff);
 		} else {
-			debug("UNIMPLEMENTED\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNIMPLEMENTED\n");
 		}
 		break;
 
@@ -1015,25 +1015,25 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		if (iw & 0x0800) {
 			uint32_t addr = (dumpaddr + 4 + (cpu->cd.arm.tmp_branch + (((iw >> 1) & 0x3ff) << 2))) & ~3;
 			
-			debug("blx\t");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "blx\t");
 			if (running) {
-				debug("0x%x", addr);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x", addr);
 				symbol = get_symbol_name(&cpu->machine->symbol_context, addr, &offset);
 				if (symbol != NULL)
-					debug(" \t<%s>", symbol);
-				debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			} else
-				debug("offset depending on prefix at runtime\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "offset depending on prefix at runtime\n");
 		} else {
 			tmp = (iw & 0x7ff) << 1;
 			if (tmp & 0x800)
 				tmp |= 0xfffff000;
 			tmp = (int32_t)(dumpaddr + 4 + tmp);
-			debug("b\t0x%x", (int)tmp);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "b\t0x%x", (int)tmp);
 			symbol = get_symbol_name(&cpu->machine->symbol_context, tmp, &offset);
 			if (symbol != NULL)
-				debug(" \t<%s>", symbol);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		}
 		break;
 
@@ -1041,26 +1041,26 @@ int arm_cpu_disassemble_instr_thumb(struct cpu *cpu, unsigned char *ib,
 		if (iw & 0x0800) {
 			uint32_t addr = (dumpaddr + 2 + (cpu->cd.arm.tmp_branch + ((iw & 0x7ff) << 1)));
 			
-			debug("bl\t");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "bl\t");
 			if (running) {
-				debug("0x%x", addr);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x", addr);
 				symbol = get_symbol_name(&cpu->machine->symbol_context, addr, &offset);
 				if (symbol != NULL)
-					debug(" \t<%s>", symbol);
-				debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			} else
-				debug("offset depending on prefix at runtime\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "offset depending on prefix at runtime\n");
 		} else {
 			tmp32 = iw & 0x07ff;
 			if (tmp32 & 0x0400)
 				tmp32 |= 0xfffff800;
 			tmp32 <<= 12;
-			debug("bprefix\t0x%x\n", tmp32);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "bprefix\t0x%x\n", tmp32);
 		}
 		break;
 
 	default:
-		debug("TODO: unimplemented opcode 0x%x\n", main_opcode);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x\n", main_opcode);
 	}
 
 	return sizeof(uint16_t);
@@ -1102,12 +1102,12 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 		char* symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL && offset == 0)
-			debug("<%s>\n", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "<%s>\n", symbol);
 
 		if (cpu->machine->ncpus > 1)
-			debug("cpu%i:\t", cpu->cpu_id);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:\t", cpu->cpu_id);
 
-		debug("%08x:  ", (int)addr & ~1);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%08x:  ", (int)addr & ~1);
 		arm_cpu_disassemble_instr_thumb(cpu, ib, 1, cpu->pc);
 	}
 
@@ -1361,7 +1361,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 					cpu->cd.arm.flags |= ARM_F_N;
 				break;
 			default:
-				debug("TODO: unimplemented DPI %i at pc 0x%08x\n", (iw >> 6) & 15, (int)cpu->pc);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented DPI %i at pc 0x%08x\n", (iw >> 6) & 15, (int)cpu->pc);
 				cpu->running = 0;
 				return 0;
 			}
@@ -1376,7 +1376,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 				cpu->cd.arm.r[rd] = cpu->cd.arm.r[r3];
 				if (r3 == ARM_PC) {
 					if (cpu->pc & 1) {
-						debug("TODO: double check with manual whether it is correct to use old pc + 8 here; at pc 0x%08x\n", (int)cpu->pc);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: double check with manual whether it is correct to use old pc + 8 here; at pc 0x%08x\n", (int)cpu->pc);
 						cpu->running = 0;
 						return 0;
 					}
@@ -1401,13 +1401,13 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 					if (rm == ARM_LR && cpu->machine->show_trace_tree)
 						cpu_functioncall_trace_return(cpu);
 				} else {
-					debug("TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
 					cpu->running = 0;
 					return 0;
 				}
 				break;
 			default:
-				debug("TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
 				cpu->running = 0;
 				return 0;
 			}
@@ -1437,7 +1437,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			break;
 
 		default:
-			debug("TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op10, (int)cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op10, (int)cpu->pc);
 			cpu->running = 0;
 			return 0;
 		}
@@ -1556,7 +1556,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 				cpu->pc += sizeof(uint16_t);
 			return 1;
 		default:
-			debug("TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
 			cpu->running = 0;
 			return 0;
 		}
@@ -1623,7 +1623,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			arm_exception(cpu, ARM_EXCEPTION_SWI);
 			return 1;
 		} else {
-			debug("TODO: unimplemented opcode 0x%x, non-branch, at pc 0x%08x\n", main_opcode, (int)cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x, non-branch, at pc 0x%08x\n", main_opcode, (int)cpu->pc);
 			cpu->running = 0;
 			return 0;
 		}
@@ -1676,7 +1676,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 		break;
 
 	default:
-		debug("TODO: unimplemented opcode 0x%x at pc 0x%08x\n", main_opcode, (int)cpu->pc);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x at pc 0x%08x\n", main_opcode, (int)cpu->pc);
 		cpu->running = 0;
 		return 0;
 	}
@@ -1714,12 +1714,12 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset == 0)
-		debug("<%s>\n", symbol);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debug("cpu%i:\t", cpu->cpu_id);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpu%i:\t", cpu->cpu_id);
 
-	debug("%08x:  ", (int)dumpaddr & ~1);
+	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%08x:  ", (int)dumpaddr & ~1);
 
 	if (dumpaddr & 1)
 		return arm_cpu_disassemble_instr_thumb(cpu, ib, running, dumpaddr);
@@ -1728,7 +1728,7 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		iw = ib[0] + (ib[1]<<8) + (ib[2]<<16) + (ib[3]<<24);
 	else
 		iw = ib[3] + (ib[2]<<8) + (ib[1]<<16) + (ib[0]<<24);
-	debug("%08x", (int)iw);
+	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%08x", (int)iw);
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -1744,19 +1744,19 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	r8 = (iw >> 8) & 15;
 
 	if (iw == 0xf10c0040) {
-		debug("cpsid\tf\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpsid\tf\n");
 		return sizeof(uint32_t);
 	} else if (iw == 0xf10c0080) {
-		debug("cpsid\ti\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cpsid\ti\n");
 		return sizeof(uint32_t);
 	} else if (iw == 0xf57ff04f) {
-		debug("dsb\tsy\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "dsb\tsy\n");
 		return sizeof(uint32_t);
 	} else if (iw == 0xf57ff05f) {
-		debug("dmb\tsy\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "dmb\tsy\n");
 		return sizeof(uint32_t);
 	} else if (iw == 0xf57ff06f) {
-		debug("isb\tsy\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "isb\tsy\n");
 		return sizeof(uint32_t);
 	} else if ((iw >> 28) == 0xf) {
 		switch (main_opcode) {
@@ -1766,14 +1766,14 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			if (tmp & 0x800000)
 				tmp |= 0xff000000;
 			tmp = (int32_t)(dumpaddr + 8 + 4*tmp + (main_opcode == 0xb? 2 : 0)) + 1;
-			debug("blx\t0x%x", (int)tmp);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "blx\t0x%x", (int)tmp);
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    tmp, &offset);
 			if (symbol != NULL)
-				debug(" \t<%s>", symbol);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
-		default:debug("UNIMPLEMENTED\n");
+		default:debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNIMPLEMENTED\n");
 		}
 		return sizeof(uint32_t);
 	}
@@ -1793,21 +1793,21 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 */
 		if ((iw & 0x0ff00fff) == 0x01900f9f) {
 			/*  ldrex rt[,rn]:  */
-			debug("ldrex%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ldrex%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[r16]);
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 		if ((iw & 0x0ff00ff0) == 0x01800f90) {
 			/*  strex rd,rt[,rn]:  */
-			debug("strex%s\t%s,%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "strex%s\t%s,%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15],
 				arm_regname[r16]);
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
@@ -1816,12 +1816,12 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0000 0110dddd aaaammmm 1001nnnn  mls rd,rn,rm,ra
 		 */
 		if ((iw & 0x0ff000f0) == 0x00600090) {
-			debug("mls%s\t", condition);
-			debug("%s,", arm_regname[r16]);
-			debug("%s,", arm_regname[iw & 15]);
-			debug("%s,", arm_regname[r8]);
-			debug("%s", arm_regname[r12]);
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "mls%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[iw & 15]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[r8]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s", arm_regname[r12]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
@@ -1831,14 +1831,14 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 */
 		if ((iw & 0x0fc000f0) == 0x00000090) {
 			int a_bit = (iw >> 21) & 1;
-			debug("%s%s%s\t", a_bit? "mla" : "mul",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s%s\t", a_bit? "mla" : "mul",
 			    condition, s_bit? "s" : "");
-			debug("%s,", arm_regname[r16]);
-			debug("%s,", arm_regname[iw & 15]);
-			debug("%s", arm_regname[r8]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[iw & 15]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s", arm_regname[r8]);
 			if (a_bit)
-				debug(",%s", arm_regname[r12]);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%s", arm_regname[r12]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
@@ -1849,10 +1849,10 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		if ((iw & 0x0f8000f0) == 0x00800090) {
 			int a_bit = (iw >> 21) & 1;
 			u_bit = (iw >> 22) & 1;
-			debug("%s%sl%s%s\t", u_bit? "s" : "u",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%sl%s%s\t", u_bit? "s" : "u",
 			    a_bit? "mla" : "mul", condition, s_bit? "s" : "");
-			debug("%s,%s,", arm_regname[r12], arm_regname[r16]);
-			debug("%s,%s\n", arm_regname[iw&15], arm_regname[r8]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,", arm_regname[r12], arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s\n", arm_regname[iw&15], arm_regname[r8]);
 			break;
 		}
 
@@ -1863,9 +1863,9 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0001 0110nnnn dddd0000 0101mmmm  qdsub Rd,Rm,Rn
 		 */
 		if ((iw & 0x0f900ff0) == 0x01000050) {
-			debug("q%s%s%s\t", iw & 0x400000? "d" : "",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "q%s%s%s\t", iw & 0x400000? "d" : "",
 			    iw & 0x200000? "sub" : "add", condition);
-			debug("%s,%s,%s\n", arm_regname[r12],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,%s\n", arm_regname[r12],
 			    arm_regname[iw&15], arm_regname[r16]);
 			break;
 		}
@@ -1875,7 +1875,7 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 */
 		if ((iw & 0x0ff000d0) == 0x01200010) {
 			l_bit = iw & 0x20;
-			debug("b%sx%s\t%s\n", l_bit? "l" : "", condition,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "b%sx%s\t%s\n", l_bit? "l" : "", condition,
 			    arm_regname[iw & 15]);
 			break;
 		}
@@ -1887,25 +1887,25 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 */
 		if ((iw & 0x0fb0fff0) == 0x0120f000 ||
 		    (iw & 0x0fb0f000) == 0x0320f000) {
-			debug("msr%s\t%s", condition, (iw&0x400000)? "S":"C");
-			debug("PSR_");
-			if (iw & (1<<19)) debug("f");
-			if (iw & (1<<18)) debug("s");
-			if (iw & (1<<17)) debug("x");
-			if (iw & (1<<16)) debug("c");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "msr%s\t%s", condition, (iw&0x400000)? "S":"C");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "PSR_");
+			if (iw & (1<<19)) debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "f");
+			if (iw & (1<<18)) debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "s");
+			if (iw & (1<<17)) debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "x");
+			if (iw & (1<<16)) debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "c");
 			if (iw & 0x02000000) {
 				int r = (iw >> 7) & 30;
 				uint32_t b = iw & 0xff;
 				while (r-- > 0)
 					b = (b >> 1) | ((b & 1) << 31);
-				debug(",#0x%x\n", b);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",#0x%x\n", b);
 			} else
-				debug(",%s\n", arm_regname[iw & 15]);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%s\n", arm_regname[iw & 15]);
 			break;
 		}
 		if ((iw & 0x0fbf0fff) == 0x010f0000) {
-			debug("mrs%s\t", condition);
-			debug("%s,%sPSR\n", arm_regname[r12],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "mrs%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%sPSR\n", arm_regname[r12],
 			    (iw&0x400000)? "S":"C");
 			break;
 		}
@@ -1914,8 +1914,8 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0001 0B00nnnn dddd0000 1001mmmm    SWP Rd,Rm,[Rn]
 		 */
 		if ((iw & 0x0fb00ff0) == 0x01000090) {
-			debug("swp%s%s\t", condition, (iw&0x400000)? "b":"");
-			debug("%s,%s,[%s]\n", arm_regname[r12],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "swp%s%s\t", condition, (iw&0x400000)? "b":"");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,[%s]\n", arm_regname[r12],
 			    arm_regname[iw & 15], arm_regname[r16]);
 			break;
 		}
@@ -1924,7 +1924,7 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0001 0010iiii iiiiiiii 0111iiii    BKPT immed16
 		 */
 		if ((iw & 0x0ff000f0) == 0x01200070) {
-			debug("bkpt%s\t0x%04x\n", condition,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "bkpt%s\t0x%04x\n", condition,
 			    ((iw & 0x000fff00) >> 4) + (iw & 0xf));
 			break;
 		}
@@ -1933,8 +1933,8 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0001 01101111 dddd1111 0001mmmm    CLZ Rd,Rm
 		 */
 		if ((iw & 0x0fff0ff0) == 0x016f0f10) {
-			debug("clz%s\t", condition);
-			debug("%s,%s\n", arm_regname[r12], arm_regname[iw&15]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "clz%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s\n", arm_regname[r12], arm_regname[iw&15]);
 			break;
 		}
 
@@ -1942,8 +1942,8 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0011 0000mmm ddddmmm mmmmmmm    MOVW Rd,imm
 		 */
 		if ((iw & 0x0ff00000) == 0x03000000) {
-			debug("movw%s\t", condition);
-			debug("%s,#%i\n", arm_regname[r12],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "movw%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,#%i\n", arm_regname[r12],
 				((iw & 0xf0000) >> 4) | (iw & 0xfff));
 			break;
 		}
@@ -1952,8 +1952,8 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0011 0100mmm ddddmmm mmmmmmm    MOVT Rd,imm
 		 */
 		if ((iw & 0x0ff00000) == 0x03400000) {
-			debug("movt%s\t", condition);
-			debug("%s,#%i\n", arm_regname[r12],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "movt%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,#%i\n", arm_regname[r12],
 				((iw & 0xf0000) >> 4) | (iw & 0xfff));
 			break;
 		}
@@ -1966,43 +1966,43 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx0001 0010dddd 0000ssss 1y10mmmm  SMULWy Rd,Rm,Rs
 		 */
 		if ((iw & 0x0ff00090) == 0x01000080) {
-			debug("smla%s%s%s\t",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "smla%s%s%s\t",
 			    iw & 0x20? "t" : "b", iw & 0x40? "t" : "b",
 			    condition);
-			debug("%s,%s,%s,%s\n", arm_regname[r16],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,%s,%s\n", arm_regname[r16],
 			    arm_regname[iw&15], arm_regname[r8],
 			    arm_regname[r12]);
 			break;
 		}
 		if ((iw & 0x0ff00090) == 0x01400080) {
-			debug("smlal%s%s%s\t",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "smlal%s%s%s\t",
 			    iw & 0x20? "t" : "b", iw & 0x40? "t" : "b",
 			    condition);
-			debug("%s,%s,%s,%s\n", arm_regname[r12],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,%s,%s\n", arm_regname[r12],
 			    arm_regname[r16], arm_regname[iw&15],
 			    arm_regname[r8]);
 			break;
 		}
 		if ((iw & 0x0ff000b0) == 0x01200080) {
-			debug("smlaw%s%s\t", iw & 0x40? "t" : "b",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "smlaw%s%s\t", iw & 0x40? "t" : "b",
 			    condition);
-			debug("%s,%s,%s,%s\n", arm_regname[r16],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,%s,%s\n", arm_regname[r16],
 			    arm_regname[iw&15], arm_regname[r8],
 			    arm_regname[r12]);
 			break;
 		}
 		if ((iw & 0x0ff0f090) == 0x01600080) {
-			debug("smul%s%s%s\t",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "smul%s%s%s\t",
 			    iw & 0x20? "t" : "b", iw & 0x40? "t" : "b",
 			    condition);
-			debug("%s,%s,%s\n", arm_regname[r16],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,%s\n", arm_regname[r16],
 			    arm_regname[iw&15], arm_regname[r8]);
 			break;
 		}
 		if ((iw & 0x0ff0f0b0) == 0x012000a0) {
-			debug("smulw%s%s\t", iw & 0x40? "t" : "b",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "smulw%s%s\t", iw & 0x40? "t" : "b",
 			    condition);
-			debug("%s,%s,%s\n", arm_regname[r16],
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,%s\n", arm_regname[r16],
 			    arm_regname[iw&15], arm_regname[r8]);
 			break;
 		}
@@ -2020,7 +2020,7 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			 *  signed store,  or  unsigned byte load/store
 			 */
 			if (!l_bit && (iw & 0xd0) == 0xd0 && (r12 & 1)) {
-				debug("TODO: r12 odd, not load/store\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: r12 odd, not load/store\n");
 				break;
 			}
 			/*  Semi-generic case:  */
@@ -2032,44 +2032,44 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				else
 					op = "ld";
 			}
-			debug("%sr%s", op, condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%sr%s", op, condition);
 			if (!l_bit && (iw & 0xd0) == 0xd0) {
-				debug("d");		/*  Double-register  */
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "d");		/*  Double-register  */
 			} else {
 				if (iw & 0x40)
-					debug("s");	/*  signed  */
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "s");	/*  signed  */
 				if (iw & 0x20)
-					debug("h");	/*  half-word  */
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "h");	/*  half-word  */
 				else
-					debug("b");	/*  byte  */
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "b");	/*  byte  */
 			}
-			debug("\t%s,[%s", arm_regname[r12], arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t%s,[%s", arm_regname[r12], arm_regname[r16]);
 			if (p_bit) {
 				/*  Pre-index:  */
 				if (regform)
-					debug(",%s%s", u_bit? "" : "-",
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%s%s", u_bit? "" : "-",
 					    arm_regname[iw & 15]);
 				else {
 					if (imm != 0)
-						debug(",#%s%i", u_bit? "" : "-",
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",#%s%i", u_bit? "" : "-",
 						    imm);
 				}
-				debug("]%s\n", w_bit? "!" : "");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "]%s\n", w_bit? "!" : "");
 			} else {
 				/*  Post-index:  */
-				debug("],");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "],");
 				if (regform)
-					debug("%s%s\n", u_bit? "" : "-",
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s\n", u_bit? "" : "-",
 					    arm_regname[iw & 15]);
 				else
-					debug("#%s%i\n", u_bit? "" : "-", imm);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "#%s%i\n", u_bit? "" : "-", imm);
 			}
 			break;
 		}
 
 		/*  Other special cases:  */
 		if (iw & 0x80 && !(main_opcode & 2) && iw & 0x10) {
-			debug("UNIMPLEMENTED reg (c!=0), t odd\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNIMPLEMENTED reg (c!=0), t odd\n");
 			break;
 		}
 
@@ -2080,12 +2080,12 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx001a aaaSnnnn ddddrrrr bbbbbbbb  Immediate form
 		 */
 
-		debug("%s%s%s\t", arm_dpiname[secondary_opcode],
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s%s\t", arm_dpiname[secondary_opcode],
 		    condition, s_bit? "s" : "");
 		if (arm_dpi_uses_d[secondary_opcode])
-			debug("%s,", arm_regname[r12]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[r12]);
 		if (arm_dpi_uses_n[secondary_opcode])
-			debug("%s,", arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,", arm_regname[r16]);
 
 		if (main_opcode & 2) {
 			/*  Immediate form:  */
@@ -2094,34 +2094,34 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			while (r-- > 0)
 				b = (b >> 1) | ((b & 1) << 31);
 			if (b < 15)
-				debug("#%i", b);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "#%i", b);
 			else
-				debug("#0x%x", b);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "#0x%x", b);
 		} else {
 			/*  Register form:  */
 			int t = (iw >> 4) & 7;
 			int c = (iw >> 7) & 31;
-			debug("%s", arm_regname[iw & 15]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s", arm_regname[iw & 15]);
 			switch (t) {
 			case 0:	if (c != 0)
-					debug(", lsl #%i", c);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", lsl #%i", c);
 				break;
-			case 1:	debug(", lsl %s", arm_regname[c >> 1]);
+			case 1:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", lsl %s", arm_regname[c >> 1]);
 				break;
-			case 2:	debug(", lsr #%i", c? c : 32);
+			case 2:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", lsr #%i", c? c : 32);
 				break;
-			case 3:	debug(", lsr %s", arm_regname[c >> 1]);
+			case 3:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", lsr %s", arm_regname[c >> 1]);
 				break;
-			case 4:	debug(", asr #%i", c? c : 32);
+			case 4:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", asr #%i", c? c : 32);
 				break;
-			case 5:	debug(", asr %s", arm_regname[c >> 1]);
+			case 5:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", asr %s", arm_regname[c >> 1]);
 				break;
 			case 6:	if (c != 0)
-					debug(", ror #%i", c);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", ror #%i", c);
 				else
-					debug(", rrx");
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", rrx");
 				break;
-			case 7:	debug(", ror %s", arm_regname[c >> 1]);
+			case 7:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", ror %s", arm_regname[c >> 1]);
 				break;
 			}
 
@@ -2132,10 +2132,10 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				    symbol_context, cpu->cd.arm.r[iw & 15],
 				    &offset);
 				if (symbol != NULL)
-					debug(" \t<%s>", symbol);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
 			}
 		}
-		debug("\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		break;
 	case 0x4:				/*  Single Data Transfer  */
 	case 0x5:
@@ -2144,130 +2144,130 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		/*  Special cases first:  */
 		if ((iw & 0xfc70f000) == 0xf450f000) {
 			/*  Preload:  */
-			debug("pld\t[%s]\n", arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "pld\t[%s]\n", arm_regname[r16]);
 			break;
 		}
 
 		if ((iw & 0x0fff0ff0) == 0x06bf0f30) {
 			/*  rev rd,rm:  */
-			debug("rev%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "rev%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fff03f0) == 0x06bf0070) {
 			/*  sxth rd,rm[,rot]:  */
-			debug("sxth%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "sxth%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
 			int rot = ((iw & 0xc00) >> 10) << 3;
 			if (rot != 0)
-				debug(",%i", rot);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", rot);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fff03f0) == 0x06ef0070) {
 			/*  uxtb rd,rm[,rot]:  */
-			debug("uxtb%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "uxtb%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
 			int rot = ((iw & 0xc00) >> 10) << 3;
 			if (rot != 0)
-				debug(",%i", rot);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", rot);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		// Note: uxtab is decoded AFTER uxtb.
 		if ((iw & 0x0ff003f0) == 0x06e00070) {
 			/*  uxtab rd,rn,rm[,rot]:  */
-			debug("uxtab%s\t%s,%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "uxtab%s\t%s,%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[r16],
 				arm_regname[iw & 15]);
 			int rot = ((iw & 0xc00) >> 10) << 3;
 			if (rot != 0)
-				debug(",%i", rot);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", rot);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fff03f0) == 0x06ff0070) {
 			/*  uxth rd,rm[,rot]:  */
-			debug("uxth%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "uxth%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
 			int rot = ((iw & 0xc00) >> 10) << 3;
 			if (rot != 0)
-				debug(",%i", rot);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", rot);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		// Note: uxtah is decoded AFTER uxth.
 		if ((iw & 0x0ff003f0) == 0x06f00070) {
 			/*  uxtah rd,rn,rm[,rot]:  */
-			debug("uxtah%s\t%s,%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "uxtah%s\t%s,%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[r16],
 				arm_regname[iw & 15]);
 			int rot = ((iw & 0xc00) >> 10) << 3;
 			if (rot != 0)
-				debug(",%i", rot);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", rot);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fe00070) == 0x07c00010) {
 			/*  bfi rd,rn,#lsb,#width:  */
-			debug("bfi%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "bfi%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
 			int lsb = (iw >> 7) & 31;
 			int msb = (iw >> 16) & 31;
 			int width = msb - lsb + 1;
-			debug(",%i", lsb);
-			debug(",%i", width);
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", lsb);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", width);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fe00070) == 0x07e00050) {
 			/*  ubfx rd,rn,#lsb,#width:  */
-			debug("ubfx%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ubfx%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
-			debug(",%i", (iw >> 7) & 31);
-			debug(",%i", 1 + ((iw >> 16) & 31));
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", (iw >> 7) & 31);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", 1 + ((iw >> 16) & 31));
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fe00070) == 0x07a00050) {
 			/*  sbfx rd,rn,#lsb,#width:  */
-			debug("sbfx%s\t%s,%s",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "sbfx%s\t%s,%s",
 				condition,
 				arm_regname[r12],
 				arm_regname[iw & 15]);
-			debug(",%i", (iw >> 7) & 31);
-			debug(",%i", 1 + ((iw >> 16) & 31));
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", (iw >> 7) & 31);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%i", 1 + ((iw >> 16) & 31));
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 			break;
 		}
 
 		if ((iw & 0x0fffffff) == 0x07f001f2) {
-			debug("linux_bug%s\t; see https://github.com/torvalds/linux/blob/master/arch/arm/include/asm/bug.h\n",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "linux_bug%s\t; see https://github.com/torvalds/linux/blob/master/arch/arm/include/asm/bug.h\n",
 				condition);
 			break;
 		}
@@ -2279,55 +2279,55 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 */
 		p_bit = main_opcode & 1;
 		if (main_opcode >= 6 && iw & 0x10) {
-			debug("TODO: single data transf. but 0x10\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: single data transf. but 0x10\n");
 			break;
 		}
-		debug("%s%s%s", l_bit? "ldr" : "str",
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s%s", l_bit? "ldr" : "str",
 		    condition, b_bit? "b" : "");
 		if (!p_bit && w_bit)
-			debug("t");
-		debug("\t%s,[%s", arm_regname[r12], arm_regname[r16]);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "t");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t%s,[%s", arm_regname[r12], arm_regname[r16]);
 		if ((iw & 0x0e000000) == 0x04000000) {
 			/*  Immediate form:  */
 			uint32_t imm = iw & 0xfff;
 			if (!p_bit)
-				debug("]");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "]");
 			if (imm != 0)
-				debug(",#%s%i", u_bit? "" : "-", imm);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",#%s%i", u_bit? "" : "-", imm);
 			if (p_bit)
-				debug("]");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "]");
 		} else if ((iw & 0x0e000010) == 0x06000000) {
 			/*  Register form:  */
 			if (!p_bit)
-				debug("]");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "]");
 			if ((iw & 0xfff) != 0)
-				debug(",%s%s", u_bit? "" : "-",
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",%s%s", u_bit? "" : "-",
 				    arm_regname[iw & 15]);
 			if ((iw & 0xff0) != 0x000) {
 				int c = (iw >> 7) & 31;
 				int t = (iw >> 4) & 7;
 				switch (t) {
 				case 0:	if (c != 0)
-						debug(", lsl #%i", c);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", lsl #%i", c);
 					break;
-				case 2:	debug(", lsr #%i", c? c : 32);
+				case 2:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", lsr #%i", c? c : 32);
 					break;
-				case 4:	debug(", asr #%i", c? c : 32);
+				case 4:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", asr #%i", c? c : 32);
 					break;
 				case 6:	if (c != 0)
-						debug(", ror #%i", c);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", ror #%i", c);
 					else
-						debug(", rrx");
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ", rrx");
 					break;
 				}
 			}
 			if (p_bit)
-				debug("]");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "]");
 		} else {
-			debug("UNKNOWN\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNKNOWN\n");
 			break;
 		}
-		debug("%s", (p_bit && w_bit)? "!" : "");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s", (p_bit && w_bit)? "!" : "");
 		if ((iw & 0x0f000000) == 0x05000000 &&
 		    (r16 == ARM_PC || running)) {
 			unsigned char tmpw[4];
@@ -2340,9 +2340,9 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    addr, &offset);
 			if (symbol != NULL)
-				debug(" \t<%s", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s", symbol);
 			else
-				debug(" \t<0x%08x", addr);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<0x%08x", addr);
 			if ((l_bit && cpu->memory_rw(cpu, cpu->mem, addr, tmpw,
 			    b_bit? 1 : sizeof(tmpw), MEM_READ, NO_EXCEPTIONS))
 			    || (!l_bit && running)) {
@@ -2359,65 +2359,65 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 					if (r12 == ARM_PC)
 						addr = cpu->pc + 8;
 				}
-				debug(": ");
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ": ");
 				if (b_bit)
-					debug("%i", tmpw[0]);
+					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%i", tmpw[0]);
 				else {
 					symbol = get_symbol_name(&cpu->machine->
 					    symbol_context, addr, &offset);
 					if (symbol != NULL)
-						debug("%s", symbol);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s", symbol);
 					else if ((int32_t)addr > -256 &&
 						    (int32_t)addr < 256)
-						debug("%i", addr);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%i", addr);
 					else
-						debug("0x%x", addr);
+						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x", addr);
 				}
 			}
-			debug(">");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ">");
 		}
-		debug("\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		break;
 	case 0x8:				/*  Block Data Transfer  */
 	case 0x9:
 		/*  xxxx100P USWLnnnn llllllll llllllll  */
 		p_bit = main_opcode & 1;
 		s_bit = b_bit;
-		debug("%s%s", l_bit? "ldm" : "stm", condition);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s", l_bit? "ldm" : "stm", condition);
 		switch (u_bit * 2 + p_bit) {
-		case 0:	debug("da"); break;
-		case 1:	debug("db"); break;
-		case 2:	debug("ia"); break;
-		case 3:	debug("ib"); break;
+		case 0:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "da"); break;
+		case 1:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "db"); break;
+		case 2:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ia"); break;
+		case 3:	debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "ib"); break;
 		}
-		debug("\t%s", arm_regname[r16]);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\t%s", arm_regname[r16]);
 		if (w_bit)
-			debug("!");
-		debug(",{");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "!");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",{");
 		n = 0;
 		for (i=0; i<16; i++)
 			if ((iw >> i) & 1) {
-				debug("%s%s", (n > 0)? ",":"", arm_regname[i]);
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s", (n > 0)? ",":"", arm_regname[i]);
 				n++;
 			}
-		debug("}");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "}");
 		if (s_bit)
-			debug("^");
-		debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "^");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		break;
 	case 0xa:				/*  B: branch  */
 	case 0xb:				/*  BL: branch and link  */
-		debug("b%s%s\t", main_opcode == 0xa? "" : "l", condition);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "b%s%s\t", main_opcode == 0xa? "" : "l", condition);
 		tmp = (iw & 0x00ffffff) << 2;
 		if (tmp & 0x02000000)
 			tmp |= 0xfc000000;
 		tmp = (int32_t)(dumpaddr + tmp + 8);
-		debug("0x%x", (int)tmp);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x", (int)tmp);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    tmp, &offset);
 		if (symbol != NULL)
-			debug(" \t<%s>", symbol);
-		debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, " \t<%s>", symbol);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		break;
 	case 0xc:				/*  Coprocessor  */
 	case 0xd:				/*  LDC/STC  */
@@ -2426,26 +2426,26 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		 *  xxxx1100 0101nnnn ddddcccc oooommmm    MRRC c,op,Rd,Rn,CRm
 		 */
 		if ((iw & 0x0fe00fff) == 0x0c400000) {
-			debug("%s%s\t", iw & 0x100000? "mra" : "mar",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s\t", iw & 0x100000? "mra" : "mar",
 			    condition);
 			if (iw & 0x100000)
-				debug("%s,%s,acc0\n",
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s,%s,acc0\n",
 				    arm_regname[r12], arm_regname[r16]);
 			else
-				debug("acc0,%s,%s\n",
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "acc0,%s,%s\n",
 				    arm_regname[r12], arm_regname[r16]);
 			break;
 		}
 		if ((iw & 0x0fe00000) == 0x0c400000) {
-			debug("%s%s\t", iw & 0x100000? "mrrc" : "mcrr",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s\t", iw & 0x100000? "mrrc" : "mcrr",
 			    condition);
-			debug("%i,%i,%s,%s,cr%i\n", r8, (iw >> 4) & 15,
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%i,%i,%s,%s,cr%i\n", r8, (iw >> 4) & 15,
 			    arm_regname[r12], arm_regname[r16], iw & 15);
 			break;
 		}
 
 		/*  xxxx110P UNWLnnnn DDDDpppp oooooooo LDC/STC  */
-		debug("TODO: coprocessor LDC/STC\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: coprocessor LDC/STC\n");
 		break;
 	case 0xe:				/*  CDP (Coprocessor Op)  */
 		/*				    or MRC/MCR!
@@ -2455,44 +2455,44 @@ int arm_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		if ((iw & 0x0ff00ff0) == 0x0e200010) {
 			/*  Special case: mia* DSP instructions  */
 			switch ((iw >> 16) & 0xf) {
-			case  0: debug("mia"); break;
-			case  8: debug("miaph"); break;
-			case 12: debug("miaBB"); break;
-			case 13: debug("miaTB"); break;
-			case 14: debug("miaBT"); break;
-			case 15: debug("miaTT"); break;
-			default: debug("UNKNOWN mia vector instruction?");
+			case  0: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "mia"); break;
+			case  8: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "miaph"); break;
+			case 12: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "miaBB"); break;
+			case 13: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "miaTB"); break;
+			case 14: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "miaBT"); break;
+			case 15: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "miaTT"); break;
+			default: debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNKNOWN mia vector instruction?");
 			}
-			debug("%s\t", condition);
-			debug("acc%i,%s,%s\n", ((iw >> 5) & 7),
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "acc%i,%s,%s\n", ((iw >> 5) & 7),
 			    arm_regname[iw & 15], arm_regname[r12]);
 			break;
 		}
 		if (iw & 0x10) {
-			debug("%s%s\t",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%s%s\t",
 			    (iw & 0x00100000)? "mrc" : "mcr", condition);
-			debug("%i,%i,r%i,cr%i,cr%i,%i",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%i,%i,r%i,cr%i,cr%i,%i",
 			    (int)((iw >> 8) & 15), (int)((iw >>21) & 7),
 			    (int)((iw >>12) & 15), (int)((iw >>16) & 15),
 			    (int)((iw >> 0) & 15), (int)((iw >> 5) & 7));
 		} else {
-			debug("cdp%s\t", condition);
-			debug("%i,%i,cr%i,cr%i,cr%i",
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "cdp%s\t", condition);
+			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "%i,%i,cr%i,cr%i,cr%i",
 			    (int)((iw >> 8) & 15),
 			    (int)((iw >>20) & 15),
 			    (int)((iw >>12) & 15),
 			    (int)((iw >>16) & 15),
 			    (int)((iw >> 0) & 15));
 			if ((iw >> 5) & 7)
-				debug(",0x%x", (int)((iw >> 5) & 7));
+				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, ",0x%x", (int)((iw >> 5) & 7));
 		}
-		debug("\n");
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "\n");
 		break;
 	case 0xf:				/*  SWI  */
-		debug("swi%s\t", condition);
-		debug("0x%x\n", (int)(iw & 0x00ffffff));
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "swi%s\t", condition);
+		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "0x%x\n", (int)(iw & 0x00ffffff));
 		break;
-	default:debug("UNIMPLEMENTED\n");
+	default:debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "UNIMPLEMENTED\n");
 	}
 
 	return sizeof(uint32_t);
