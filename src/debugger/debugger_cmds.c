@@ -56,6 +56,70 @@ static void debugger_cmd_breakpoint(struct machine *m, char *args)
 		printf("  add addr      add a breakpoint for address addr\n");
 		printf("  delete x      delete breakpoint nr x\n");
 		printf("  show          show current breakpoints\n");
+		printf("  subsystem name level  break when a debugmsg for subsystem\n");
+		printf("                name is emitted at verbosity <= level\n");
+		printf("                (level: error, warning, info, debug)\n");
+		printf("  subsystem delete x    delete subsystem breakpoint nr x\n");
+		printf("  subsystem show        show subsystem breakpoints\n");
+		return;
+	}
+
+	/*  Subsystem (debugmsg) breakpoints:  */
+	if (strncmp(args, "subsystem ", 10) == 0) {
+		char *p = args + 10;
+		while (*p == ' ')
+			p++;
+
+		if (strncmp(p, "show", 4) == 0) {
+			if (m->breakpoints.n_subsys == 0)
+				printf("No subsystem breakpoints set.\n");
+			for (i=0; i<m->breakpoints.n_subsys; i++)
+				printf("%3i: subsystem %s (%i), level <= %s, hits %i\n",
+				    i, debugmsg_subsystem_name_by_id(
+				    m->breakpoints.subsys_id[i]),
+				    m->breakpoints.subsys_id[i],
+				    debugmsg_level_name(m->breakpoints.subsys_level[i]),
+				    m->breakpoints.subsys_hits[i]);
+			return;
+		}
+
+		if (strncmp(p, "delete ", 7) == 0) {
+			int x = atoi(p + 7);
+			if (m->breakpoints.n_subsys == 0) {
+				printf("No subsystem breakpoints set.\n");
+				return;
+			}
+			if (x < 0 || x >= m->breakpoints.n_subsys) {
+				printf("Invalid subsystem breakpoint nr %i.\n", x);
+				return;
+			}
+			debugger_subsys_breakpoint_delete(m, x);
+			return;
+		}
+
+		/*  "subsystem <name> <level>":  */
+		char *name = p;
+		while (*p != '\0' && *p != ' ')
+			p++;
+		if (*p == '\0') {
+			printf("syntax: breakpoint subsystem <name> <level>\n");
+			return;
+		}
+		*p = '\0';
+		p++;
+		while (*p == ' ')
+			p++;
+
+		int level;
+		if (!debugmsg_parse_level(p, &level)) {
+			printf("Invalid level '%s' (use error, warning, info, debug)\n", p);
+			return;
+		}
+
+		i = debugger_subsys_breakpoint_add(m, name, level);
+		printf("subsystem breakpoint %i: %s at level <= %s\n",
+		    i, debugmsg_subsystem_name_by_id(m->breakpoints.subsys_id[i]),
+		    debugmsg_level_name(level));
 		return;
 	}
 
@@ -64,6 +128,16 @@ static void debugger_cmd_breakpoint(struct machine *m, char *args)
 			printf("No breakpoints set.\n");
 		for (i=0; i<m->breakpoints.n; i++)
 			show_breakpoint(m, i);
+		if (m->breakpoints.n_subsys == 0)
+			printf("No subsystem breakpoints set.\n");
+		else
+			for (i=0; i<m->breakpoints.n_subsys; i++)
+				printf("%3i: subsystem %s (%i), level <= %s, hits %i\n",
+				    i, debugmsg_subsystem_name_by_id(
+				    m->breakpoints.subsys_id[i]),
+				    m->breakpoints.subsys_id[i],
+				    debugmsg_level_name(m->breakpoints.subsys_level[i]),
+				    m->breakpoints.subsys_hits[i]);
 		return;
 	}
 

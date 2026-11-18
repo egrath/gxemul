@@ -107,6 +107,10 @@ static size_t debug_indent = 0;
 static void debugmsg_va(struct cpu* cpu, int subsystem,
 	const char *name, int verbosity, va_list argp, const char *fmt)
 {
+	/*  Subsystem breakpoints ("breakpoint subsystem <name> <level>"):  */
+	if (subsystem >= 0 && (size_t)subsystem < debugmsg_nr_of_subsystems)
+		debugger_subsys_breakpoint_check(cpu, subsystem, verbosity);
+
 	/*  For log events on the control socket, at its own level:  */
 	if (verbosity <= control_log_level) {
 		char msg[DEBUG_BUFSIZE];
@@ -377,7 +381,7 @@ bool fatal_error_dropped = false;
  *  CPU, flush its dyntrans caches (so the debugger sees consistent state),
  *  and ask the emulation loop to drop to the debugger console.
  */
-static void fatal_error_cpu_stop(struct cpu *cpu)
+void fatal_error_cpu_stop(struct cpu *cpu)
 {
 	if (cpu == NULL)
 		return;

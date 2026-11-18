@@ -1020,6 +1020,16 @@ void emul_run(struct emul *emul)
 			about_to_enter_single_step = false;
 		}
 
+		/*
+		 *  A subsystem breakpoint fired during machine_run():
+		 *  enter the debugger before running any more instructions:
+		 */
+		if (subsys_bp_dropped) {
+			subsys_bp_dropped = false;
+			debugger_reset();
+			single_step = true;
+		}
+
 		if (single_step)
 			debugger();
 
@@ -1047,6 +1057,17 @@ void emul_run(struct emul *emul)
 			any_machine_still_running |= machine_run(emul->machines[i]);
 
 		emul_executing = false;
+
+		if (subsys_bp_dropped) {
+			subsys_bp_dropped = false;
+			emul_executing = true;
+			debugger_reset();
+			single_step = true;
+			debugger();
+			emul_executing = false;
+			if (emul_shutdown)
+				break;
+		}
 
 		if (fatal_error_dropped) {
 			fatal_error_dropped = false;

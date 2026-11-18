@@ -44,12 +44,17 @@ void debugger_reset(void);
 void debugger_init(struct emul *emul);
 int debugger_breakpoint_add(struct machine *m, const char *expr);
 void debugger_breakpoint_delete(struct machine *m, int i);
+int debugger_subsys_breakpoint_add(struct machine *m, const char *subsys_name,
+	int level);
+void debugger_subsys_breakpoint_delete(struct machine *m, int i);
+bool debugger_subsys_breakpoint_check(struct cpu *cpu, int subsystem, int verbosity);
 void debugger_set_stop_reason(const char *reason);
 bool debugger_is_stopped(void);
 void debugger_ctl_continue(void);
 void debugger_ctl_step(int n);
 void debugger_ctl_stop(const char *reason);
 void debugger_drop_to_console(const char *reason);
+extern volatile bool subsys_bp_dropped;
 
 /*  debugger_expr.c:  */
 #define	PARSE_NOMATCH		0

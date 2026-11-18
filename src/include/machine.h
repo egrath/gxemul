@@ -65,6 +65,16 @@ struct breakpoints {
 	int		*id;		/*  stable, unlike the index  */
 
 	int		next_id;
+
+	/*  Subsystem (debugmsg) breakpoints: entry i triggers when a
+	    debugmsg with subsystem id subsys_id[i] is emitted at a
+	    verbosity level <= level[i].  n_subsys counts only entries
+	    of the first n entries... no — separate array:  */
+	int		n_subsys;
+	int		*subsys_id;
+	int		*subsys_level;
+	int		*subsys_hits;	/*  number of times triggered  */
+	int		subsys_next_id;
 };
 
 struct statistics {

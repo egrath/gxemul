@@ -70,11 +70,13 @@ extern int verbose;
  */
 
 bool single_step = false;
+volatile bool subsys_bp_dropped = false;
 bool about_to_enter_single_step = false;
 bool debugger_enter_at_end_of_run = false;
 volatile int single_step_breakpoint = 0;
 
 extern bool emul_shutdown;
+extern bool emul_executing;
 
 int old_quiet_mode = 0;
 
@@ -255,6 +257,91 @@ void debugger_breakpoint_delete(struct machine *m, int i)
 	for (i=0; i<m->ncpus; i++)
 		if (m->cpus[i]->translation_cache != NULL)
 			cpu_create_or_reset_tc(m->cpus[i]);
+}
+
+
+/*
+ *  debugger_subsys_breakpoint_add():
+ *
+ *  Adds a breakpoint that triggers when a debugmsg() for subsystem
+ *  'subsys_name' is emitted at verbosity level <= 'level'.  Returns the
+ *  index, or -1 on error.
+ */
+int debugger_subsys_breakpoint_add(struct machine *m, const char *subsys_name,
+	int level)
+{
+	int subsys = debugmsg_subsystem_lookup(subsys_name);
+	if (subsys < 0) {
+		/*  Register dynamically, so it can be set before device init:  */
+		subsys = debugmsg_register_subsystem(subsys_name);
+	}
+
+	int i = m->breakpoints.n_subsys;
+	CHECK_ALLOCATION(m->breakpoints.subsys_id = (int *) realloc(
+	    m->breakpoints.subsys_id, sizeof(int) * (i + 1)));
+	CHECK_ALLOCATION(m->breakpoints.subsys_level = (int *) realloc(
+	    m->breakpoints.subsys_level, sizeof(int) * (i + 1)));
+	CHECK_ALLOCATION(m->breakpoints.subsys_hits = (int *) realloc(
+	    m->breakpoints.subsys_hits, sizeof(int) * (i + 1)));
+
+	m->breakpoints.subsys_id[i] = subsys;
+	m->breakpoints.subsys_level[i] = level;
+	m->breakpoints.subsys_hits[i] = 0;
+	m->breakpoints.n_subsys ++;
+
+	return i;
+}
+
+
+/*
+ *  debugger_subsys_breakpoint_delete():
+ */
+void debugger_subsys_breakpoint_delete(struct machine *m, int i)
+{
+	if (i < 0 || i >= m->breakpoints.n_subsys)
+		return;
+
+	for (; i<m->breakpoints.n_subsys-1; i++) {
+		m->breakpoints.subsys_id[i]    = m->breakpoints.subsys_id[i+1];
+		m->breakpoints.subsys_level[i] = m->breakpoints.subsys_level[i+1];
+		m->breakpoints.subsys_hits[i]  = m->breakpoints.subsys_hits[i+1];
+	}
+	m->breakpoints.n_subsys --;
+}
+
+
+/*
+ *  debugger_subsys_breakpoint_check():
+ *
+ *  Called from debugmsg_va() for every message.  If any subsystem
+ *  breakpoint matches (subsystem id and verbosity <= level), count the
+ *  hit and, if a CPU context is available, ask the emulation to stop and
+ *  drop into the debugger.  Returns true if a breakpoint triggered.
+ */
+bool debugger_subsys_breakpoint_check(struct cpu *cpu, int subsystem, int verbosity)
+{
+	struct machine *m = cpu != NULL ? cpu->machine : NULL;
+	if (m == NULL)
+		return false;
+
+	for (int i = 0; i < m->breakpoints.n_subsys; i++) {
+		if (m->breakpoints.subsys_id[i] != subsystem)
+			continue;
+		if (verbosity > m->breakpoints.subsys_level[i])
+			continue;
+
+		m->breakpoints.subsys_hits[i] ++;
+
+		if (cpu != NULL && emul_executing && !single_step) {
+			debugger_set_stop_reason("subsystem breakpoint");
+			single_step_breakpoint = 2;	/*  not an address bp  */
+			fatal_error_cpu_stop(cpu);
+			subsys_bp_dropped = true;
+			debugger_ctl_stop("subsystem breakpoint");
+		}
+		return true;
+	}
+	return false;
 }
 
 

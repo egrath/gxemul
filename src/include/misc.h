@@ -255,6 +255,7 @@ extern bool fatal_error_dropped;
 void fatal_error(int subsystem, const char *name, const char *fmt, ...);
 void fatal_error_cpu(struct cpu *cpu, int subsystem, const char *name,
 	const char *fmt, ...);
+void fatal_error_cpu_stop(struct cpu *cpu);
 void debugmsg_init(void);
 int debugmsg_register_subsystem(const char* name);
 int debugmsg_subsystem_lookup(const char *name);
