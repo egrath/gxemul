@@ -5883,3 +5883,18 @@ Changelog for GXemul:
 
 
 ==============  RELEASE 1.0.33  ==============
+
+20261117	Motorola M88K: ld.d with r0 as destination now loads the second
+		  word into r1, as on the 88100. It wrote the second word over
+		  the PID control register instead, which made the System V/88
+		  exception return path return through stale SNIP/SFIP and
+		  panic (kernel data fault) e.g. when quitting the demos on the
+		  CAFE88 Open CD.
+		MVME393: mouse button releases without movement and quick
+		  clicks reach the guest; capitals and shifted symbols typed
+		  through the control socket or VNC are sent with Shift; the
+		  keyboard queue holds 1024 events.
+
+
+
+==============  RELEASE 1.0.34  ==============
