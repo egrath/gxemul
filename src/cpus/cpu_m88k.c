@@ -1428,13 +1428,13 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				if (iw & 0x400)
 					scale = 4;
 				else
-					debug(".bu"), scale = 1;
+					{ debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".bu"); scale = 1; }
 			} else {
 				/*  ld  */
 				if ((iw & 0xf00) < 0xc00)
-					debug(".hu"), scale = 2;
+					{ debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".hu"); scale = 2; }
 				else
-					debug(".bu"), scale = 1;
+					{ debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".bu"); scale = 1; }
 			}
 			if (iw & 0x100)
 				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".usr");

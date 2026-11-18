@@ -1280,7 +1280,7 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", ");
 		if (cache_op==0)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "index invalidate");
 		if (cache_op==1)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "index load tag");
-		if (cache_op==2)	debug("index store tag"), showtag=1;
+		if (cache_op==2)	{ debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "index store tag"); showtag=1; }
 		if (cache_op==3)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "create dirty exclusive");
 		if (cache_op==4)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "hit invalidate");
 		if (cache_op==5)     debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "fill OR hit writeback invalidate");
