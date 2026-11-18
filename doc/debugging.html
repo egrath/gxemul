@@ -47,11 +47,13 @@ SUCH DAMAGE.
 <ul>
 	<li><a href="#intro">Introduction to debugging code using GXemul</a>
 	<li><a href="#launching">Launching the emulator</a>
+	<li><a href="#log">Debug logging (subsystems, verbosity, destinations)</a>
 	<li><a href="#unassemble">Unassembling machine code</a>
 	<li><a href="#reg">Dumping CPU registers</a>
 	<li><a href="#dump">Dumping memory contents</a>
 	<li><a href="#step">Continuing execution or Single-stepping</a>
 	<li><a href="#breakpoints">Breakpoints</a>
+	<li><a href="#subsysbp">Subsystem breakpoints</a>
 	<li><a href="#trace">Function call tracing</a>
 	<li><a href="#capture">Screenshots and videos</a>
 	<li><a href="#media">Changing CD-ROMs and tapes</a>
@@ -139,6 +141,49 @@ Simple setup...
 GXemul> 
 </pre>
 
+
+
+<a name="log"></a><h4>Debug logging (subsystems, verbosity, destinations)</h4>
+
+<p>All diagnostic output from the emulator goes through one framework, with a
+<b>subsystem</b> (e.g. <tt>cpu</tt>, <tt>disk</tt>, <tt>net</tt>, <tt>device</tt>,
+<tt>promemul</tt>, <tt>machine</tt>, plus one per device such as <tt>le</tt> or
+<tt>dec21143</tt>), a <b>verbosity level</b> (<tt>error</tt>, <tt>warning</tt>,
+<tt>info</tt>, <tt>debug</tt>) and a set of <b>destinations</b> (console, stderr,
+log file). Errors are always shown on the console.
+
+<p>By default, only warnings and errors are shown, and only on the console. To
+see more, use <tt>--log</tt> to pick a destination and <tt>-v</tt> (repeatable)
+or the <tt>log</tt> command in the debugger to raise verbosity:
+
+<pre>
+$ <b>gxemul -e 3max -v -v --log console -d disk.img -d bc:netbsd.iso</b>
+    model: DECstation 5000/200 (3MAX, KN02)
+    cpu: R3000 (32-bit, I+D = 4+4 KB, L2 = 0 KB)
+    ...
+</pre>
+
+<p>From the <tt>GXemul&gt;</tt> prompt (or via <a href="control.html">--ctl</a>):
+
+<pre>
+GXemul> <b>log output</b>                          # show destinations and levels
+GXemul> <b>log cpu debug</b>                       # set one subsystem's level
+GXemul> <b>log ALL warning</b>                     # set all subsystems
+GXemul> <b>log console on</b>                      # send debug output to the console
+GXemul> <b>log stderr on</b>                       # ... or to stderr
+GXemul> <b>log file /tmp/gxemul.log</b>            # ... or to a file
+GXemul> <b>quiet on</b>                            # all subsystems to ERROR only
+</pre>
+
+<p>Levels can also be set before startup with the <tt>GXEMUL_LOGLEVEL</tt>
+environment variable, e.g.
+<tt>GXEMUL_LOGLEVEL="disk=debug,net=info,ALL=warning"</tt>, and a default log
+file with <tt>GXEMUL_LOGFILE=/tmp/gxemul.log</tt>.
+
+<p>Fatal errors inside the emulator (e.g. an unimplemented device access) do not
+kill the process: they are reported at <tt>error</tt> level, the offending CPU is
+stopped, and the emulator drops to the <tt>GXemul&gt;</tt> prompt so you can
+inspect registers and memory before continuing or quitting.
 
 
 <a name="unassemble"></a><h4>Unassembling machine code</h4>
@@ -377,9 +422,36 @@ le0: 32 receive buffers, 8 transmit buffers
 s0014a170: e84400a6	bcnd	eq0,r4,0x0014a408	; &lt;bcopy_out>
 BREAKPOINT: pc = 0x14a170
 (The instruction has not yet executed.)
-GXemul> 
+GXemul>
 </pre>
 
+
+<a name="subsysbp"></a><h4>Subsystem breakpoints</h4>
+
+<p>In addition to address breakpoints, you can break into the debugger when a
+debug message is emitted for a given <b>subsystem</b> at or below a given
+<b>level</b>:
+
+<pre>
+GXemul> <b>breakpoint subsystem disk warning</b>
+subsystem breakpoint 0: disk at level <= warning
+GXemul> <b>breakpoint subsystem show</b>
+  0: subsystem disk (2), level <= warning, hits 0
+GXemul> <b>c</b>
+...
+disk: [ WARNING: ... ]
+GXemul>                                       &lt;-- stopped on the subsystem breakpoint
+GXemul> <b>breakpoint subsystem show</b>
+  0: subsystem disk (2), level <= warning, hits 1
+GXemul> <b>breakpoint subsystem delete 0</b>
+</pre>
+
+<p>Levels are <tt>error</tt>, <tt>warning</tt>, <tt>info</tt>, <tt>debug</tt>;
+the breakpoint triggers for messages with verbosity &lt;= the given level. Hit
+counts are shown by <tt>breakpoint show</tt> / <tt>breakpoint subsystem show</tt>.
+This works from the <tt>GXemul&gt;</tt> prompt and via
+<a href="control.html">--ctl</a> <tt>raw</tt> commands. Subsystem names can be
+listed with <tt>log output</tt>.
 
 
 <a name="trace"></a><h4>Function call tracing</h4>
