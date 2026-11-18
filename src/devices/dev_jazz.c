@@ -239,7 +239,7 @@ DEVICE_TICK(jazz)
 	    && (d->int_enable_mask & 2) /* Hm? */ ) {
 		d->interval -= 2;
 		if (d->interval <= 0) {
-			/*  debug("[ jazz: interval timer interrupt ]\n");
+			/*  debugmsg(SUBSYS_DEVICE, "dev_jazz", VERBOSITY_DEBUG, "[ jazz: interval timer interrupt ]\n");
 			  INTERRUPT_ASSERT(d->jazz_timer_irq);  */
 		}
 
@@ -430,7 +430,7 @@ DEVICE_ACCESS(jazz_led)
 	case 0:
 		if (writeflag == MEM_WRITE) {
 			d->led = idata;
-			debug("[ jazz_led: write to LED: 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_jazz", VERBOSITY_DEBUG, "[ jazz_led: write to LED: 0x%02x ]\n",
 			    (int)idata);
 		} else {
 			odata = d->led;
@@ -483,7 +483,7 @@ DEVICE_ACCESS(jazz_a0)
 			idata = ((idata ^ 0xff) & 0xff) << 8;
 			d->isa_int_enable_mask =
 			    (d->isa_int_enable_mask & 0xff) | idata;
-			debug("[ jazz_isa_a0: setting isa_int_enable_mask "
+			debugmsg(SUBSYS_DEVICE, "dev_jazz", VERBOSITY_DEBUG, "[ jazz_isa_a0: setting isa_int_enable_mask "
 			    "to 0x%04x ]\n", (int)d->isa_int_enable_mask);
 
 			reassert_isa_interrupts(d);
@@ -534,7 +534,7 @@ DEVICE_ACCESS(jazz_20)
 			idata = (idata ^ 0xff) & 0xff;
 			d->isa_int_enable_mask =
 			    (d->isa_int_enable_mask & 0xff00) | idata;
-			debug("[ jazz_isa_20: setting isa_int_enable_mask "
+			debugmsg(SUBSYS_DEVICE, "dev_jazz", VERBOSITY_DEBUG, "[ jazz_isa_20: setting isa_int_enable_mask "
 			    "to 0x%04x ]\n", (int)d->isa_int_enable_mask);
 
 			reassert_isa_interrupts(d);

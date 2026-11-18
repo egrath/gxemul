@@ -221,7 +221,7 @@ DEVICE_ACCESS(footbridge_reset)
 	if (writeflag == MEM_WRITE) {
 		idata = memory_readmax64(cpu, data, len);
 		if (idata & 0x40) {
-			debug("[ footbridge_reset: GP16: Halting. ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_footbridge", VERBOSITY_DEBUG, "[ footbridge_reset: GP16: Halting. ]\n");
 			cpu->running = 0;
 		}
 	}
@@ -253,7 +253,7 @@ DEVICE_ACCESS(footbridge_pci)
 		    " pc (might not be updated) = 0x%08x ]", (int)cpu->pc);
 	}
 
-	debug("[ footbridge pci: %s bus %i, device %i, function %i, register "
+	debugmsg(SUBSYS_DEVICE, "dev_footbridge", VERBOSITY_DEBUG, "[ footbridge pci: %s bus %i, device %i, function %i, register "
 	    "%i ]\n", writeflag == MEM_READ? "read from" : "write to", bus,
 	    dev, func, reg);
 
@@ -405,7 +405,7 @@ DEVICE_ACCESS(footbridge)
 		else {
 			d->timer_load[timer_nr] = idata & TIMER_MAX_VAL;
 			reload_timer_value(cpu, d, timer_nr);
-			/*  debug("[ footbridge: timer %i (1-based), "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_footbridge", VERBOSITY_DEBUG, "[ footbridge: timer %i (1-based), "
 			    "value %i ]\n", timer_nr + 1,
 			    (int)d->timer_value[timer_nr]);  */
 			INTERRUPT_DEASSERT(d->timer_irq[timer_nr]);

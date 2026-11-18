@@ -97,10 +97,10 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 	int64_t sector_nr, sector_count;
 	int i, res;
 
-	debug("[ GDROM cmd: ");
+	debugmsg(SUBSYS_DEVICE, "dev_dreamcast_gdrom", VERBOSITY_DEBUG, "[ GDROM cmd: ");
 	for (i=0; i<12; i++)
-		debug("%02x ", d->cmd[i]);
-	debug("(cnt=%i) ]\n", d->cnt);
+		debugmsg(SUBSYS_DEVICE, "dev_dreamcast_gdrom", VERBOSITY_DEBUG, "%02x ", d->cmd[i]);
+	debugmsg(SUBSYS_DEVICE, "dev_dreamcast_gdrom", VERBOSITY_DEBUG, "(cnt=%i) ]\n", d->cnt);
 
 	if (d->data != NULL)
 		free(d->data);
@@ -339,11 +339,11 @@ DEVICE_ACCESS(dreamcast_gdrom)
 
 	case GDROM_REGX:
 		if (writeflag == MEM_READ) {
-			debug("[ Read to GDROM_REGX? ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_gdrom", VERBOSITY_DEBUG, "[ Read to GDROM_REGX? ]\n");
 		} else {
 			/*  NetBSD/dreamcast writes 0 here.  */
 			if (idata != 0)
-				debug("[ Write 0x%x to GDROM_REGX? ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "dev_dreamcast_gdrom", VERBOSITY_DEBUG, "[ Write 0x%x to GDROM_REGX? ]\n", (int)idata);
 		}
 		break;
 
@@ -408,7 +408,7 @@ DEVICE_ACCESS(dreamcast_gdrom)
 				d->busy |= 0x08;
 				d->cmd_count = 0;
 			} else if (idata == 0xef) {
-				debug("dreamcast_gdrom: ROM: TODO\n");
+				debugmsg(SUBSYS_DEVICE, "dev_dreamcast_gdrom", VERBOSITY_DEBUG, "dreamcast_gdrom: ROM: TODO\n");
 				SYSASIC_TRIGGER_EVENT(SYSASIC_EVENT_GDROM);
 			} else {
 				fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "dreamcast_gdrom: unimplemented "

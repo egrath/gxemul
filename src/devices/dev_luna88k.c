@@ -967,7 +967,7 @@ DEVINIT(luna88k)
                 templ.interrupt_assert = luna88k_interrupt_assert;
                 templ.interrupt_deassert = luna88k_interrupt_deassert;
 
-		// debug("registering irq: %s\n", n);
+		// debugmsg(SUBSYS_DEVICE, "dev_luna88k", VERBOSITY_DEBUG, "registering irq: %s\n", n);
 
                 interrupt_handler_register(&templ);
         }

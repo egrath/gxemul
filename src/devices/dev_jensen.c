@@ -456,7 +456,7 @@ DEVICE_ACCESS(jensen_inta)
 	}
 	d->inta_second = !d->inta_second;
 
-	debug("[ jensen: INTA cycle returning 0x%02x ]\n", vector);
+	debugmsg(SUBSYS_DEVICE, "dev_jensen", VERBOSITY_DEBUG, "[ jensen: INTA cycle returning 0x%02x ]\n", vector);
 
 	memory_writemax64(cpu, data, len, vector);
 	return 1;
@@ -905,7 +905,7 @@ void dev_jensen_set_rom(struct jensen_data *d, const unsigned char *image,
 			if (got == len) {
 				memcpy(d->rom, buf, len);
 				free(buf);
-				debug("[ jensen: Flash loaded from %s ]\n",
+				debugmsg(SUBSYS_DEVICE, "dev_jensen", VERBOSITY_DEBUG, "[ jensen: Flash loaded from %s ]\n",
 				    d->flash_file);
 				goto done;
 			}

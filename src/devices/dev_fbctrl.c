@@ -73,7 +73,7 @@ static void fbctrl_command(struct cpu *cpu, struct fbctrl_data *d)
 		 */
 		x1 = d->port[DEV_FBCTRL_PORT_X1];
 		y1 = d->port[DEV_FBCTRL_PORT_Y1];
-		debug("[ dev_fbctrl: changing resolution to %i,%i ]\n", x1, y1);
+		debugmsg(SUBSYS_DEVICE, "dev_fbctrl", VERBOSITY_DEBUG, "[ dev_fbctrl: changing resolution to %i,%i ]\n", x1, y1);
 
 		dev_fb_resize(d->vfb_data, x1, y1);
 

@@ -463,7 +463,7 @@ static void fdc_rw(struct fdc82077_data *d)
 	d->dor = (d->dor & ~DOR_DRIVE_MASK) | drive;
 	st0 = (head << 2) | drive;
 
-	debug("[ fdc: %s drive %i C=%i H=%i R=%i N=%i EOT=%i%s%s ]\n",
+	debugmsg(SUBSYS_DEVICE, "dev_fdc", VERBOSITY_DEBUG, "[ fdc: %s drive %i C=%i H=%i R=%i N=%i EOT=%i%s%s ]\n",
 	    writing? "WRITE" : verify? "VERIFY" : "READ", drive, c, h, r, n,
 	    eot, mt? " MT" : "", pio? " (non-DMA)" : "");
 
@@ -656,7 +656,7 @@ static void fdc_format(struct fdc82077_data *d)
 
 	d->dor = (d->dor & ~DOR_DRIVE_MASK) | drive;
 
-	debug("[ fdc: FORMAT drive %i cyl %i head %i, %i sectors ]\n",
+	debugmsg(SUBSYS_DEVICE, "dev_fdc", VERBOSITY_DEBUG, "[ fdc: FORMAT drive %i cyl %i head %i, %i sectors ]\n",
 	    drive, d->pcn[drive], head, sc);
 
 	if (di == NULL || !fdc_rate_ok(d, di)) {
@@ -739,7 +739,7 @@ static void fdc_execute(struct fdc82077_data *d)
 
 	case 0x07:	/*  RECALIBRATE  */
 		d->dor = (d->dor & ~DOR_DRIVE_MASK) | drive;
-		debug("[ fdc: RECALIBRATE drive %i ]\n", drive);
+		debugmsg(SUBSYS_DEVICE, "dev_fdc", VERBOSITY_DEBUG, "[ fdc: RECALIBRATE drive %i ]\n", drive);
 		fdc_seek_done(d, drive, 0, 0, 1);
 		break;
 
@@ -795,7 +795,7 @@ static void fdc_execute(struct fdc82077_data *d)
 			fdc_seek_done(d, drive, head, ncn, 0);
 		} else
 			fdc_seek_done(d, drive, head, d->cmd[2], 0);
-		debug("[ fdc: SEEK drive %i to cyl %i ]\n", drive,
+		debugmsg(SUBSYS_DEVICE, "dev_fdc", VERBOSITY_DEBUG, "[ fdc: SEEK drive %i to cyl %i ]\n", drive,
 		    d->pcn[drive]);
 		break;
 

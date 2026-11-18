@@ -68,11 +68,11 @@ DEVICE_ACCESS(dec5500_ioboard)
 
 #ifdef IOBOARD_DEBUG
 	if (writeflag == MEM_WRITE)
-		debug("[ dec5500_ioboard: write to address 0x%llx, "
+		debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ dec5500_ioboard: write to address 0x%llx, "
 		    "data=0x%016llx ]\n", (long long)relative_addr,
 		    (long long)idata);
 	else
-		debug("[ dec5500_ioboard: read from address 0x%llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ dec5500_ioboard: read from address 0x%llx ]\n",
 		    (long long)relative_addr);
 #endif
 
@@ -88,11 +88,11 @@ DEVICE_ACCESS(dec5500_ioboard)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			debug("[ dec5500_ioboard: unimplemented write to "
+			debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ dec5500_ioboard: unimplemented write to "
 			    "address 0x%llx, data=0x%016llx ]\n",
 			    (long long)relative_addr, (long long)idata);
 		else
-			debug("[ dec5500_ioboard: unimplemented read from"
+			debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ dec5500_ioboard: unimplemented read from"
 			    " address 0x%llx ]\n", (long long)relative_addr);
 	}
 
@@ -115,10 +115,10 @@ DEVICE_ACCESS(sgec)
 
 #ifdef SGEC_DEBUG
 	if (writeflag == MEM_WRITE)
-		debug("[ sgec: write to address 0x%llx, data=0x%016llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ sgec: write to address 0x%llx, data=0x%016llx ]\n",
 		    (long long)relative_addr, (long long)idata);
 	else
-		debug("[ sgec: read from address 0x%llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ sgec: read from address 0x%llx ]\n",
 		    (long long)relative_addr);
 #endif
 
@@ -130,11 +130,11 @@ DEVICE_ACCESS(sgec)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			debug("[ sgec: unimplemented write to address 0x%llx,"
+			debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ sgec: unimplemented write to address 0x%llx,"
 			    " data=0x%016llx ]\n", (long long)relative_addr,
 			    (long long)idata);
 		else
-			debug("[ sgec: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_kn220", VERBOSITY_DEBUG, "[ sgec: unimplemented read from address "
 			    "0x%llx ]\n", (long long)relative_addr);
 	}
 

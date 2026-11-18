@@ -175,10 +175,10 @@ DEVICE_ACCESS(dreamcast_asic)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			debug("[ dreamcast_asic: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_asic", VERBOSITY_DEBUG, "[ dreamcast_asic: read from addr 0x%x ]\n",
 			    (int)relative_addr);
 		} else {
-			debug("[ dreamcast_asic: write to addr 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_asic", VERBOSITY_DEBUG, "[ dreamcast_asic: write to addr 0x%x: 0x%x ]\n",
 			    (int)relative_addr, (int)idata);
 		}
 	}

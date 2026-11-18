@@ -117,42 +117,42 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 
 	case EXTDMA_CTRL_EXT_ADDR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " EXT_ADDR = 0x%08x ]\n", channel, (int) idata);
 		}
 		break;
 
 	case EXTDMA_CTRL_SH4_ADDR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " SH4_ADDR = 0x%08x ]\n", channel, (int) idata);
 		}
 		break;
 
 	case EXTDMA_CTRL_SIZE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " SIZE = 0x%08x ]\n", channel, (int) idata);
 		}
 		break;
 
 	case EXTDMA_CTRL_DIR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " DIR = 0x%08x ]\n", channel, (int) idata);
 		}
 		break;
 
 	case EXTDMA_CTRL_MODE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " MODE = 0x%08x ]\n", channel, (int) idata);
 		}
 		break;
 
 	case EXTDMA_CTRL_CHAN_ENABLE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " CHAN_ENABLE = 0x%08x ]\n", channel, (int) idata);
 			if (idata != 0) {
 				fatal_error(SUBSYS_DEVICE, "dreamcast_g2", "EXTDMA_CTRL_CHAN_ENABLE: todo\n");
@@ -162,7 +162,7 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 
 	case EXTDMA_CTRL_XFER_ENABLE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " XFER_ENABLE = 0x%08x ]\n", channel, (int) idata);
 			if (idata != 0) {
 				fatal_error(SUBSYS_DEVICE, "dreamcast_g2", "EXTDMA_CTRL_XFER_ENABLE: todo\n");
@@ -172,7 +172,7 @@ DEVICE_ACCESS(dreamcast_g2_extdma)
 
 	case EXTDMA_CTRL_STATUS:
 		if (writeflag == MEM_WRITE) {
-			debug("[ dreamcast_g2_extdma: write to channel %i:"
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
 			    " STATUS = 0x%08x ]\n", channel, (int) idata);
 			if (idata != 0) {
 				debugmsg(SUBSYS_DEVICE, "dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_extdma: write to channel %i:"
@@ -250,10 +250,10 @@ DEVICE_ACCESS(dreamcast_g2_misc)
 		break;
 
 	default:if (writeflag == MEM_READ) {
-			debug("[ dreamcast_g2_misc: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_misc: read from addr 0x%x ]\n",
 			    (int)relative_addr);
 		} else {
-			debug("[ dreamcast_g2_misc: write to addr 0x%x: "
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_g2", VERBOSITY_DEBUG, "[ dreamcast_g2_misc: write to addr 0x%x: "
 			    "0x%x ]\n", (int)relative_addr, (int)idata);
 		}
 

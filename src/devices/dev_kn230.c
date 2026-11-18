@@ -105,19 +105,19 @@ DEVICE_ACCESS(kn230)
 	case 0:
 		if (writeflag==MEM_READ) {
 			odata = d->csr;
-			/* debug("[ kn230: read from CSR: 0x%08x ]\n",
+			/* debugmsg(SUBSYS_DEVICE, "dev_kn230", VERBOSITY_DEBUG, "[ kn230: read from CSR: 0x%08x ]\n",
 			    (int)odata); */
 		} else {
-			/* debug("[ kn230: write to CSR: 0x%08x ]\n",
+			/* debugmsg(SUBSYS_DEVICE, "dev_kn230", VERBOSITY_DEBUG, "[ kn230: write to CSR: 0x%08x ]\n",
 			    (int)idata); */
 		}
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ kn230: read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_kn230", VERBOSITY_DEBUG, "[ kn230: read from 0x%08lx ]\n",
 			    (long)relative_addr);
 		} else {
-			debug("[ kn230: write to  0x%08lx: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_kn230", VERBOSITY_DEBUG, "[ kn230: write to  0x%08lx: 0x%08x ]\n",
 			    (long)relative_addr, (int)idata);
 		}
 	}

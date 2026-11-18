@@ -385,10 +385,10 @@ DEVICE_ACCESS(i80321)
 
 	if (n != NULL) {
 		if (writeflag == MEM_READ) {
-			debug("[ i80321: read from %s: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_i80321", VERBOSITY_DEBUG, "[ i80321: read from %s: 0x%llx ]\n",
 			    n, (long long)idata);
 		} else {
-			debug("[ i80321: write to %s: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_i80321", VERBOSITY_DEBUG, "[ i80321: write to %s: 0x%llx ]\n",
 			    n, (long long)idata);
 		}
 	}

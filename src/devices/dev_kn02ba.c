@@ -91,7 +91,7 @@ DEVICE_ACCESS(kn02ba_mer)
 		else
 			odata = d->mer;
 
-		debug("[ kn02ba_mer: %s MER, data=0x%08x (%s %s %s %s %s %s %s) ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_kn02ba", VERBOSITY_DEBUG, "[ kn02ba_mer: %s MER, data=0x%08x (%s %s %s %s %s %s %s) ]\n",
 			writeflag == MEM_WRITE ? "write to" : "read from",
 			d->mer,
 			d->mer & KMIN_MER_PAGE_BRY ? "PAGE_BRY" : "--",
@@ -137,7 +137,7 @@ DEVICE_ACCESS(kn02ba_msr)
 		else
 			odata = d->msr;
 
-		debug("[ kn02ba_msr: %s MSR, data=0x%08x (%s) ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_kn02ba", VERBOSITY_DEBUG, "[ kn02ba_msr: %s MSR, data=0x%08x (%s) ]\n",
 			writeflag == MEM_WRITE ? "write to" : "read from",
 			d->msr,
 			d->msr & KMIN_MSR_SIZE_16Mb ? "16Mb" : "--"

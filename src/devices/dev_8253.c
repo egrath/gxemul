@@ -232,7 +232,7 @@ static void pit_load(struct pit8253_data *d, int c)
 	    Alpha ARC firmware times the CPU with).  */
 	d->hz[c] = I8253_TIMER_FREQ / (double) (d->counter[c] == 0?
 	    65536 : d->counter[c]);
-	debug("[ 8253: counter %i set to %i (%.3f Hz) ]\n", c, d->counter[c],
+	debugmsg(SUBSYS_DEVICE, "dev_8253", VERBOSITY_DEBUG, "[ 8253: counter %i set to %i (%.3f Hz) ]\n", c, d->counter[c],
 	    d->hz[c]);
 
 	switch (c) {
@@ -241,9 +241,9 @@ static void pit_load(struct pit8253_data *d, int c)
 		else
 			timer_update_frequency(d->timer0, d->hz[0]);
 		break;
-	case 1:	debug("[ 8253: counter 1 (DMA refresh) not emulated ]\n");
+	case 1:	debugmsg(SUBSYS_DEVICE, "dev_8253", VERBOSITY_DEBUG, "[ 8253: counter 1 (DMA refresh) not emulated ]\n");
 		break;
-	case 2:	debug("[ 8253: counter 2 (tone generation) not emulated ]\n");
+	case 2:	debugmsg(SUBSYS_DEVICE, "dev_8253", VERBOSITY_DEBUG, "[ 8253: counter 2 (tone generation) not emulated ]\n");
 		break;
 	}
 }
@@ -324,7 +324,7 @@ DEVICE_ACCESS(8253)
 
 	case I8253_TIMER_MODE:
 		if (writeflag == MEM_READ) {
-			debug("[ 8253: read; can this actually happen? ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_8253", VERBOSITY_DEBUG, "[ 8253: read; can this actually happen? ]\n");
 			break;
 		}
 
@@ -350,11 +350,11 @@ DEVICE_ACCESS(8253)
 		d->mode[c] = idata & 0x0e;
 		d->write_msb_next[c] = d->read_msb_next[c] = 0;
 		d->latched[c] = 0;
-		debug("[ 8253: counter %i mode=0x%x access=0x%x ]\n", c,
+		debugmsg(SUBSYS_DEVICE, "dev_8253", VERBOSITY_DEBUG, "[ 8253: counter %i mode=0x%x access=0x%x ]\n", c,
 		    d->mode[c], d->rw_mode[c]);
 
 		if (idata & I8253_TIMER_BCD)
-			debug("[ 8253: BCD counting not emulated ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_8253", VERBOSITY_DEBUG, "[ 8253: BCD counting not emulated ]\n");
 		break;
 
 	default:if (writeflag == MEM_WRITE) {

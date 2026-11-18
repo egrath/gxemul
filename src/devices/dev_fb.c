@@ -205,7 +205,7 @@ void dev_fb_setcursor(struct vfb_data *d, int cursor_x, int cursor_y, int on,
 		d->fb_window->cursor_ysize  = cursor_ysize;
 	}
 
-	/*  debug("dev_fb_setcursor(%i,%i, size %i,%i, on=%i)\n",
+	/*  debugmsg(SUBSYS_DEVICE, "dev_fb", VERBOSITY_DEBUG, "dev_fb_setcursor(%i,%i, size %i,%i, on=%i)\n",
 	    cursor_x, cursor_y, cursor_xsize, cursor_ysize, on);  */
 }
 

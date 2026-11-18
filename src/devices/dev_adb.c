@@ -158,10 +158,10 @@ static void adb_process_cmd(struct cpu *cpu, struct adb_data *d)
 {
 	int i, reg, dev;
 
-	debug("[ adb: COMMAND:");
+	debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, "[ adb: COMMAND:");
 	for (i=0; i<d->cur_output_offset; i++)
-		debug(" %02x", d->output_buf[i]);
-	debug(" ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, " %02x", d->output_buf[i]);
+	debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, " ]\n");
 
 	if (d->cur_output_offset < 2) {
 		debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_WARNING, "[ adb: WEIRD output length: %i ]",
@@ -262,19 +262,19 @@ static void adb_transfer(struct cpu *cpu, struct adb_data *d, int state_change)
 
 	if (state_change) {
 		if (d->tip == 0) {
-			debug("[ adb: transfer #%lli done ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, "[ adb: transfer #%lli done ]\n",
 			    (long long)d->transfer_nr);
 			if (d->cur_output_offset > 0)
 				adb_process_cmd(cpu, d);
 			d->transfer_nr ++;
 			return;
 		}
-		debug("[ adb: starting transfer #%lli: %s ]\n", (long long)
+		debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, "[ adb: starting transfer #%lli: %s ]\n", (long long)
 		    d->transfer_nr, d->dir == DIR_INPUT? "INPUT" : "OUTPUT");
 		d->cur_input_offset = d->cur_output_offset = 0;
 	}
 
-	debug("[ adb: transfer #%lli: ", (long long)d->transfer_nr);
+	debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, "[ adb: transfer #%lli: ", (long long)d->transfer_nr);
 
 	switch (d->dir) {
 
@@ -283,7 +283,7 @@ static void adb_transfer(struct cpu *cpu, struct adb_data *d, int state_change)
 			debugmsg(SUBSYS_DEVICE, "adb", VERBOSITY_DEBUG, "[ adb: INPUT beyond end of data? ]\n");
 		else
 			c = d->input_buf[d->cur_input_offset ++];
-		debug("input 0x%02x", c);
+		debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, "input 0x%02x", c);
 		d->reg[vSR >> VIA_REG_SHIFT] = c;
 		d->reg[vIFR >> VIA_REG_SHIFT] |= IFR_ANY | IFR_SR;
 		if (d->cur_input_offset >= d->cur_input_length)
@@ -292,14 +292,14 @@ static void adb_transfer(struct cpu *cpu, struct adb_data *d, int state_change)
 
 	case DIR_OUTPUT:
 		c = d->reg[vSR >> VIA_REG_SHIFT];
-		debug("output 0x%02x", c);
+		debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, "output 0x%02x", c);
 		d->reg[vIFR >> VIA_REG_SHIFT] |= IFR_ANY | IFR_SR;
 		d->reg[vBufB >> VIA_REG_SHIFT] |= BUFB_nINTR;
 		d->output_buf[d->cur_output_offset ++] = c;
 		break;
 	}
 
-	debug(" ]\n");
+	debugmsg(SUBSYS_DEVICE, "dev_adb", VERBOSITY_DEBUG, " ]\n");
 }
 
 

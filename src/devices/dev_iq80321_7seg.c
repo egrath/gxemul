@@ -62,7 +62,7 @@ DEVICE_ACCESS(iq80321_7seg)
 			odata = d->msb;
 		else {
 			d->msb = idata;
-			debug("[ iq80321_7seg: setting MSB to 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_iq80321_7seg", VERBOSITY_DEBUG, "[ iq80321_7seg: setting MSB to 0x%02x ]\n",
 			    (int)idata);
 		}
 		break;
@@ -72,7 +72,7 @@ DEVICE_ACCESS(iq80321_7seg)
 			odata = d->lsb;
 		else {
 			d->lsb = idata;
-			debug("[ iq80321_7seg: setting LSB to 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_iq80321_7seg", VERBOSITY_DEBUG, "[ iq80321_7seg: setting LSB to 0x%02x ]\n",
 			    (int)idata);
 		}
 		break;

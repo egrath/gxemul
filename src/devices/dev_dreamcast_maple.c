@@ -382,11 +382,11 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 	uint32_t addr = d->dmaaddr;
 
 	if (!d->enable) {
-		debug("[ maple_do_dma_xfer: not enabled? ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_dreamcast_maple", VERBOSITY_DEBUG, "[ maple_do_dma_xfer: not enabled? ]\n");
 		return;
 	}
 
-	/*  debug("[ dreamcast_maple: DMA transfer, dmaaddr = "
+	/*  debugmsg(SUBSYS_DEVICE, "dev_dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: DMA transfer, dmaaddr = "
 	    "0x%08" PRIx32" ]\n", addr);  */
 
 	/*
@@ -469,7 +469,7 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 		case MAPLE_COMMAND_DEVINFO:
 			if (d->device[port] == NULL || unit != 0) {
 				/*  No device present: Timeout.  */
-				/*  debug("[ dreamcast_maple: response="
+				/*  debugmsg(SUBSYS_DEVICE, "dev_dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: response="
 				    "timeout ]\n");  */
 				response_code = (uint32_t) -1;
 				response_code = LE32_TO_HOST(response_code);
@@ -481,7 +481,7 @@ void maple_do_dma_xfer(struct cpu *cpu, struct dreamcast_maple_data *d)
 				unsigned int i;
 				struct maple_devinfo *di =
 				    &d->device[port]->devinfo;
-				/*  debug("[ dreamcast_maple: response="
+				/*  debugmsg(SUBSYS_DEVICE, "dev_dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: response="
 				    "\"%s\" ]\n", di->di_product_name);  */
 				response_code = MAPLE_RESPONSE_DEVINFO |
 				    (((port << 6) | 0x20) << 8) |
@@ -552,7 +552,7 @@ DEVICE_ACCESS(dreamcast_maple)
 	case 0x04:	/*  MAPLE_DMAADDR  */
 		if (writeflag == MEM_WRITE) {
 			d->dmaaddr = idata;
-			/* debug("[ dreamcast_maple: dmaaddr set to 0x%08x"
+			/* debugmsg(SUBSYS_DEVICE, "dev_dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: dmaaddr set to 0x%08x"
 			    " ]\n", d->dmaaddr);  */
 		} else {
 			debugmsg(SUBSYS_DEVICE, "dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: TODO: read from dmaaddr ]");
@@ -593,7 +593,7 @@ DEVICE_ACCESS(dreamcast_maple)
 			d->timeout = (idata >> 16) & 0xffff;
 			/*  TODO: Bits 8..9 are "speed", but only the value
 			    0 (indicating 2 Mbit/s) should be used.  */
-			debug("[ dreamcast_maple: timeout set to %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dreamcast_maple", VERBOSITY_DEBUG, "[ dreamcast_maple: timeout set to %i ]\n",
 			    d->timeout);
 		} else {
 			odata = d->timeout << 16;

@@ -123,7 +123,7 @@ static void m8820x_command(struct cpu *cpu, struct m8820x_data *d)
 	}
 
 	/*  Other codes are no-ops.  */
-	debug("[ m8820x: command 0x%02x ignored ]\n", cmd);
+	debugmsg(SUBSYS_DEVICE, "dev_m8820x", VERBOSITY_DEBUG, "[ m8820x: command 0x%02x ignored ]\n", cmd);
 }
 
 
@@ -247,7 +247,7 @@ DEVICE_ACCESS(m8820x)
 	default:
 		/*  Unused register addresses read as zero.  */
 		if (writeflag == MEM_WRITE)
-			debug("[ m8820x: write to offset 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_m8820x", VERBOSITY_DEBUG, "[ m8820x: write to offset 0x%x: 0x%x ]\n",
 			    (int) relative_addr, (int) idata);
 		odata = 0;
 	}

@@ -115,7 +115,7 @@ DEVICE_ACCESS(gt)
 	case GT_PCI0M1REMAP_OFS:
 		if (writeflag == MEM_READ) {
 			odata = d->decode[relative_addr / 8];
-			debug("[ gt: read from offset 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: read from offset 0x%x: 0x%x ]\n",
 			    (int)relative_addr, (int)odata);
 		} else {
 			d->decode[relative_addr / 8] = idata;
@@ -126,17 +126,17 @@ DEVICE_ACCESS(gt)
 
 	case GT_PCI0_CMD_OFS:
 		if (writeflag == MEM_WRITE) {
-			debug("[ gt: write to GT_PCI0_CMD: 0x%08x (TODO) ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: write to GT_PCI0_CMD: 0x%08x (TODO) ]\n",
 			    (int)idata);
 		} else {
-			debug("[ gt: read from GT_PCI0_CMD (0x%08x) (TODO) ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: read from GT_PCI0_CMD (0x%08x) (TODO) ]\n",
 			    (int)odata);
 		}
 		break;
 
 	case GT_INTR_CAUSE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ gt: write to GT_INTR_CAUSE: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: write to GT_INTR_CAUSE: 0x%08x ]\n",
 			    (int)idata);
 			return 1;
 		} else {
@@ -146,7 +146,7 @@ DEVICE_ACCESS(gt)
 			if (d->pending_timer0_interrupts > 0)
 				d->pending_timer0_interrupts --;
 
-			debug("[ gt: read from GT_INTR_CAUSE (0x%08x) ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: read from GT_INTR_CAUSE (0x%08x) ]\n",
 			    (int)odata);
 		}
 		break;
@@ -199,13 +199,13 @@ DEVICE_ACCESS(gt)
 
 	default:
 		if (writeflag == MEM_READ) {
-			debug("[ gt: read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: read from addr 0x%x ]\n",
 			    (int)relative_addr);
 		} else {
-			debug("[ gt: write to addr 0x%x:", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, "[ gt: write to addr 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
-				debug(" %02x", data[i]);
-			debug(" ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_gt", VERBOSITY_DEBUG, " ]\n");
 		}
 	}
 

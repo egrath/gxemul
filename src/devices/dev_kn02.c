@@ -97,7 +97,7 @@ DEVICE_ACCESS(kn02)
 			odata = d->csr[0] + (d->csr[1] << 8) +
 			    (d->csr[2] << 16) + (d->csr[3] << 24);
 
-			/* debug("[ kn02: read from CSR: 0x%08x ]\n", odata); */
+			/* debugmsg(SUBSYS_DEVICE, "dev_kn02", VERBOSITY_DEBUG, "[ kn02: read from CSR: 0x%08x ]\n", odata); */
 		} else {
 			/*
 			 *  Only bits 23..8 are considered writable. The
@@ -129,10 +129,10 @@ DEVICE_ACCESS(kn02)
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ kn02: read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_kn02", VERBOSITY_DEBUG, "[ kn02: read from 0x%08lx ]\n",
 			    (long)relative_addr);
 		} else {
-			debug("[ kn02: write to  0x%08lx: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_kn02", VERBOSITY_DEBUG, "[ kn02: write to  0x%08lx: 0x%08x ]\n",
 			    (long)relative_addr, (int)idata);
 		}
 	}

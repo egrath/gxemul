@@ -119,7 +119,7 @@ DEVICE_ACCESS(vdac)
 			d->cur_write_addr = data[0];
 			d->sub_color = 0;
 		} else {
-			debug("[ vdac: read from MAPWA ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_kn01", VERBOSITY_DEBUG, "[ vdac: read from MAPWA ]\n");
 			data[0] = d->vdac_reg[relative_addr];
 		}
 		break;
@@ -155,7 +155,7 @@ DEVICE_ACCESS(vdac)
 			d->cur_read_addr = data[0];
 			d->sub_color = 0;
 		} else {
-			debug("[ vdac: read from MAPRA ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_kn01", VERBOSITY_DEBUG, "[ vdac: read from MAPRA ]\n");
 			data[0] = d->vdac_reg[relative_addr];
 		}
 		break;
@@ -164,7 +164,7 @@ DEVICE_ACCESS(vdac)
 			d->cur_write_addr_overlay = data[0];
 			d->sub_color_overlay = 0;
 		} else {
-			debug("[ vdac: read from OVERWA ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_kn01", VERBOSITY_DEBUG, "[ vdac: read from OVERWA ]\n");
 			data[0] = d->vdac_reg[relative_addr];
 		}
 		break;
@@ -206,17 +206,17 @@ DEVICE_ACCESS(vdac)
 			d->cur_read_addr_overlay = data[0];
 			d->sub_color_overlay = 0;
 		} else {
-			debug("[ vdac: read from OVERRA ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_kn01", VERBOSITY_DEBUG, "[ vdac: read from OVERRA ]\n");
 			data[0] = d->vdac_reg[relative_addr];
 		}
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ vdac: unimplemented write to address 0x%x,"
+			debugmsg(SUBSYS_DEVICE, "dev_kn01", VERBOSITY_DEBUG, "[ vdac: unimplemented write to address 0x%x,"
 			    " data=0x%02x ]\n", (int)relative_addr, data[0]);
 			d->vdac_reg[relative_addr] = data[0];
 		} else {
-			debug("[ vdac: unimplemented read from address 0x%x"
+			debugmsg(SUBSYS_DEVICE, "dev_kn01", VERBOSITY_DEBUG, "[ vdac: unimplemented read from address 0x%x"
 			    " ]\n", (int)relative_addr);
 			data[0] = d->vdac_reg[relative_addr];
 		}

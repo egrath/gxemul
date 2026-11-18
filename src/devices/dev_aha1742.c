@@ -188,7 +188,7 @@ static void aha1742_assert_irq(struct aha1742_data *d)
 	}
 
 	d->irq_asserted = irq;
-	debug("[ aha1742: ASSERT IRQ %d intdef=0x%02x ]\n", irq, d->intdef);
+	debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: ASSERT IRQ %d intdef=0x%02x ]\n", irq, d->intdef);
 	INTERRUPT_ASSERT(d->irq[irq]);
 }
 
@@ -197,7 +197,7 @@ static void aha1742_deassert_irq(struct aha1742_data *d)
 	if (!d->irq_asserted)
 		return;
 
-	debug("[ aha1742: DEASSERT IRQ %d ]\n", d->irq_asserted);
+	debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: DEASSERT IRQ %d ]\n", d->irq_asserted);
 	INTERRUPT_DEASSERT(d->irq[d->irq_asserted]);
 	d->irq_asserted = 0;
 }
@@ -301,7 +301,7 @@ static void aha1742_execute_ecb(struct cpu *cpu, struct aha1742_data *d)
 
 	lun = opt2 & ECB_LUN;
 
-	debug("[ aha1742: ECB cmd op=0x%02x target=%d lun=%d cdb_len=%d data_addr=0x%x data_len=%d status=0x%x ]\n",
+	debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: ECB cmd op=0x%02x target=%d lun=%d cdb_len=%d data_addr=0x%x data_len=%d status=0x%x ]\n",
 	    opcode, target, lun, scsi_cmd_len, data_addr, data_len, status_addr);
 	memset(status_block, 0, sizeof(status_block));
 
@@ -571,7 +571,7 @@ DEVICE_ACCESS(aha1742)
 	case AHA_INTDEF:
 		if (writeflag == MEM_WRITE) {
 			d->intdef = idata;
-			debug("[ aha1742: write INTDEF = 0x%02x (IRQ %d) ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: write INTDEF = 0x%02x (IRQ %d) ]\n",
 			    d->intdef, aha1742_get_irq(d));
 		} else {
 			odata = d->intdef;
@@ -623,22 +623,22 @@ DEVICE_ACCESS(aha1742)
 	case AHA_ATTN:
 		if (writeflag == MEM_WRITE) {
 			d->attn = idata;
-			debug("[ aha1742: write ATTN = 0x%02x (op 0x%02x targ %d) mboxout=0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: write ATTN = 0x%02x (op 0x%02x targ %d) mboxout=0x%x ]\n",
 			    d->attn, d->attn & ATTN_OPCODE, d->attn & ATTN_TARGET, d->mboxout);
 			if ((d->attn & ATTN_OPCODE) == OP_START_ECB) {
 				aha1742_execute_ecb(cpu, d);
 			} else if ((d->attn & ATTN_OPCODE) == OP_IMMED) {
 				/* Immediate command (target reset) */
-				debug("[ aha1742: OP_IMMED target=%d ]\n", d->attn & ATTN_TARGET);
+				debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: OP_IMMED target=%d ]\n", d->attn & ATTN_TARGET);
 				aha1742_complete(d, 0,
 				    (d->attn & ATTN_TARGET) | AHB_IMMED_OK, 0);
 			} else if ((d->attn & ATTN_OPCODE) == OP_ABORT_ECB) {
 				/* Abort ECB */
-				debug("[ aha1742: OP_ABORT_ECB target=%d ]\n", d->attn & ATTN_TARGET);
+				debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: OP_ABORT_ECB target=%d ]\n", d->attn & ATTN_TARGET);
 				aha1742_complete(d, d->mboxout,
 				    (d->attn & ATTN_TARGET) | AHB_ECB_OK, 1);
 			} else {
-				debug("[ aha1742: unknown ATTN opcode 0x%02x ]\n", d->attn & ATTN_OPCODE);
+				debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: unknown ATTN opcode 0x%02x ]\n", d->attn & ATTN_OPCODE);
 			}
 		} else {
 			odata = d->attn;
@@ -648,7 +648,7 @@ DEVICE_ACCESS(aha1742)
 	case AHA_G2CNTRL:
 		if (writeflag == MEM_WRITE) {
 			d->g2cntrl = idata;
-			debug("[ aha1742: write G2CNTRL = 0x%02x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: write G2CNTRL = 0x%02x ]\n", (int)idata);
 			if (idata & G2CNTRL_CLEAR_EISA_INT) {
 				d->g2stat &= ~G2STAT_INT_PEND;
 				aha1742_deassert_irq(d);
@@ -681,7 +681,7 @@ DEVICE_ACCESS(aha1742)
 	case AHA_G2INTST:
 		if (writeflag == MEM_WRITE)
 			break;
-		debug("[ aha1742: read G2INTST = 0x%02x ]\n", (int)d->g2intst);
+		debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: read G2INTST = 0x%02x ]\n", (int)d->g2intst);
 		odata = d->g2intst;
 		break;
 
@@ -712,7 +712,7 @@ DEVICE_ACCESS(aha1742)
 	case AHA_MBOXIN3:
 		if (writeflag == MEM_WRITE)
 			break;
-		debug("[ aha1742: read MBOXIN = 0x%08x ]\n", (unsigned int)d->mboxin);
+		debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: read MBOXIN = 0x%08x ]\n", (unsigned int)d->mboxin);
 		odata = (d->mboxin >> 24) & 0xff;
 		break;
 
@@ -725,10 +725,10 @@ DEVICE_ACCESS(aha1742)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			debug("[ aha1742: write to unimpl reg 0x%02x: 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: write to unimpl reg 0x%02x: 0x%02x ]\n",
 			    (int)relative_addr, (int)idata);
 		else
-			debug("[ aha1742: read from unimpl reg 0x%02x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_aha1742", VERBOSITY_DEBUG, "[ aha1742: read from unimpl reg 0x%02x ]\n",
 			    (int)relative_addr);
 		break;
 	}

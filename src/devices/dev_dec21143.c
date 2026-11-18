@@ -1112,7 +1112,7 @@ static void srom_access(struct cpu *cpu, struct dec21143_data *d,
 {
 	int obit, ibit;
 
-	/*  debug("CSR9 WRITE! 0x%08x\n", (int)idata);  */
+	/*  debugmsg(SUBSYS_DEVICE, "dev_dec21143", VERBOSITY_DEBUG, "CSR9 WRITE! 0x%08x\n", (int)idata);  */
 
 	/*  New selection? Then reset internal state.  */
 	if (idata & MIIROM_SR && !(oldreg & MIIROM_SR)) {
@@ -1128,7 +1128,7 @@ static void srom_access(struct cpu *cpu, struct dec21143_data *d,
 
 	obit = 0;
 	ibit = idata & MIIROM_SROMDI? 1 : 0;
-	/*  debug("CLOCK CYCLE! (bit %i): ", d->srom_curbit);  */
+	/*  debugmsg(SUBSYS_DEVICE, "dev_dec21143", VERBOSITY_DEBUG, "CLOCK CYCLE! (bit %i): ", d->srom_curbit);  */
 
 	/*
 	 *  Linux sends more zeroes before starting the actual opcode, than
@@ -1143,7 +1143,7 @@ static void srom_access(struct cpu *cpu, struct dec21143_data *d,
 		d->srom_opcode_has_started = 1;
 		d->srom_opcode <<= 1;
 		d->srom_opcode |= ibit;
-		/*  debug("opcode input '%i'\n", ibit);  */
+		/*  debugmsg(SUBSYS_DEVICE, "dev_dec21143", VERBOSITY_DEBUG, "opcode input '%i'\n", ibit);  */
 	} else {
 		switch (d->srom_opcode) {
 		case TULIP_SROM_OPC_READ:
@@ -1169,7 +1169,7 @@ static void srom_access(struct cpu *cpu, struct dec21143_data *d,
 		d->reg[CSR_MIIROM / 8] &= ~MIIROM_SROMDO;
 		if (obit)
 			d->reg[CSR_MIIROM / 8] |= MIIROM_SROMDO;
-		/*  debug("input '%i', output '%i'\n", ibit, obit);  */
+		/*  debugmsg(SUBSYS_DEVICE, "dev_dec21143", VERBOSITY_DEBUG, "input '%i', output '%i'\n", ibit, obit);  */
 	}
 
 	d->srom_curbit ++;

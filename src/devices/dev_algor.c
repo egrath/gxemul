@@ -182,10 +182,10 @@ DEVICE_ACCESS(algor)
 
 	if (n != NULL) {
 		if (writeflag == MEM_READ) {
-			debug("[ algor: read from %s: 0x%" PRIx64" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_algor", VERBOSITY_DEBUG, "[ algor: read from %s: 0x%" PRIx64" ]\n",
 			    n, (uint64_t) odata);
 		} else {
-			debug("[ algor: write to %s: 0x%" PRIx64" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_algor", VERBOSITY_DEBUG, "[ algor: write to %s: 0x%" PRIx64" ]\n",
 			    n, (uint64_t) idata);
 		}
 	}

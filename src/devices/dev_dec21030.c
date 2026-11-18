@@ -128,7 +128,7 @@ DEVICE_ACCESS(dec21030)
 		case 0x2d:	/*  Block fill:  */
 			/*  data is nr of pixels to fill minus one  */
 			newlen = memory_readmax64(cpu, data, len) + 1;
-			/*  debug("YO addr=0x%08x, newlen=%i\n", relative_addr,
+			/*  debugmsg(SUBSYS_DEVICE, "dev_dec21030", VERBOSITY_DEBUG, "YO addr=0x%08x, newlen=%i\n", relative_addr,
 			    newlen);  */
 			if (newlen > MAX_XSIZE)
 				newlen = MAX_XSIZE;

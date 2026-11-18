@@ -87,7 +87,7 @@ DEVICE_TICK(dec5800)
 
 	/*  Timer interrupts?  */
 	if (d->csr & 0x8000) {
-		debug("[ dec5800: timer interrupt! ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800: timer interrupt! ]\n");
 
 		/*  Set timer interrupt pending bit:  */
 		d->csr |= 0x20000000;
@@ -111,11 +111,11 @@ DEVICE_ACCESS(dec5800_vectors)
 		    0x80 = IPI  */
 		odata = d->vector_0x50;
 /* odata = 0xfc; */
-		debug("[ dec5800_vectors: read from 0x%02x: 0x%02x ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800_vectors: read from 0x%02x: 0x%02x ]\n",
 		    (int)relative_addr, (int)odata);
 	} else {
 		d->vector_0x50 = idata;
-		debug("[ dec5800_vectors: write to 0x%02x: 0x%02x ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800_vectors: write to 0x%02x: 0x%02x ]\n",
 		    (int)relative_addr, (int)idata);
 	}
 
@@ -142,7 +142,7 @@ DEVICE_ACCESS(dec5800)
 		if (writeflag == MEM_READ) {
 			odata = d->csr;
 			odata ^= random() & 0x10000;
-			debug("[ dec5800: read from csr: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800: read from csr: 0x%08x ]\n",
 			    (int)odata);
 		} else {
 			d->csr = idata;
@@ -151,16 +151,16 @@ DEVICE_ACCESS(dec5800)
 			d->csr &= ~0x20000000;
 			INTERRUPT_DEASSERT(d->timer_irq);
 
-			debug("[ dec5800: write to csr: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800: write to csr: 0x%08x ]\n",
 			    (int)idata);
 		}
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ dec5800: read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800: read from 0x%08lx ]\n",
 			    (long)relative_addr);
 		} else {
-			debug("[ dec5800: write to  0x%08lx: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ dec5800: write to  0x%08lx: 0x%08x ]\n",
 			    (long)relative_addr, (int)idata);
 		}
 	}
@@ -263,41 +263,41 @@ DEVICE_ACCESS(decbi)
 				odata = 0;
 			}
 
-			debug("[ decbi: (node %i) read from BIREG_DTYPE:"
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) read from BIREG_DTYPE:"
 			    " 0x%x ]\n", node_nr, (int)odata);
 		} else {
-			debug("[ decbi: (node %i) attempt to write to "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) attempt to write to "
 			    "BIREG_DTYPE: 0x%08x ]\n", node_nr, (int)idata);
 		}
 		break;
 	case BIREG_VAXBICSR:
 		if (writeflag==MEM_READ) {
 			odata = (d->csr[node_nr] & ~BICSR_NODEMASK) | node_nr;
-			debug("[ decbi: (node %i) read from BIREG_"
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) read from BIREG_"
 			    "VAXBICSR: 0x%x ]\n", node_nr, (int)odata);
 		} else {
 			d->csr[node_nr] = idata;
-			debug("[ decbi: (node %i) attempt to write to "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) attempt to write to "
 			    "BIREG_VAXBICSR: 0x%08x ]\n", node_nr, (int)idata);
 		}
 		break;
 	case 0xf4:
 		if (writeflag==MEM_READ) {
 			odata = 0xffff;	/*  ?  */
-			debug("[ decbi: (node %i) read from 0xf4: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) read from 0xf4: "
 			    "0x%x ]\n", node_nr, (int)odata);
 		} else {
-			debug("[ decbi: (node %i) attempt to write "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) attempt to write "
 			    "to 0xf4: 0x%08x ]\n", node_nr, (int)idata);
 		}
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ decbi: (node %i) read from unimplemented "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) read from unimplemented "
 			    "0x%08lx ]\n", node_nr, (long)relative_addr,
 			    (int)odata);
 		} else {
-			debug("[ decbi: (node %i) write to unimplemented "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) write to unimplemented "
 			    "0x%08lx: 0x%08x ]\n", node_nr,
 			    (long)relative_addr, (int)idata);
 		}
@@ -368,10 +368,10 @@ DEVICE_ACCESS(deccca)
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ deccca: read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ deccca: read from 0x%08lx ]\n",
 			    (long)relative_addr);
 		} else {
-			debug("[ deccca: write to  0x%08lx: 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ deccca: write to  0x%08lx: 0x%08x ]\n",
 			    (long)relative_addr, (int)idata);
 		}
 	}
@@ -441,48 +441,48 @@ DEVICE_ACCESS(decxmi)
 			if (node_nr == 0)
 				odata = XMIDT_DWMBA;
 
-			debug("[ decxmi: (node %i) read from XMI_TYPE: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) read from XMI_TYPE: "
 			    "0x%08x ]\n", node_nr, (int)odata);
 		} else
-			debug("[ decxmi: (node %i) write to XMI_TYPE: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) write to XMI_TYPE: "
 			    "0x%08x ]\n", node_nr, (int)idata);
 		break;
 	case XMI_BUSERR:
 		if (writeflag == MEM_READ) {
 			odata = 0;
-			debug("[ decxmi: (node %i) read from XMI_BUSERR: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) read from XMI_BUSERR: "
 			    "0x%08x ]\n", node_nr, (int)odata);
 		} else
-			debug("[ decxmi: (node %i) write to XMI_BUSERR: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) write to XMI_BUSERR: "
 			    "0x%08x ]\n", node_nr, (int)idata);
 		break;
 	case XMI_FAIL:
 		if (writeflag == MEM_READ) {
 			odata = 0;
-			debug("[ decxmi: (node %i) read from XMI_FAIL: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) read from XMI_FAIL: "
 			    "0x%08x ]\n", node_nr, (int)odata);
 		} else
-			debug("[ decxmi: (node %i) write to XMI_FAIL: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) write to XMI_FAIL: "
 			    "0x%08x ]\n", node_nr, (int)idata);
 		break;
 	case 0xc:
 		if (writeflag == MEM_READ) {
 			odata = d->reg_0xc[node_nr];
-			debug("[ decxmi: (node %i) read from REG 0xC: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) read from REG 0xC: "
 			    "0x%08x ]\n", node_nr, (int)odata);
 		} else {
 			d->reg_0xc[node_nr] = idata;
-			debug("[ decxmi: (node %i) write to REG 0xC: "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) write to REG 0xC: "
 			    "0x%08x ]\n", node_nr, (int)idata);
 		}
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ decxmi: (node %i) read from unimplemented "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) read from unimplemented "
 			    "0x%08lx ]\n", node_nr, (long)relative_addr,
 			    (int)odata);
 		} else {
-			debug("[ decxmi: (node %i) write to unimplemented "
+			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) write to unimplemented "
 			    "0x%08lx: 0x%08x ]\n", node_nr,
 			    (long)relative_addr, (int)idata);
 		}

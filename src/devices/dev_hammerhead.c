@@ -63,7 +63,7 @@ DEVICE_ACCESS(hammerhead)
 		int my_id = cpu->cpu_id;
 		struct cpu *other_cpu = cpu->machine->cpus[!my_id];
 
-		debug("[ HAMMERHEAD: from cpu%i to cpu%i: new pc = 0x%llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_hammerhead", VERBOSITY_DEBUG, "[ HAMMERHEAD: from cpu%i to cpu%i: new pc = 0x%llx ]\n",
 		    my_id, !my_id, (long long)idata);
 
 if (idata <= 0x100)

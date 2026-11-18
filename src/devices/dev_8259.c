@@ -144,7 +144,7 @@ DEVICE_ACCESS(8259)
 				/*  NOP / Set Priority Command (R=0, SL=1, EOI=0)  */
 				/*  TODO  */
 			} else {
-				debug("[ 8259: unimplemented command 0x%02x ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "dev_8259", VERBOSITY_DEBUG, "[ 8259: unimplemented command 0x%02x ]\n", (int)idata);
 			}
 		} else {
 			switch (d->current_command) {
@@ -203,7 +203,7 @@ DEVICE_ACCESS(8259)
 				if (idata & 0x02) {
 					/*  Should not be set in PCs, but
 					    on CATS, for example, it is set.  */
-					debug("[ 8259: WARNING! Bit 1 i"
+					debugmsg(SUBSYS_DEVICE, "dev_8259", VERBOSITY_DEBUG, "[ 8259: WARNING! Bit 1 i"
 					    "n Init Cmd 4 is set! ]\n");
 				}
 				if (!(idata & 0x01))

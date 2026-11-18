@@ -85,13 +85,13 @@ DEVICE_ACCESS(cons)
 			if (data[i] != 0) {
 				if (cpu->machine->register_dump ||
 				    cpu->machine->instruction_trace)
-					debug("putchar '");
+					debugmsg(SUBSYS_DEVICE, "dev_cons", VERBOSITY_DEBUG, "putchar '");
 
 				console_putchar(d->console_handle, data[i]);
 
 				if (cpu->machine->register_dump ||
 				    cpu->machine->instruction_trace)
-					debug("'\n");
+					debugmsg(SUBSYS_DEVICE, "dev_cons", VERBOSITY_DEBUG, "'\n");
 				fflush(stdout);
 			}
 		}
