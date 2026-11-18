@@ -78,50 +78,50 @@ DEVICE_ACCESS(sgi_ip22_imc)
 	switch (relative_addr) {
 	case (IMC_CPUCTRL0 - IP22_IMC_BASE):
 		if (writeflag == MEM_WRITE) {
-			/*  debug("[ sgi_ip22_imc: write to "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: write to "
 			    "IMC_CPUCTRL0, data=0x%08x ]\n", (int)idata);  */
 		} else {
-			/*  debug("[ sgi_ip22_imc: read from IMC_CPUCTRL0, "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: read from IMC_CPUCTRL0, "
 			    "data=0x%08x ]\n", (int)odata);  */
 		}
 		break;
 	case (IMC_SYSID - IP22_IMC_BASE):
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_imc: unimplemented write "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: unimplemented write "
 			    "IMC_SYSID, data=0x%08x ]\n", (int)idata);
 		} else {
 			/*  Lowest 4 bits are the revision bits.  */
 			odata = 3;  /*  + IMC_SYSID_HAVEISA;  */
-			/*  debug("[ sgi_ip22_imc: read from IMC_SYSID, "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: read from IMC_SYSID, "
 			    "data=0x%08x ]\n", (int)odata);  */
 		}
 		break;
 	case (IMC_WDOG - IP22_IMC_BASE):
 		if (writeflag == MEM_WRITE) {
-			/*  debug("[ sgi_ip22_imc: write to IMC_WDOG, "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: write to IMC_WDOG, "
 			    "data=0x%08x ]\n", (int)idata);  */
 		} else {
-			/*  debug("[ sgi_ip22_imc: read from IMC_WDOG, "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: read from IMC_WDOG, "
 			    "data=0x%08x ]\n", (int)odata);  */
 		}
 		break;
 	case (IMC_MEMCFG0 - IP22_IMC_BASE):
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_imc: unimplemented write "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: unimplemented write "
 			    "IMC_MEMCFG0, data=0x%08x ]\n", (int)idata);
 		} else {
 			odata = 0x3100 + (0x8000000 >> 22);  /*  ? TODO  */
-			/*  debug("[ sgi_ip22_imc: read from IMC_MEMCFG0,"
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: read from IMC_MEMCFG0,"
 			    " data=0x%08x ]\n", (int)odata);  */
 		}
 		break;
 	case (IMC_MEMCFG1 - IP22_IMC_BASE):
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_imc: unimplemented write "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: unimplemented write "
 			    "IMC_MEMCFG1, data=0x%08x ]\n", (int)idata);
 		} else {
 			odata = 0;
-			/*  debug("[ sgi_ip22_imc: read from IMC_MEMCFG1, "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: read from IMC_MEMCFG1, "
 			    "data=0x%08x ]\n", (int)odata);  */
 		}
 		break;
@@ -131,21 +131,21 @@ DEVICE_ACCESS(sgi_ip22_imc)
 		 *  but I have no idea how it works.
 		 */
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_imc: write to IMC_EEPROM, data="
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: write to IMC_EEPROM, data="
 			    "0x%08x ]\n", (int)idata);
 		} else {
 			odata = random() & 0x1e;
-			debug("[ sgi_ip22_imc: read from IMC_WDOG, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: read from IMC_WDOG, "
 			    "data=0x%08x ]\n", (int)odata);
 		}
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_imc: unimplemented write to "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: unimplemented write to "
 			    "address 0x%x, data=0x%08x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
-			debug("[ sgi_ip22_imc: unimplemented read from "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_imc: unimplemented read from "
 			    "address 0x%x, data=0x%08x ]\n",
 			    (int)relative_addr, (int)odata);
 		}
@@ -173,22 +173,22 @@ DEVICE_ACCESS(sgi_ip22_unknown)
 	switch (relative_addr) {
 	case 0x04:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_unknown: write to address 0x%x,"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_unknown: write to address 0x%x,"
 			    " data=0x%08x ]\n", (int)relative_addr, (int)idata);
 		} else {
 			odata = d->unknown_timer;
 			d->unknown_timer += 100;
-			debug("[ sgi_ip22_unknown: read from address 0x%x, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_unknown: read from address 0x%x, "
 			    "data=0x%08x ]\n", (int)relative_addr, (int)odata);
 		}
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_unknown: unimplemented write to "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_unknown: unimplemented write to "
 			    "address 0x%x, data=0x%08x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
-			debug("[ sgi_ip22_unknown: unimplemented read from "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_unknown: unimplemented read from "
 			    "address 0x%x, data=0x%08x ]\n",
 			    (int)relative_addr, (int)odata);
 		}
@@ -223,11 +223,11 @@ DEVICE_ACCESS(sgi_ip22_unknown2)
 	switch (relative_addr) {
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22_unknown2: unimplemented write "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_unknown2: unimplemented write "
 			    "to address 0x%x, data=0x%08x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
-			debug("[ sgi_ip22_unknown2: unimplemented read from "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_unknown2: unimplemented read from "
 			    "address 0x%x, data=0x%08x ]\n",
 			    (int)relative_addr, (int)odata);
 		}
@@ -248,7 +248,7 @@ DEVICE_ACCESS(sgi_ip22_sysid)
 	idata = memory_readmax64(cpu, data, len);
 
 	if (writeflag == MEM_WRITE) {
-		debug("[ sgi_ip22_sysid: write to address 0x%x, "
+		debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_sysid: write to address 0x%x, "
 		    "data=0x%08x ]\n", (int)relative_addr, (int)idata);
 	} else {
 		/*
@@ -263,7 +263,7 @@ DEVICE_ACCESS(sgi_ip22_sysid)
 		/*  IOC rev 1, Guiness, board rev 3:  */
 		odata = (1 << 5) + (3 << 1) + (d->guiness_flag? 0 : 1);
 
-		debug("[ sgi_ip22_sysid: read from address 0x%x, data="
+		debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22_sysid: read from address 0x%x, data="
 		    "0x%08x ]\n", (int)relative_addr, (int)odata);
 	}
 
@@ -292,10 +292,10 @@ DEVICE_ACCESS(sgi_ip22)
 	switch (relative_addr) {
 	case 0x00:	/*  local0 irq stat  */
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22: write to local0 IRQ STAT, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to local0 IRQ STAT, "
 			    "data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from local0 IRQ STAT, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from local0 IRQ STAT, "
 			    "data=0x%llx ]\n", (long long)odata);
 		}
 		break;
@@ -314,19 +314,19 @@ DEVICE_ACCESS(sgi_ip22)
 debugmsg(SUBSYS_DEVICE, "sgi_ip22", VERBOSITY_DEBUG, "TODO: ip22 legacy interrupt rewrite!\n");
 
 //			cpu_interrupt_ack(cpu, 8 + 63);
-//			debug("[ sgi_ip22: write to local0 IRQ MASK, "
+//			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to local0 IRQ MASK, "
 //			    "data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from local0 IRQ MASK, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from local0 IRQ MASK, "
 			    "data=0x%llx ]\n", (long long)odata);
 		}
 		break;
 	case 0x08:	/*  local1 irq stat  */
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22: write to local1 IRQ STAT, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to local1 IRQ STAT, "
 			    "data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from local1 IRQ STAT, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from local1 IRQ STAT, "
 			    "data=0x%llx ]\n", (long long)odata);
 		}
 		break;
@@ -336,37 +336,37 @@ debugmsg(SUBSYS_DEVICE, "sgi_ip22", VERBOSITY_DEBUG, "TODO: ip22 legacy interrup
 
 debugmsg(SUBSYS_DEVICE, "sgi_ip22", VERBOSITY_DEBUG, "TODO: ip22 legacy interrupt rewrite!\n");
 //			cpu_interrupt_ack(cpu, 8 + 63);
-//			debug("[ sgi_ip22: write to local1 IRQ MASK, "
+//			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to local1 IRQ MASK, "
 //			    "data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from local1 IRQ MASK, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from local1 IRQ MASK, "
 			    "data=0x%llx ]\n", (long long)odata);
 		}
 		break;
 	case 0x10:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22: write to mappable IRQ STAT, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to mappable IRQ STAT, "
 			    "data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from mappable IRQ STAT, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from mappable IRQ STAT, "
 			    "data=0x%llx ]\n", (long long)odata);
 		}
 		break;
 	case 0x14:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22: write to mappable local0 IRQ "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to mappable local0 IRQ "
 			    "MASK, data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from mappable local0 IRQ "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from mappable local0 IRQ "
 			    "MASK, data=0x%llx ]\n", (long long)odata);
 		}
 		break;
 	case 0x18:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22: write to mappable local1 IRQ "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: write to mappable local1 IRQ "
 			    "MASK, data=0x%llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_ip22: read from mappable local1 IRQ "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: read from mappable local1 IRQ "
 			    "MASK, data=0x%llx ]\n", (long long)odata);
 		}
 		break;
@@ -388,11 +388,11 @@ debugmsg(SUBSYS_DEVICE, "sgi_ip22", VERBOSITY_DEBUG, "TODO: ip22 legacy interrup
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip22: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: unimplemented write to address "
 			    "0x%x, data=0x%02x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
-			debug("[ sgi_ip22: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip22", VERBOSITY_DEBUG, "[ sgi_ip22: unimplemented read from address "
 			    "0x%llx ]\n", (long long)relative_addr);
 		}
 	}

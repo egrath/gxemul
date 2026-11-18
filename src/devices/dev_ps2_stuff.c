@@ -200,47 +200,47 @@ DEVICE_ACCESS(ps2)
 				/*  :-)  TODO: remove this?  */
 				d->timer_count[timer_nr] ++;
 			}
-			debug("[ ps2: read timer %i count: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read timer %i count: 0x%llx ]\n",
 			    timer_nr, (long long)odata);
 		} else {
 			d->timer_count[timer_nr] = idata;
-			debug("[ ps2: write timer %i count: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write timer %i count: 0x%llx ]\n",
 			    timer_nr, (long long)idata);
 		}
 		break;
 	case 0x0010:	/*  timer mode  */
 		if (writeflag == MEM_READ) {
 			odata = d->timer_mode[timer_nr];
-			debug("[ ps2: read timer %i mode: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read timer %i mode: 0x%llx ]\n",
 			    timer_nr, (long long)odata);
 		} else {
 			d->timer_mode[timer_nr] = idata;
-			debug("[ ps2: write timer %i mode: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write timer %i mode: 0x%llx ]\n",
 			    timer_nr, (long long)idata);
 		}
 		break;
 	case 0x0020:	/*  timer comp  */
 		if (writeflag == MEM_READ) {
 			odata = d->timer_comp[timer_nr];
-			debug("[ ps2: read timer %i comp: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read timer %i comp: 0x%llx ]\n",
 			    timer_nr, (long long)odata);
 		} else {
 			d->timer_comp[timer_nr] = idata;
-			debug("[ ps2: write timer %i comp: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write timer %i comp: 0x%llx ]\n",
 			    timer_nr, (long long)idata);
 		}
 		break;
 	case 0x0030:	/*  timer hold  */
 		if (writeflag == MEM_READ) {
 			odata = d->timer_hold[timer_nr];
-			debug("[ ps2: read timer %i hold: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read timer %i hold: 0x%llx ]\n",
 			    timer_nr, (long long)odata);
 			if (timer_nr >= 2)
 				debugmsg(SUBSYS_DEVICE, "ps2_stuff", VERBOSITY_WARNING, "[ WARNING: ps2: read from non-"
 				    "existant timer %i hold register ]\n");
 		} else {
 			d->timer_hold[timer_nr] = idata;
-			debug("[ ps2: write timer %i hold: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write timer %i hold: 0x%llx ]\n",
 			    timer_nr, (long long)idata);
 			if (timer_nr >= 2)
 				debugmsg(SUBSYS_DEVICE, "ps2_stuff", VERBOSITY_WARNING, "[ WARNING: ps2: write to "
@@ -252,10 +252,10 @@ DEVICE_ACCESS(ps2)
 	case 0x8000 + D2_CHCR_REG:
 		if (writeflag==MEM_READ) {
 			odata = d->dmac_reg[regnr];
-			/*  debug("[ ps2: dmac read from D2_CHCR "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: dmac read from D2_CHCR "
 			    "(0x%llx) ]\n", (long long)d->dmac_reg[regnr]);  */
 		} else {
-			/*  debug("[ ps2: dmac write to D2_CHCR, "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: dmac write to D2_CHCR, "
 			    "data 0x%016llx ]\n", (long long) idata);  */
 			if (idata & D_CHCR_STR) {
 				int length = d->dmac_reg[D2_QWC_REG/0x10] * 16;
@@ -265,7 +265,7 @@ DEVICE_ACCESS(ps2)
 				    D2_TADR_REG/0x10];
 				unsigned char *copy_buf;
 
-				debug("[ ps2: dmac [ch2] transfer addr="
+				debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: dmac [ch2] transfer addr="
 				    "0x%016llx len=0x%lx ]\n", (long long)
 				    d->dmac_reg[D2_MADR_REG/0x10],
 				    (long)length);
@@ -288,7 +288,7 @@ DEVICE_ACCESS(ps2)
 				/*  interrupt DMA channel 2  */
 				INTERRUPT_ASSERT(d->dma_channel2_irq);
 			} else
-				debug("[ ps2: dmac [ch2] stopping "
+				debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: dmac [ch2] stopping "
 				    "transfer ]\n");
 			d->dmac_reg[regnr] = idata;
 			return 1;
@@ -324,14 +324,14 @@ DEVICE_ACCESS(ps2)
 	case 0xf000:	/*  interrupt register  */
 		if (writeflag == MEM_READ) {
 			odata = d->intr;
-			debug("[ ps2: read from Interrupt Register:"
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read from Interrupt Register:"
 			    " 0x%llx ]\n", (long long)odata);
 
 			/*  TODO: This is _NOT_ correct behavior:  */
 //			d->intr = 0;
 //			INTERRUPT_DEASSERT(d->intr_irq);
 		} else {
-			debug("[ ps2: write to Interrupt Register: "
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write to Interrupt Register: "
 			    "0x%llx ]\n", (long long)idata);
 			/*  Clear out bits that are set in idata:  */
 			d->intr &= ~idata;
@@ -344,10 +344,10 @@ DEVICE_ACCESS(ps2)
 	case 0xf010:	/*  interrupt mask  */
 		if (writeflag == MEM_READ) {
 			odata = d->imask;
-			/*  debug("[ ps2: read from Interrupt Mask "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read from Interrupt Mask "
 			    "Register: 0x%llx ]\n", (long long)odata);  */
 		} else {
-			/*  debug("[ ps2: write to Interrupt Mask "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write to Interrupt Mask "
 			    "Register: 0x%llx ]\n", (long long)idata);  */
 			/*  Note: written value indicates which bits
 			    to _toggle_, not which bits to set!  */
@@ -358,11 +358,11 @@ DEVICE_ACCESS(ps2)
 	case 0xf230:	/*  sbus interrupt register?  */
 		if (writeflag == MEM_READ) {
 			odata = d->sbus_smflg;
-			debug("[ ps2: read from SBUS SMFLG:"
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read from SBUS SMFLG:"
 			    " 0x%llx ]\n", (long long)odata);
 		} else {
 			/*  Clear bits on write:  */
-			debug("[ ps2: write to SBUS SMFLG:"
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write to SBUS SMFLG:"
 			    " 0x%llx ]\n", (long long)idata);
 			d->sbus_smflg &= ~idata;
 			/*  irq 1 is SBUS  */
@@ -372,10 +372,10 @@ DEVICE_ACCESS(ps2)
 		break;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ ps2: read from addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: read from addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)odata);
 		} else {
-			debug("[ ps2: write to addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write to addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)idata);
 		}
 	}

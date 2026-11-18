@@ -213,12 +213,12 @@ DEVICE_ACCESS(ps2_gif)
 		return 0;
 
 	if (writeflag==MEM_READ) {
-		debug("[ gif read from addr 0x%x, len=%i ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif read from addr 0x%x, len=%i ]\n",
 		    (int)relative_addr, (int)len);
 	} else {
 		if (data[0] == 0x08 && data[1] == 0x80) {
 			/*  Possibly "initialize 640x480 mode":  */
-			debug("[ gif: initialize video mode (?) ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif: initialize video mode (?) ]\n");
 		} else if (data[0] == 0x04 && data[1] == 0x00 && len > 300) {
 			/*  Possibly "output 8x16 character":  */
 			int xbase, ybase, xsize, ysize, x, y;
@@ -230,7 +230,7 @@ DEVICE_ACCESS(ps2_gif)
 			ysize = data[13*4 + 0] + (data[13*4 + 1] << 8);
 			ysize &= ~0xf;	/*  multple of 16  */
 
-			/*  debug("[ gif: putchar at (%i,%i), size (%i,%i) "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif: putchar at (%i,%i), size (%i,%i) "
 			    "]\n", xbase, ybase, xsize, ysize);  */
 
 			/*
@@ -290,7 +290,7 @@ DEVICE_ACCESS(ps2_gif)
 			x_size   = data[12*4 + 0] + ((data[12*4 + 1]) << 8);
 			y_size   = data[13*4 + 0] + ((data[13*4 + 1]) << 8);
 
-			/*  debug("[ gif: blockcopy (%i,%i) -> (%i,%i), size="
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif: blockcopy (%i,%i) -> (%i,%i), size="
 			    "(%i,%i) ]\n", x_source,y_source, x_dest,y_dest,
 			    x_size,y_size);  */
 
@@ -307,7 +307,7 @@ DEVICE_ACCESS(ps2_gif)
 			xend  = (data[8*5 + 0] + (data[8*5 + 1] << 8)) / 16;
 			yend  = (data[8*5 + 2] + (data[8*5 + 3] << 8)) / 16;
 
-			/*  debug("[ gif: linux \"clear\" (%i,%i)-(%i,%i) ]\n",
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif: linux \"clear\" (%i,%i)-(%i,%i) ]\n",
 			    xbase, ybase, xend, yend);  */
 
 			framebuffer_blockcopyfill(d->vfb_data, 1, 0,0,0,
@@ -321,7 +321,7 @@ DEVICE_ACCESS(ps2_gif)
 			xend  = (data[28*4 + 0] + (data[28*4 + 1] << 8)) / 16;
 			yend  = (data[28*4 + 2] + (data[28*4 + 3] << 8)) / 16;
 
-			/*  debug("[ gif: NETBSD cursor at (%i,%i)-(%i,%i) ]\n",
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif: NETBSD cursor at (%i,%i)-(%i,%i) ]\n",
 			    xbase, ybase, xend, yend);  */
 
 			/*  Output the cursor to framebuffer memory:  */
@@ -353,7 +353,7 @@ DEVICE_ACCESS(ps2_gif)
 			xend  = (data[8*8 + 0] + (data[8*8 + 1] << 8)) / 16;
 			yend  = (data[8*8 + 2] + (data[8*8 + 3] << 8)) / 16;
 
-			debug("[ gif: LINUX cursor at (%i,%i)-(%i,%i) ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_gif", VERBOSITY_DEBUG, "[ gif: LINUX cursor at (%i,%i)-(%i,%i) ]\n",
 			    xbase, ybase, xend, yend);
 
 			/*  Output the cursor to framebuffer memory:  */

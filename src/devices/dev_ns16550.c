@@ -229,7 +229,7 @@ DEVICE_ACCESS(ns16550)
 			d->reg[com_lsr] = idata;
 		} else {
 			odata = d->reg[com_lsr];
-			/*  debug("[ ns16550 (%s): read from lsr: 0x%02x ]\n",
+			/*  debugmsg(SUBSYS_DEVICE, "dev_ns16550", VERBOSITY_DEBUG, "[ ns16550 (%s): read from lsr: 0x%02x ]\n",
 			    d->name, (int)odata);  */
 		}
 		break;

@@ -447,7 +447,7 @@ static void sh4_sci_cmd(struct sh4_data *d, struct cpu *cpu)
 		cpu->memory_rw(cpu, cpu->mem, SCI_DEVICE_BASE + d->sci_cur_addr,
 		    &data_byte, 1, MEM_READ, PHYSICAL);
 
-		debug("[ SCI: read addr=%x data=%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ SCI: read addr=%x data=%x ]\n",
 		    d->sci_cur_addr, data_byte);
 
 		d->sci_curbyte = data_byte;
@@ -462,7 +462,7 @@ static void sh4_sci_cmd(struct sh4_data *d, struct cpu *cpu)
 		/*  Write the 4 data bits to the current address:  */
 		uint8_t data_byte = cmd & 0x0f;
 
-		debug("[ SCI: write addr=%x data=%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ SCI: write addr=%x data=%x ]\n",
 		    d->sci_cur_addr, data_byte);
 
 		cpu->memory_rw(cpu, cpu->mem, SCI_DEVICE_BASE + d->sci_cur_addr,
@@ -962,7 +962,7 @@ DEVICE_ACCESS(sh4)
 			d->sdmr3 = v;
 		else
 			d->sdmr2 = v;
-		debug("[ sh4: sdmr%i set to 0x%04" PRIx16" ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4: sdmr%i set to 0x%04" PRIx16" ]\n",
 		    relative_addr & 0x00040000? 3 : 2, v);
 		return 1;
 	}
@@ -1140,17 +1140,17 @@ DEVICE_ACCESS(sh4)
 			odata = d->tstr;
 		} else {
 			if (idata & 1 && !(d->tstr & 1))
-				debug("[ sh4 timer: starting timer 0 ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer: starting timer 0 ]\n");
 			if (idata & 2 && !(d->tstr & 2))
-				debug("[ sh4 timer: starting timer 1 ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer: starting timer 1 ]\n");
 			if (idata & 4 && !(d->tstr & 4))
-				debug("[ sh4 timer: starting timer 2 ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer: starting timer 2 ]\n");
 			if (!(idata & 1) && d->tstr & 1)
-				debug("[ sh4 timer: stopping timer 0 ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer: stopping timer 0 ]\n");
 			if (!(idata & 2) && d->tstr & 2)
-				debug("[ sh4 timer: stopping timer 1 ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer: stopping timer 1 ]\n");
 			if (!(idata & 4) && d->tstr & 4)
-				debug("[ sh4 timer: stopping timer 2 ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer: stopping timer 2 ]\n");
 			d->tstr = idata;
 		}
 		break;
@@ -1214,7 +1214,7 @@ DEVICE_ACCESS(sh4)
 				break;
 			}
 
-			debug("[ sh4 timer %i clock set to %f Hz ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4 timer %i clock set to %f Hz ]\n",
 			    timer_nr, d->timer_hz[timer_nr]);
 
 			if (idata & (TCR_ICPF | TCR_ICPE1 | TCR_ICPE0 |
@@ -1469,7 +1469,7 @@ DEVICE_ACCESS(sh4)
 
 	case SH4_PDTRA:
 		if (writeflag == MEM_WRITE) {
-			// debug("[ sh4: pdtra: write 0x%08x (while pctra = 0x%08x) ]\n", (int)idata, (int)d->pctra);
+			// debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4: pdtra: write 0x%08x (while pctra = 0x%08x) ]\n", (int)idata, (int)d->pctra);
 			d->pdtra = idata;
 
 			// Hack: Makes the Dreamcast BIOS pass "cable select"
@@ -1478,7 +1478,7 @@ DEVICE_ACCESS(sh4)
 			if ((idata & 1) == 0 || (idata & 2) == 0)
 				d->pdtra &= ~3;
 		} else {
-			// debug("[ sh4: pdtra: read ]\n");
+			// debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4: pdtra: read ]\n");
 			odata = d->pdtra;
 
 			// bits 8..9 on Dreamcast mean:
@@ -1496,10 +1496,10 @@ DEVICE_ACCESS(sh4)
 
 	case SH4_PDTRB:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sh4: pdtrb: write: TODO ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4: pdtrb: write: TODO ]\n");
 			d->pdtrb = idata;
 		} else {
-			debug("[ sh4: pdtrb: read: TODO ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ sh4: pdtrb: read: TODO ]\n");
 			odata = d->pdtrb;
 		}
 		break;
@@ -1823,7 +1823,7 @@ DEVICE_ACCESS(sh4)
 			d->rtc_rcr2 = idata;
 			// bit 1 (i.e. idata == 0x02) means reset.
 			if (idata != 0x02) {
-				debug("[ SH4: TODO: RTC RCR2 value 0x%02x ignored. ]\n", (int)idata);
+				debugmsg(SUBSYS_DEVICE, "dev_sh4", VERBOSITY_DEBUG, "[ SH4: TODO: RTC RCR2 value 0x%02x ignored. ]\n", (int)idata);
 			}
 		}
 		break;

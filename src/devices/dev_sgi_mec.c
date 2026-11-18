@@ -119,7 +119,7 @@ static void mec_control_write(struct cpu *cpu, struct sgi_mec_data *d,
 	uint64_t x)
 {
 	if (x & MEC_MAC_CORE_RESET) {
-		debug("[ sgi_mec: CORE RESET ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: CORE RESET ]\n");
 		mec_reset(d);
 	}
 }
@@ -489,13 +489,13 @@ DEVICE_ACCESS(sgi_mec)
 			d->reg[MEC_INT_STATUS / sizeof(uint64_t)] =
 				 old_int_status
 				 & ~(writtenvalue & MEC_INT_STATUS_MASK);
-			debug("[ sgi_mec: write to MEC_INT_STATUS: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_INT_STATUS: "
 			    "0x%016llx ]\n", (long long)idata);
 		}
 		break;
 	case MEC_DMA_CONTROL:	/*  0x10  */
 		if (writeflag) {
-			debug("[ sgi_mec: write to MEC_DMA_CONTROL: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_DMA_CONTROL: "
 			    "0x%016llx ]\n", (long long)idata);
 			if (!(idata & MEC_DMA_TX_INT_ENABLE)) {
 				/*  This should apparently stop the
@@ -507,17 +507,17 @@ DEVICE_ACCESS(sgi_mec)
 		break;
 	case MEC_TX_ALIAS:	/*  0x20  */
 		if (writeflag) {
-			debug("[ sgi_mec: write to MEC_TX_ALIAS: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_TX_ALIAS: "
 			    "0x%016llx ]\n", (long long)idata);
 		} else {
-			debug("[ sgi_mec: read from MEC_TX_ALIAS: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: read from MEC_TX_ALIAS: "
 			    "0x%016llx ]\n", (long long)idata);
 			odata = d->reg[MEC_TX_RING_PTR / sizeof(uint64_t)];
 		}
 		break;
 	case MEC_RX_ALIAS:	/*  0x28  */
 		if (writeflag)
-			debug("[ sgi_mec: write to MEC_RX_ALIAS: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_RX_ALIAS: "
 			    "0x%016llx ]\n", (long long)idata);
 		break;
 	case MEC_TX_RING_PTR:		/*  0x30  */
@@ -526,7 +526,7 @@ DEVICE_ACCESS(sgi_mec)
 			writtenvalue &= MEC_TX_RING_WRITE_PTR;
 			d->reg[regnr] = (old_tx_ring_ptr & ~MEC_TX_RING_WRITE_PTR) | writtenvalue;
 
-			debug("[ sgi_mec: write to MEC_TX_RING_PTR: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_TX_RING_PTR: "
 			    "0x%016llx ]\n", (long long)idata);
 		}
 		break;
@@ -536,7 +536,7 @@ DEVICE_ACCESS(sgi_mec)
 			int reg = d->reg[MEC_PHY_ADDRESS / sizeof(uint64_t)] & MEC_PHY_ADDR_REGISTER;
 
 			if (writeflag) {
-				debug("[ sgi_mec: write to MEC_PHY_DATA (dev %i, reg %i): "
+				debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_PHY_DATA (dev %i, reg %i): "
 				    "0x%016llx ]\n",
 				    dev, reg, (long long)idata);
 			}
@@ -580,17 +580,17 @@ DEVICE_ACCESS(sgi_mec)
 		break;
 	case MEC_PHY_ADDRESS:	/*  0x68  */
 		if (writeflag)
-			debug("[ sgi_mec: write to MEC_PHY_ADDRESS: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_PHY_ADDRESS: "
 			    "0x%016llx ]\n", (long long)idata);
 		break;
 	case MEC_PHY_READ_INITIATE:	/*  0x70  */
 		if (writeflag)
-			debug("[ sgi_mec: write to MEC_PHY_READ_INITIATE: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_PHY_READ_INITIATE: "
 			    "0x%016llx ]\n", (long long)idata);
 		break;
 	case MEC_STATION:	/*  0xa0  */
 		if (writeflag)
-			debug("[ sgi_mec: setting the MAC address to "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: setting the MAC address to "
 			    "%02x:%02x:%02x:%02x:%02x:%02x ]\n",
 			    (idata >> 40) & 255, (idata >> 32) & 255,
 			    (idata >> 24) & 255, (idata >> 16) & 255,
@@ -604,13 +604,13 @@ DEVICE_ACCESS(sgi_mec)
 		break;
 	case MEC_STATION_ALT:	/*  0xa8  */
 		if (writeflag)
-			debug("[ sgi_mec: setting the ALTERNATIVE MAC address"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: setting the ALTERNATIVE MAC address"
 			    " to %02x:%02x:%02x:%02x:%02x:%02x ]\n",
 			    (idata >> 40) & 255, (idata >> 32) & 255,
 			    (idata >> 24) & 255, (idata >> 16) & 255,
 			    (idata >>  8) & 255, (idata >>  0) & 255);
 		else
-			debug("[ sgi_mec: reading the ALTERNATIVE MAC address"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: reading the ALTERNATIVE MAC address"
 			    " as %02x:%02x:%02x:%02x:%02x:%02x ]\n",
 			    (odata >> 40) & 255, (odata >> 32) & 255,
 			    (odata >> 24) & 255, (odata >> 16) & 255,
@@ -618,17 +618,17 @@ DEVICE_ACCESS(sgi_mec)
 		break;
 	case MEC_MULTICAST:	/*  0xb0  */
 		if (writeflag)
-			debug("[ sgi_mec: write to MEC_MULTICAST: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_MULTICAST: "
 			    "0x%016llx ]\n", (long long)idata);
 		break;
 	case MEC_TX_RING_BASE:	/*  0xb8  */
 		if (writeflag)
-			debug("[ sgi_mec: write to MEC_TX_RING_BASE: "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_TX_RING_BASE: "
 			    "0x%016llx ]\n", (long long)idata);
 		break;
 	case MEC_MCL_RX_FIFO:	/*  0x100  */
 		if (writeflag) {
-			debug("[ sgi_mec: write to MEC_MCL_RX_FIFO: 0x"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: write to MEC_MCL_RX_FIFO: 0x"
 			    "%016llx ]\n", (long long)idata);
 			d->rx_addr[d->cur_rx_addr_index_write] = idata;
 			d->cur_rx_addr_index_write ++;

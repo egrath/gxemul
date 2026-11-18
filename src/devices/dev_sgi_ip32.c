@@ -365,16 +365,16 @@ DEVICE_ACCESS(crime)
 
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ crime: read from 0x%x, len=%i:",
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ crime: read from 0x%x, len=%i:",
 			    (int)relative_addr, len);
 			for (i=0; i<len; i++)
-				debug(" %02x", data[i]);
-			debug(" ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " ]\n");
 		} else {
-			debug("[ crime: write to 0x%x:", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ crime: write to 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
-				debug(" %02x", data[i]);
-			debug(" (len=%i) ]\n", len);
+				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%i) ]\n", len);
 		}
 	}
 
@@ -613,15 +613,15 @@ DEVICE_ACCESS(mace)
 
 	default:
 		if (writeflag == MEM_READ) {
-			debug("[ mace: read from 0x%x:", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ mace: read from 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
-				debug(" %02x", data[i]);
-			debug(" (len=%i) ]\n", len);
+				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%i) ]\n", len);
 		} else {
-			debug("[ mace: write to 0x%x:", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ mace: write to 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
-				debug(" %02x", data[i]);
-			debug(" (len=%i) ]\n", len);
+				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%i) ]\n", len);
 		}
 	}
 
@@ -835,11 +835,11 @@ DEVICE_ACCESS(sgi_ust)
 		break;
 	default:
 		if (writeflag == MEM_WRITE)
-			debug("[ sgi_ust: unimplemented write to "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ sgi_ust: unimplemented write to "
 			    "address 0x%llx, data=0x%016llx ]\n",
 			    (long long)relative_addr, (long long)idata);
 		else
-			debug("[ sgi_ust: unimplemented read from address"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ sgi_ust: unimplemented read from address"
 			    " 0x%llx ]\n", (long long)relative_addr);
 	}
 

@@ -164,11 +164,11 @@ debugmsg(SUBSYS_DEVICE, "sgi_ip30", VERBOSITY_DEBUG, "IP30 legacy interrupt rewr
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30: unimplemented write to address "
 			    "0x%x, data=0x%02x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
-			debug("[ sgi_ip30: unimplemented read from address"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30: unimplemented read from address"
 			    " 0x%x ]\n", (int)relative_addr);
 		}
 	}
@@ -214,11 +214,11 @@ DEVICE_ACCESS(sgi_ip30_2)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30_2: unimplemented write to "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_2: unimplemented write to "
 			    "address 0x%x, data=0x%02x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
-			debug("[ sgi_ip30_2: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_2: unimplemented read from address "
 			    "0x%x ]\n", (int)relative_addr);
 		}
 	}
@@ -241,7 +241,7 @@ DEVICE_ACCESS(sgi_ip30_3)
 
 	case 0xb4:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30_3: unimplemented write to "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_3: unimplemented write to "
 			    "address 0x%x, data=0x%02x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
@@ -251,7 +251,7 @@ DEVICE_ACCESS(sgi_ip30_3)
 
 	case 0x00104:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30_3: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_3: unimplemented write to address "
 			    "0x%x, data=0x%02x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
@@ -278,11 +278,11 @@ DEVICE_ACCESS(sgi_ip30_3)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30_3: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_3: unimplemented write to address "
 			    "0x%x, data=0x%02x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
-			debug("[ sgi_ip30_3: unimplemented read from "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_3: unimplemented read from "
 			    "address 0x%x ]\n", (int)relative_addr);
 		}
 	}
@@ -321,11 +321,11 @@ DEVICE_ACCESS(sgi_ip30_4)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30_4: unimplemented write to address"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_4: unimplemented write to address"
 			    " 0x%x, data=0x%02x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
-			debug("[ sgi_ip30_4: unimplemented read from address"
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_4: unimplemented read from address"
 			    " 0x%x ]\n", (int)relative_addr);
 		}
 	}
@@ -356,11 +356,11 @@ DEVICE_ACCESS(sgi_ip30_5)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip30_5: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_5: unimplemented write to address "
 			    "0x%x, data=0x%02x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
-			debug("[ sgi_ip30_5: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip30", VERBOSITY_DEBUG, "[ sgi_ip30_5: unimplemented read from address "
 			    "0x%x ]\n", (int)relative_addr);
 		}
 	}

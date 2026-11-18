@@ -127,7 +127,7 @@ DEVICE_ACCESS(pcic_cis)
 	if (relative_addr < sizeof(x))
 		odata = x[relative_addr];
 
-	debug("[ dev_pcic_cis_access: blah blah: addr=0x%x ]\n",
+	debugmsg(SUBSYS_DEVICE, "dev_pcic", VERBOSITY_DEBUG, "[ dev_pcic_cis_access: blah blah: addr=0x%x ]\n",
 	    (int)relative_addr);
 }
 
@@ -190,13 +190,13 @@ DEVICE_ACCESS(pcic)
 
 		default:
 			if (writeflag == MEM_WRITE) {
-				debug("[ pcic: unimplemented write to "
+				debugmsg(SUBSYS_DEVICE, "dev_pcic", VERBOSITY_DEBUG, "[ pcic: unimplemented write to "
 				    "controller %i socket %c, regnr %i: "
 				    "data=0x%02x ]\n", controller_nr,
 				    socket_nr? 'B' : 'A',
 				    d->regnr & 0x3f, (int)idata);
 			} else {
-				debug("[ pcic: unimplemented read from "
+				debugmsg(SUBSYS_DEVICE, "dev_pcic", VERBOSITY_DEBUG, "[ pcic: unimplemented read from "
 				    "controller %i socket %c, regnr %i ]\n",
 				    controller_nr, socket_nr? 'B' : 'A',
 				    d->regnr & 0x3f);

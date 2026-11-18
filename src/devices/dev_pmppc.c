@@ -67,7 +67,7 @@ DEVICE_ACCESS(pmppc_board)
 		if (writeflag==MEM_READ) {
 			odata = d->config0;
 		} else {
-			debug("[ pmppc: UNIMPLEMENTED write to PMPPC_CONFIG0:"
+			debugmsg(SUBSYS_DEVICE, "dev_pmppc", VERBOSITY_DEBUG, "[ pmppc: UNIMPLEMENTED write to PMPPC_CONFIG0:"
 			    " 0x%02x ]\n", (int)idata);
 		}
 		break;
@@ -76,7 +76,7 @@ DEVICE_ACCESS(pmppc_board)
 		if (writeflag==MEM_READ) {
 			odata = d->config1;
 		} else {
-			debug("[ pmppc: UNIMPLEMENTED write to PMPPC_CONFIG1:"
+			debugmsg(SUBSYS_DEVICE, "dev_pmppc", VERBOSITY_DEBUG, "[ pmppc: UNIMPLEMENTED write to PMPPC_CONFIG1:"
 			    " 0x%02x ]\n", (int)idata);
 		}
 		break;
@@ -95,10 +95,10 @@ DEVICE_ACCESS(pmppc_board)
 
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ pmppc: UNIMPLEMENTED read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pmppc", VERBOSITY_DEBUG, "[ pmppc: UNIMPLEMENTED read from 0x%08lx ]\n",
 			    (long)relative_addr);
 		} else {
-			debug("[ pmppc: UNIMPLEMENTED write to  0x%08lx:"
+			debugmsg(SUBSYS_DEVICE, "dev_pmppc", VERBOSITY_DEBUG, "[ pmppc: UNIMPLEMENTED write to  0x%08lx:"
 			    " 0x%02x ]\n", (long)relative_addr, (int)idata);
 		}
 	}

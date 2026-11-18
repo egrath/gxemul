@@ -323,21 +323,21 @@ DEVICE_ACCESS(pvr_dma)
 
 	case PVR_ADDR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr_dma: ADDR set to 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr_dma: ADDR set to 0x%08x ]\n",
 			    (int) idata);
 		}
 		break;
 
 	case PVR_COUNT:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr_dma: COUNT set to 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr_dma: COUNT set to 0x%08x ]\n",
 			    (int) idata);
 		}
 		break;
 
 	case PVR_MODE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr_dma: MODE set to 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr_dma: MODE set to 0x%08x ]\n",
 			    (int) idata);
 			if (idata != 0) {
 				pvr_dma_transfer(cpu, d);
@@ -569,16 +569,16 @@ void pvr_geometry_updated(struct pvr_data *d)
 	if (!d->video_enabled || !d->display_enabled)
 		return;
 
-	debug("[ pvr_geometry_updated: %i x %i, ", d->xsize, d->ysize);
+	debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr_geometry_updated: %i x %i, ", d->xsize, d->ysize);
 
 	switch (d->pixelmode) {
-	case 0: debug("RGB0555 (16-bit)"); break;
-	case 1: debug("RGB565 (16-bit)"); break;
-	case 2: debug("RGB888 (24-bit)"); break;
-	case 3: debug("RGB0888 (32-bit)"); break;
+	case 0: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB0555 (16-bit)"); break;
+	case 1: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB565 (16-bit)"); break;
+	case 2: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB888 (24-bit)"); break;
+	case 3: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB0888 (32-bit)"); break;
 	}
 
-	debug(" ]\n");
+	debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, " ]\n");
 }
 
 
@@ -1075,7 +1075,7 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 
 	double baseRed = 0.0, baseGreen = 0.0, baseBlue = 0.0;
 
-	debug("[ pvr_render: rendering to FB offset 0x%x, "
+	debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr_render: rendering to FB offset 0x%x, "
 	    "%i Tile Accelerator commands ]\n", fb_base, d->n_ta_commands);
 
 	/*
@@ -1574,12 +1574,12 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_RESET:
 		if (writeflag == MEM_WRITE) {
 			if (idata != 0) {
-				debug("[ pvr: RESET ");
+				debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: RESET ");
 				if (idata & PVR_RESET_PVR)
 					pvr_reset(d);
 				if (idata & PVR_RESET_TA)
 					pvr_reset_ta(d);
-				debug("]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "]\n");
 			}
 			idata = 0;
 			DEFAULT_WRITE;
@@ -1588,7 +1588,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_STARTRENDER:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: STARTRENDER ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: STARTRENDER ]\n");
 			pvr_render(cpu, d);
 		} else {
 			debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: huh? read from STARTRENDER ]\n");
@@ -1597,7 +1597,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_OB_ADDR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: OB_ADDR set to 0x%08" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: OB_ADDR set to 0x%08" PRIx32" ]\n",
 			    (uint32_t)(idata & PVR_OB_ADDR_MASK));
 			if (idata & ~PVR_OB_ADDR_MASK) {
 				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: OB_ADDR: Fatal error: Unknown"
@@ -1611,7 +1611,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_TILEBUF_ADDR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: TILEBUF_ADDR set to 0x%08" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TILEBUF_ADDR set to 0x%08" PRIx32" ]\n",
 			    (uint32_t)(idata & PVR_TILEBUF_ADDR_MASK));
 			if (idata & ~PVR_TILEBUF_ADDR_MASK) {
 				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "[ pvr: TILEBUF_ADDR: Unknown"
@@ -1626,21 +1626,21 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_SPANSORT:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: SPANSORT: ");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: SPANSORT: ");
 			if (idata & PVR_SPANSORT_SPAN0)
-				debug("SPAN0 ");
+				debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "SPAN0 ");
 			if (idata & PVR_SPANSORT_SPAN1)
-				debug("SPAN1 ");
+				debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "SPAN1 ");
 			if (idata & PVR_SPANSORT_TSP_CACHE_ENABLE)
-				debug("TSP_CACHE_ENABLE ");
-			debug("]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "TSP_CACHE_ENABLE ");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "]\n");
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_BRDCOLR:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: BRDCOLR set to 0x%06" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: BRDCOLR set to 0x%06" PRIx32" ]\n",
 			    (int)idata);
 			DEFAULT_WRITE;
 			d->border_updated = 1;
@@ -1662,23 +1662,23 @@ DEVICE_ACCESS(pvr)
 			d->line_double = idata & DIWMODE_SD_MASK? 1:0;
 			d->display_enabled = idata & DIWMODE_DE_MASK? 1:0;
 
-			debug("[ pvr: DIWMODE set to: ");
-			debug("clock_double=%i, ", d->clock_double);
-			debug("strip_buffer_enabled=%i, ",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: DIWMODE set to: ");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "clock_double=%i, ", d->clock_double);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "strip_buffer_enabled=%i, ",
 			    d->strip_buffer_enabled);
-			debug("strip_length=%i, ", d->strip_length);
-			debug("argb8888_threshold=%i, ", d->argb8888_threshold);
-			debug("extend=0x%x, ", d->extend);
-			debug("pixelmode=");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "strip_length=%i, ", d->strip_length);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "argb8888_threshold=%i, ", d->argb8888_threshold);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "extend=0x%x, ", d->extend);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "pixelmode=");
 			switch (d->pixelmode) {
-			case 0: debug("RGB0555 (16-bit)"); break;
-			case 1: debug("RGB565 (16-bit)"); break;
-			case 2: debug("RGB888 (24-bit)"); break;
-			case 3: debug("RGB0888 (32-bit)"); break;
+			case 0: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB0555 (16-bit)"); break;
+			case 1: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB565 (16-bit)"); break;
+			case 2: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB888 (24-bit)"); break;
+			case 3: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "RGB0888 (32-bit)"); break;
 			}
-			debug(", line_double=%i, ", d->line_double);
-			debug("display_enabled=%i", d->display_enabled);
-			debug(" ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, ", line_double=%i, ", d->line_double);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "display_enabled=%i", d->display_enabled);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, " ]\n");
 
 			DEFAULT_WRITE;
 			pvr_geometry_updated(d);
@@ -1688,7 +1688,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_DIWSIZE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: DIWSIZE set to modulo=%i, "
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: DIWSIZE set to modulo=%i, "
 			    "width=%i, height=%i ]\n", (int)
 			    ((idata >> DIWSIZE_MODULO_SHIFT) & DIWSIZE_MASK),
 			    (int)((idata >> DIWSIZE_DPL_SHIFT) & DIWSIZE_MASK),
@@ -1701,7 +1701,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_FB_RENDER_ADDR1:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FB_RENDER_ADDR1 set to 0x%08" PRIx32
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FB_RENDER_ADDR1 set to 0x%08" PRIx32
 			    " ]\n", (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1709,7 +1709,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_FB_RENDER_ADDR2:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FB_RENDER_ADDR2 set to 0x%08" PRIx32
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FB_RENDER_ADDR2 set to 0x%08" PRIx32
 			    " ]\n", (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1717,7 +1717,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_FB_CLIP_X:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FB_CLIP_X set to min=%i, "
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FB_CLIP_X set to min=%i, "
 			    "max=%i ]\n", (int) (idata & FB_CLIP_XY_MIN_MASK),
 			    (int) ((idata & FB_CLIP_XY_MAX_MASK)
 			    >> FB_CLIP_XY_MAX_SHIFT));
@@ -1729,7 +1729,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_FB_CLIP_Y:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FB_CLIP_Y set to min=%i, "
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FB_CLIP_Y set to min=%i, "
 			    "max=%i ]\n", (int) (idata & FB_CLIP_XY_MIN_MASK),
 			    (int) ((idata & FB_CLIP_XY_MAX_MASK)
 			    >> FB_CLIP_XY_MAX_SHIFT));
@@ -1741,7 +1741,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_SHADOW:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: SHADOW set to enable=%i, "
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: SHADOW set to enable=%i, "
 			    "intensity=%i ]\n",
 			    (int) (idata & SHADOW_ENABLE? 1 : 0),
 			    (int) (idata & SHADOW_INTENSITY_MASK));
@@ -1753,85 +1753,85 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_OBJECT_CLIP:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: OBJECT_CLIP 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: OBJECT_CLIP 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_OB_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: OB_CFG 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: OB_CFG 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_UNKNOWN_80:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: UNKNOWN_80 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: UNKNOWN_80 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_UNKNOWN_84:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: UNKNOWN_84 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: UNKNOWN_84 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_BGPLANE_Z:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: BGPLANE_Z 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: BGPLANE_Z 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_BGPLANE_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: BGPLANE_CFG 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: BGPLANE_CFG 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_ISP_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: ISP_CFG 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: ISP_CFG 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_VRAM_CFG1:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: VRAM_CFG1 set to 0x%08" PRIx32,
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: VRAM_CFG1 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != VRAM_CFG1_GOOD_REFRESH_VALUE)
 				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ VRAM_CFG1 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
-			debug(" ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, " ]\n");
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_VRAM_CFG2:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: VRAM_CFG2 set to 0x%08" PRIx32,
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: VRAM_CFG2 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != VRAM_CFG2_UNKNOWN_MAGIC)
 				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ VRAM_CFG2 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
-			debug(" ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, " ]\n");
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_VRAM_CFG3:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: VRAM_CFG3 set to 0x%08" PRIx32,
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: VRAM_CFG3 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != VRAM_CFG3_UNKNOWN_MAGIC)
 				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ VRAM_CFG3 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
-			debug(" ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, " ]\n");
 			DEFAULT_WRITE;
 		}
 		break;
@@ -1839,7 +1839,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_FOG_TABLE_COL:
 		// e.g. 0x007f7f7f
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FOG_TABLE_COL set to 0x%06" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FOG_TABLE_COL set to 0x%06" PRIx32" ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1848,7 +1848,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_FOG_VERTEX_COL:
 		// e.g. 0x007f7f7f
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FOG_VERTEX_COL set to 0x%06" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FOG_VERTEX_COL set to 0x%06" PRIx32" ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1857,7 +1857,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_FOG_DENSITY:
 		// e.g. 0x0000ff07
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: FOG_DENSITY set to 0x%08" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: FOG_DENSITY set to 0x%08" PRIx32" ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1866,7 +1866,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_CLAMP_MAX:
 		// e.g. 0xffffffff
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: CLAMP_MAX set to 0x%06" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: CLAMP_MAX set to 0x%06" PRIx32" ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1875,7 +1875,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_CLAMP_MIN:
 		// e.g. 0x00000000
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: CLAMP_MIN set to 0x%06" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: CLAMP_MIN set to 0x%06" PRIx32" ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -1883,7 +1883,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_FB_RENDER_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: PVRREG_FB_RENDER_CFG set to 0x%08x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: PVRREG_FB_RENDER_CFG set to 0x%08x ]\n",
 			    (int) idata);
 			/*  TODO  */
 			DEFAULT_WRITE;
@@ -1892,7 +1892,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_FB_RENDER_MODULO:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: PVRREG_FB_RENDER_MODULO set to %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: PVRREG_FB_RENDER_MODULO set to %i ]\n",
 			    (int) idata);
 			/*  TODO  */
 			DEFAULT_WRITE;
@@ -1901,7 +1901,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_DIWADDRL:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: DIWADDRL set to 0x%08" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: DIWADDRL set to 0x%08" PRIx32" ]\n",
 			    (int) idata);
 			pvr_fb_invalidate(d, -1, -1);
 			DEFAULT_WRITE;
@@ -1910,7 +1910,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_DIWADDRS:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: DIWADDRS set to 0x%08" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: DIWADDRS set to 0x%08" PRIx32" ]\n",
 			    (int) idata);
 			pvr_fb_invalidate(d, -1, -1);
 			DEFAULT_WRITE;
@@ -1923,7 +1923,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_RASEVTPOS:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: RASEVTPOS pos1=%i pos2=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: RASEVTPOS pos1=%i pos2=%i ]\n",
 			    (int)((idata & RASEVTPOS_POS1_MASK)
 			    >> RASEVTPOS_POS1_SHIFT),
 			    (int)(idata & RASEVTPOS_POS2_MASK));
@@ -1940,17 +1940,17 @@ DEVICE_ACCESS(pvr)
 			d->h_sync_positive = idata & SYNCCONF_HP_MASK? 1:0;
 			d->v_sync_positive = idata & SYNCCONF_VP_MASK? 1:0;
 
-			debug("[ pvr: SYNCCONF set to: ");
-			debug("video_enabled=%i, ", d->video_enabled);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: SYNCCONF set to: ");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "video_enabled=%i, ", d->video_enabled);
 			switch (d->broadcast_standard) {
-			case SYNCCONF_BC_VGA: debug("VGA"); break;
-			case SYNCCONF_BC_NTSC: debug("NTSC"); break;
-			case SYNCCONF_BC_PAL: debug("PAL"); break;
-			default: debug("*UNKNOWN*"); break;
+			case SYNCCONF_BC_VGA: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "VGA"); break;
+			case SYNCCONF_BC_NTSC: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "NTSC"); break;
+			case SYNCCONF_BC_PAL: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "PAL"); break;
+			default: debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "*UNKNOWN*"); break;
 			}
-			debug(", interlaced=%i, ", d->interlaced);
-			debug("hsync=%i, ", d->h_sync_positive);
-			debug("vsync=%i ]\n", d->v_sync_positive);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, ", interlaced=%i, ", d->interlaced);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "hsync=%i, ", d->h_sync_positive);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "vsync=%i ]\n", d->v_sync_positive);
 
 			DEFAULT_WRITE;
 			pvr_geometry_updated(d);
@@ -1960,7 +1960,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_BRDHORZ:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: BRDHORZ start=%i stop=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: BRDHORZ start=%i stop=%i ]\n",
 			    (int)((idata & BRDHORZ_START_MASK)
 			    >> BRDHORZ_START_SHIFT),
 			    (int)(idata & BRDHORZ_STOP_MASK));
@@ -1970,7 +1970,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_SYNCSIZE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: SYNCSIZE v=%i h=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: SYNCSIZE v=%i h=%i ]\n",
 			    (int)((idata & SYNCSIZE_V_MASK)
 			    >> SYNCSIZE_V_SHIFT),
 			    (int)(idata & SYNCSIZE_H_MASK));
@@ -1980,7 +1980,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_BRDVERT:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: BRDVERT start=%i stop=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: BRDVERT start=%i stop=%i ]\n",
 			    (int)((idata & BRDVERT_START_MASK)
 			    >> BRDVERT_START_SHIFT),
 			    (int)(idata & BRDVERT_STOP_MASK));
@@ -1990,14 +1990,14 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_SYNCH_WIDTH:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: SYNCH_WIDTH 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: SYNCH_WIDTH 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_TSP_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: TSP_CFG 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TSP_CFG 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
@@ -2011,7 +2011,7 @@ DEVICE_ACCESS(pvr)
 				    "Magic value. 0x%08x", (int)idata);
 			}
 			if (idata & DIWCONF_BLANK)
-				debug("[ pvr: PVRREG_DIWCONF: BLANK: TODO ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: PVRREG_DIWCONF: BLANK: TODO ]\n");
 
 			DEFAULT_WRITE;
 			pvr_geometry_updated(d);
@@ -2021,7 +2021,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_DIWHSTRT:
 		if (writeflag == MEM_WRITE) {
 			int v = idata & DIWVSTRT_HPOS_MASK;
-			debug("[ pvr: DIWHSTRT hpos=%i (%s) ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: DIWHSTRT hpos=%i (%s) ]\n",
 			    v, v == 174? "PAL" :
 			    (v == 164? "NTSC" :
 			    (v == 144? "VGA" : "unknown!")));
@@ -2031,7 +2031,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_DIWVSTRT:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: DIWVSTRT v2=%i v1=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: DIWVSTRT v2=%i v1=%i ]\n",
 			    (int)((idata & DIWVSTRT_V2_MASK)
 			    >> DIWVSTRT_V2_SHIFT),
 			    (int)(idata & DIWVSTRT_V1_MASK));
@@ -2041,14 +2041,14 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_SCALER_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: SCALER_CFG 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: SCALER_CFG 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_PALETTE_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: PALETTE_CFG 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: PALETTE_CFG 0x%08x ]\n", (int)idata);
 			DEFAULT_WRITE;
 		}
 		break;
@@ -2060,19 +2060,19 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_MAGIC_110:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: MAGIC_110 set to 0x%08" PRIx32,
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: MAGIC_110 set to 0x%08" PRIx32,
 			    (int) idata);
 			if (idata != MAGIC_110_VALUE)
 				debugmsg(SUBSYS_DEVICE, "pvr", VERBOSITY_DEBUG, "{ MAGIC_110 = 0x%08" PRIx32" is not "
 				    "yet implemented! }", (int) idata);
-			debug(" ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, " ]\n");
 			DEFAULT_WRITE;
 		}
 		break;
 
 	case PVRREG_TA_LUMINANCE:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: TA_LUMINANCE set to 0x%08" PRIx32" ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_LUMINANCE set to 0x%08" PRIx32" ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2085,7 +2085,7 @@ DEVICE_ACCESS(pvr)
 				    "TA_OPB_START: 0x%08x ]", (int)idata);
 			}
 			idata &= TA_OPB_START_MASK;
-			debug("[ pvr: TA_OPB_START set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OPB_START set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2098,7 +2098,7 @@ DEVICE_ACCESS(pvr)
 				    "TA_OB_START: 0x%08x ]", (int)idata);
 			}
 			idata &= TA_OB_START_MASK;
-			debug("[ pvr: TA_OB_START set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OB_START set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2107,7 +2107,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OPB_END:
 		if (writeflag == MEM_WRITE) {
 			idata &= TA_OPB_END_MASK;
-			debug("[ pvr: TA_OPB_END set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OPB_END set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2116,7 +2116,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OB_END:
 		if (writeflag == MEM_WRITE) {
 			idata &= TA_OB_END_MASK;
-			debug("[ pvr: TA_OB_END set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OB_END set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2125,7 +2125,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OPB_POS:
 		if (writeflag == MEM_WRITE) {
 			idata &= TA_OPB_POS_MASK;
-			debug("[ pvr: TA_OPB_POS set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OPB_POS set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2134,7 +2134,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OB_POS:
 		if (writeflag == MEM_WRITE) {
 			idata &= TA_OB_POS_MASK;
-			debug("[ pvr: TA_OB_POS set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OB_POS set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2143,7 +2143,7 @@ DEVICE_ACCESS(pvr)
 	case PVRREG_TA_OPL_INIT:
 		if (writeflag == MEM_WRITE) {
 			idata &= PVR_TA_OPL_INIT_MASK;
-			debug("[ pvr: TA_OPL_INIT set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OPL_INIT set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2155,7 +2155,7 @@ DEVICE_ACCESS(pvr)
 			    >> TILEBUF_SIZE_HEIGHT_SHIFT;
 			d->tilebuf_xsize = idata & TILEBUF_SIZE_WIDTH_MASK;
 			d->tilebuf_xsize ++; d->tilebuf_ysize ++;
-			debug("[ pvr: TILEBUF_SIZE set to %i x %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TILEBUF_SIZE set to %i x %i ]\n",
 			    d->tilebuf_xsize, d->tilebuf_ysize);
 			DEFAULT_WRITE;
 		}
@@ -2163,7 +2163,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_TA_OPB_CFG:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: TA_OPB_CFG set to 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_OPB_CFG set to 0x%x ]\n",
 			    (int) idata);
 			DEFAULT_WRITE;
 		}
@@ -2171,7 +2171,7 @@ DEVICE_ACCESS(pvr)
 
 	case PVRREG_TA_INIT:
 		if (writeflag == MEM_WRITE) {
-			debug("[ pvr: TA_INIT ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr: TA_INIT ]\n");
 
 			if (idata & PVR_TA_INIT)
 				pvr_ta_init(cpu, d);

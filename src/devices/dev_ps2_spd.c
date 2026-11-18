@@ -66,21 +66,21 @@ DEVICE_ACCESS(ps2_spd)
 	case 0x4a:
 	case 0x4c:
 	case 0x4e:
-		debug("[ ps2_spd: wdc access ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_ps2_spd", VERBOSITY_DEBUG, "[ ps2_spd: wdc access ]\n");
 		cpu->memory_rw(cpu, mem, (relative_addr - 0x40) / 2 +
 		    d->wdcaddr, data, len, writeflag, PHYSICAL);
 		return 1;
 	case 0x5c:	/*  aux control  */
-		debug("[ ps2_spd: wdc access (2) ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_ps2_spd", VERBOSITY_DEBUG, "[ ps2_spd: wdc access (2) ]\n");
 		cpu->memory_rw(cpu, mem, d->wdcaddr + 0x206, data, len,
 		    writeflag, PHYSICAL);
 		return 1;
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ ps2_spd: read from addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_spd", VERBOSITY_DEBUG, "[ ps2_spd: read from addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)odata);
 		} else {
-			debug("[ ps2_spd: write to addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_spd", VERBOSITY_DEBUG, "[ ps2_spd: write to addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)idata);
 		}
 	}

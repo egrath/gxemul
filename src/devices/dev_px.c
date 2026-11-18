@@ -163,72 +163,72 @@ void dev_px_dma(struct cpu *cpu, uint32_t sys_addr, struct px_data *d)
 		    (dma_buf[1] << 16) + (dma_buf[0] << 24);
 
 	if (px_debug) {
-		debug("[ px: dma from 0x%08x: ", (int)sys_addr);
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: dma from 0x%08x: ", (int)sys_addr);
 
-		debug("cmd=");
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "cmd=");
 		switch (cmdword & 0xf) {
-		case STAMP_CMD_POINTS:		debug("points");	break;
-		case STAMP_CMD_LINES:		debug("lines");		break;
-		case STAMP_CMD_TRIANGLES:	debug("triangles");	break;
-		case STAMP_CMD_COPYSPANS:	debug("copyspans");	break;
-		case STAMP_CMD_READSPANS:	debug("readspans");	break;
-		case STAMP_CMD_WRITESPANS:	debug("writespans");	break;
-		case STAMP_CMD_VIDEO:		debug("video");		break;
+		case STAMP_CMD_POINTS:		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "points");	break;
+		case STAMP_CMD_LINES:		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "lines");		break;
+		case STAMP_CMD_TRIANGLES:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "triangles");	break;
+		case STAMP_CMD_COPYSPANS:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "copyspans");	break;
+		case STAMP_CMD_READSPANS:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "readspans");	break;
+		case STAMP_CMD_WRITESPANS:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "writespans");	break;
+		case STAMP_CMD_VIDEO:		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "video");		break;
 		default:
-			debug("0x%x (?)", cmdword & 0xf);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "0x%x (?)", cmdword & 0xf);
 		}
 
-		debug(",rgb=");
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",rgb=");
 		switch (cmdword & 0x30) {
-		case STAMP_RGB_NONE:	debug("none");		break;
-		case STAMP_RGB_CONST:	debug("const");		break;
-		case STAMP_RGB_FLAT:	debug("flat");		break;
-		case STAMP_RGB_SMOOTH:	debug("smooth");	break;
+		case STAMP_RGB_NONE:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "none");		break;
+		case STAMP_RGB_CONST:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "const");		break;
+		case STAMP_RGB_FLAT:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "flat");		break;
+		case STAMP_RGB_SMOOTH:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "smooth");	break;
 		default:
-			debug("0x%x (?)", cmdword & 0x30);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "0x%x (?)", cmdword & 0x30);
 		}
 
-		debug(",z=");
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",z=");
 		switch (cmdword & 0xc0) {
-		case STAMP_Z_NONE:	debug("none");		break;
-		case STAMP_Z_CONST:	debug("const");		break;
-		case STAMP_Z_FLAT:	debug("flat");		break;
-		case STAMP_Z_SMOOTH:	debug("smooth");	break;
+		case STAMP_Z_NONE:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "none");		break;
+		case STAMP_Z_CONST:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "const");		break;
+		case STAMP_Z_FLAT:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "flat");		break;
+		case STAMP_Z_SMOOTH:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "smooth");	break;
 		default:
-			debug("0x%x (?)", cmdword & 0xc0);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "0x%x (?)", cmdword & 0xc0);
 		}
 
-		debug(",xy=");
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",xy=");
 		switch (cmdword & 0x300) {
-		case STAMP_XY_NONE:		debug("none");		break;
-		case STAMP_XY_PERPACKET:	debug("perpacket");	break;
-		case STAMP_XY_PERPRIMATIVE:	debug("perprimative");	break;
+		case STAMP_XY_NONE:		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "none");		break;
+		case STAMP_XY_PERPACKET:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "perpacket");	break;
+		case STAMP_XY_PERPRIMATIVE:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "perprimative");	break;
 		default:
-			debug("0x%x (?)", cmdword & 0x300);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "0x%x (?)", cmdword & 0x300);
 		}
 
-		debug(",lw=");
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",lw=");
 		switch (cmdword & 0xc00) {
-		case STAMP_LW_NONE:		debug("none");		break;
-		case STAMP_LW_PERPACKET:	debug("perpacket");	break;
-		case STAMP_LW_PERPRIMATIVE:	debug("perprimative");	break;
+		case STAMP_LW_NONE:		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "none");		break;
+		case STAMP_LW_PERPACKET:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "perpacket");	break;
+		case STAMP_LW_PERPRIMATIVE:	debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "perprimative");	break;
 		default:
-			debug("0x%x (?)", cmdword & 0xc00);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "0x%x (?)", cmdword & 0xc00);
 		}
 
 		if (cmdword & STAMP_CLIPRECT)
-			debug(",CLIPRECT");
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",CLIPRECT");
 		if (cmdword & STAMP_MESH)
-			debug(",MESH");
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",MESH");
 		if (cmdword & STAMP_AALINE)
-			debug(",AALINE");
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",AALINE");
 		if (cmdword & STAMP_HS_EQUALS)
-			debug(",HS_EQUALS");
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, ",HS_EQUALS");
 
 		for (size_t i=0; i<dma_len; i++)
-			debug(" %02x", dma_buf[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, " %02x", dma_buf[i]);
 
-		debug(" ]\n");
+		debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, " ]\n");
 	}
 
 	/*  NetBSD and Ultrix copyspans  */
@@ -256,7 +256,7 @@ void dev_px_dma(struct cpu *cpu, uint32_t sys_addr, struct px_data *d)
 		/*  Why not this?  lw = (lw + 1) >> 2;  */
 
 		if (px_debug)
-			debug("[ px: copyspans:  nspans = %i, lw = %i ]\n", nspans, lw);
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: copyspans:  nspans = %i, lw = %i ]\n", nspans, lw);
 
 		/*  Reread copyspans command if it wasn't completely read:  */
 		if (dma_len < 4*(5 + nspans*3)) {
@@ -309,7 +309,7 @@ void dev_px_dma(struct cpu *cpu, uint32_t sys_addr, struct px_data *d)
 			if (span_len > PX_XSIZE)
 				span_len = PX_XSIZE;
 
-			/*  debug("  span %i: len=%i src=%i dst=%i\n",
+			/*  debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "  span %i: len=%i src=%i dst=%i\n",
 			    spannr, span_len, span_src, span_dst);  */
 
 			memmove(d->vfb_data->framebuffer + span_dst *
@@ -390,7 +390,7 @@ void dev_px_dma(struct cpu *cpu, uint32_t sys_addr, struct px_data *d)
 			x2 = PX_XSIZE;
 
 		if (px_debug)
-			debug("[ px: clear/fill: v1 = 0x%08x  v2 = 0x%08x "
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: clear/fill: v1 = 0x%08x  v2 = 0x%08x "
 			    "lw=%i x=%i y=%i x2=%i y2=%i ]\n", (int)v1, (int)v2,
 			    lw, x,y, x2,y2);
 
@@ -471,7 +471,7 @@ void dev_px_dma(struct cpu *cpu, uint32_t sys_addr, struct px_data *d)
 		y2 = ((v2 - 63) >> 3) & 1023;
 
 		if (px_debug)
-			debug("[ px putchar: v1 = 0x%08x  v2 = 0x%08x x=%i y=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px putchar: v1 = 0x%08x  v2 = 0x%08x x=%i y=%i ]\n",
 			    (int)v1, (int)v2, x,y, x2,y2);
 
 		x %= PX_XSIZE;
@@ -626,50 +626,50 @@ DEVICE_ACCESS(px)
 
 	case 0x180008:		/*  hsync  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from hsync: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from hsync: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to hsync: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to hsync: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	case 0x18000c:		/*  hsync2  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from hsync2: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from hsync2: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to hsync2: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to hsync2: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	case 0x180010:		/*  hblank  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from hblank: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from hblank: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to hblank: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to hblank: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	case 0x180014:		/*  vsync  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from vsync: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from vsync: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to vsync: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to vsync: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	case 0x180018:		/*  vblank  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from vblank: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from vblank: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to vblank: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to vblank: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
@@ -681,7 +681,7 @@ DEVICE_ACCESS(px)
 /*  TODO:  how do interrupts work on the pixelstamp boards?  */
 odata = random();
 
-			debug("[ px: read from ipdvint: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from ipdvint: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
 			d->intr = idata;
@@ -691,27 +691,27 @@ odata = random();
 				d->intr &= ~STIC_INT_V;
 			if (idata & STIC_INT_P_WE)
 				d->intr &= ~STIC_INT_P;
-			debug("[ px: write to ipdvint: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to ipdvint: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	case 0x180028:		/*  sticsr  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from sticsr: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from sticsr: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to sticsr: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to sticsr: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	case 0x180038:		/*  buscsr  */
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from buscsr: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from buscsr: 0x%08llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to buscsr: 0x%08llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to buscsr: 0x%08llx ]\n",
 			    (long long)idata);
 		}
 		break;
@@ -720,20 +720,20 @@ odata = random();
 		if (writeflag==MEM_READ) {
 			odata = (d->type << 12) + (d->xconfig << 11) +
 			    (d->yconfig << 9);
-			debug("[ px: read from modcl: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from modcl: 0x%llx ]\n",
 			    (long long)odata);
 		} else {
-			debug("[ px: write to modcl: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to modcl: 0x%llx ]\n",
 			    (long long)idata);
 		}
 		break;
 
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ px: read from addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: read from addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)odata);
 		} else {
-			debug("[ px: write to addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px: write to addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)idata);
 		}
 	}

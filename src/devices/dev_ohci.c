@@ -121,20 +121,20 @@ DEVICE_ACCESS(ohci)
 		break;
 	default:
 		if (writeflag == MEM_READ) {
-			debug("[ ohci: read from addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ohci", VERBOSITY_DEBUG, "[ ohci: read from addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)odata);
 		} else {
-			debug("[ ohci: write to addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ohci", VERBOSITY_DEBUG, "[ ohci: write to addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)idata);
 		}
 	}
 
 	if (name != NULL) {
 		if (writeflag == MEM_READ)
-			debug("[ ohci: read from %s: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ohci", VERBOSITY_DEBUG, "[ ohci: read from %s: 0x%llx ]\n",
 			    name, (long long)odata);
 		else
-			debug("[ ohci: write to %s: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ohci", VERBOSITY_DEBUG, "[ ohci: write to %s: 0x%llx ]\n",
 			    name, (long long)idata);
 	}
 

@@ -407,7 +407,7 @@ DEVICE_ACCESS(sgi_gbe)
 
 	case CRMFB_CTRLSTAT:	// 0x0
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_gbe: write to ctrlstat: 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: write to ctrlstat: 0x%08x ]\n", (int)idata);
 			d->ctrlstat = (idata & ~CRMFB_CTRLSTAT_CHIPID_MASK)
 				| (d->ctrlstat & CRMFB_CTRLSTAT_CHIPID_MASK);
 		} else
@@ -562,7 +562,7 @@ DEVICE_ACCESS(sgi_gbe)
 			d->ovr_width_in_tiles = (idata >> CRMFB_FRM_TILESIZE_WIDTH_SHIFT) & 0xff;
 			d->ovr_partial_pixels = ((idata >> CRMFB_FRM_TILESIZE_RHS_SHIFT) & 0x1f) * 32;
 
-			debug("[ sgi_gbe: OVR setting width in tiles = %i, partial pixels = %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: OVR setting width in tiles = %i, partial pixels = %i ]\n",
 			    d->ovr_width_in_tiles, d->ovr_partial_pixels);
 		} else
 			odata = d->ovr_tilesize;
@@ -587,7 +587,7 @@ DEVICE_ACCESS(sgi_gbe)
 			d->width_in_tiles = (idata >> CRMFB_FRM_TILESIZE_WIDTH_SHIFT) & 0xff;
 			d->partial_pixels = ((idata >> CRMFB_FRM_TILESIZE_RHS_SHIFT) & 0x1f) * 32 * 8 / d->bitdepth;
 
-			debug("[ sgi_gbe: setting color depth to %i bits, width in tiles = %i, partial pixels = %i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: setting color depth to %i bits, width in tiles = %i, partial pixels = %i ]\n",
 			    d->bitdepth, d->width_in_tiles, d->partial_pixels);
 		} else
 			odata = d->tilesize;
@@ -595,7 +595,7 @@ DEVICE_ACCESS(sgi_gbe)
 
 	case CRMFB_FRM_PIXSIZE:	// 0x30004
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_gbe: setting PIXSIZE to 0x%08x ]\n", (int)idata);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: setting PIXSIZE to 0x%08x ]\n", (int)idata);
 		}
 		break;
 		
@@ -612,7 +612,7 @@ DEVICE_ACCESS(sgi_gbe)
 		 */
 		if (writeflag == MEM_WRITE) {
 			d->frm_control = idata;
-			debug("[ sgi_gbe: frm_control = 0x%08x ]\n", d->frm_control);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: frm_control = 0x%08x ]\n", d->frm_control);
 		} else
 			odata = d->frm_control;
 		break;
@@ -740,7 +740,7 @@ DEVICE_ACCESS(sgi_gbe)
 
 	if (writeflag == MEM_READ) {
 #ifdef GBE_DEBUG
-		debug("[ sgi_gbe: DEBUG: read from address 0x%llx: 0x%llx ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_sgi_gbe", VERBOSITY_DEBUG, "[ sgi_gbe: DEBUG: read from address 0x%llx: 0x%llx ]\n",
 		    (long long)relative_addr, (long long)odata);
 #endif
 		memory_writemax64(cpu, data, len, odata);

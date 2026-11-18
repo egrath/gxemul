@@ -86,7 +86,7 @@ static void eeprom_clk(struct rtl8139c_data *d)
 		int cmd = d->eeprom_cur_cmd >> d->eeprom_address_width;
 		int addr = d->eeprom_cur_cmd & ((1<<d->eeprom_address_width)-1);
 
-		debug("[ rtl8139c eeprom cmd=0x%x addr=0x%02x ]\n", cmd, addr);
+		debugmsg(SUBSYS_DEVICE, "dev_rtl8139c", VERBOSITY_DEBUG, "[ rtl8139c eeprom cmd=0x%x addr=0x%02x ]\n", cmd, addr);
 
 		switch (cmd) {
 

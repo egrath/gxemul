@@ -145,7 +145,7 @@ DEVICE_ACCESS(z8530)
 		/*  Register access:  */
 		if (writeflag == MEM_READ) {
 			odata = d->rr[port_nr][d->reg_select[port_nr]];
-			debug("[ z8530: read from port %i reg %2i: "
+			debugmsg(SUBSYS_DEVICE, "dev_z8530", VERBOSITY_DEBUG, "[ z8530: read from port %i reg %2i: "
 			    "0x%02x ]\n", port_nr, d->reg_select[
 			    port_nr], (int)odata);
 			d->reg_select[port_nr] = 0;
@@ -163,7 +163,7 @@ DEVICE_ACCESS(z8530)
 			} else {
 				d->wr[port_nr][d->reg_select[port_nr]] = idata;
 				switch (d->reg_select[port_nr]) {
-				default:debug("[ z8530: write to  port %i reg "
+				default:debugmsg(SUBSYS_DEVICE, "dev_z8530", VERBOSITY_DEBUG, "[ z8530: write to  port %i reg "
 					    "%2i: 0x%02x ]\n", port_nr, d->
 					    reg_select[port_nr], (int)idata);
 				}

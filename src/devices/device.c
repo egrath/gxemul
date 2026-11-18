@@ -410,11 +410,11 @@ void device_dumplist(void)
 		sort_entries();
 
 	for (i=0; i<n_device_entries; i++) {
-		debug("  %s", device_entries[i].name);
+		debugmsg(SUBSYS_DEVICE, "device", VERBOSITY_DEBUG, "  %s", device_entries[i].name);
 
 		/*  TODO: flags?  */
 
-		debug("\n");
+		debugmsg(SUBSYS_DEVICE, "device", VERBOSITY_DEBUG, "\n");
 	}
 }
 

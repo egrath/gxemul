@@ -1269,7 +1269,7 @@ DEVICE_ACCESS(pckbc)
 					d->last_scancode |= 0x80;
 				}
 			}
-			/*  debug("[ pckbc: read from DATA: 0x%02x ]\n",
+			/*  debugmsg(SUBSYS_DEVICE, "dev_pckbc", VERBOSITY_DEBUG, "[ pckbc: read from DATA: 0x%02x ]\n",
 			    (int)odata);  */
 		} else {
 			if (port_nr == 1) {
@@ -1327,7 +1327,7 @@ DEVICE_ACCESS(pckbc)
 				odata |= KBS_OCMD;
 
 			odata |= KBS_NOSEC;
-			/*  debug("[ pckbc: read from CTL status port: "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_pckbc", VERBOSITY_DEBUG, "[ pckbc: read from CTL status port: "
 			    "0x%02x ]\n", (int)odata);  */
 		} else {
 			debugmsg(d->subsys, "pckbc", VERBOSITY_DEBUG,
@@ -1473,7 +1473,7 @@ DEVICE_ACCESS(pckbc)
 				odata |= PS2_STATUS_RXFULL;
 			}
 
-			//debug("[ pckbc: read from port %i, PS2_STATUS: "
+			//debugmsg(SUBSYS_DEVICE, "dev_pckbc", VERBOSITY_DEBUG, "[ pckbc: read from port %i, PS2_STATUS: "
 			//    "0x%llx ]\n", port_nr, (long long)odata);
 		} else {
 			debugmsg(d->subsys, "pckbc", VERBOSITY_DEBUG,

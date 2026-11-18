@@ -799,7 +799,7 @@ DEVICE_ACCESS(mc146818)
 			case MC_RATE_8_Hz:	d->interrupt_hz = 8;	break;
 			case MC_RATE_4_Hz:	d->interrupt_hz = 4;	break;
 			case MC_RATE_2_Hz:	d->interrupt_hz = 2;	break;
-			default:/*  debug("[ mc146818: unimplemented "
+			default:/*  debugmsg(SUBSYS_DEVICE, "dev_mc146818", VERBOSITY_DEBUG, "[ mc146818: unimplemented "
 				    "MC_REGA RS: %i ]\n",
 				    data[0] & MC_REGA_RSMASK);  */
 				;
@@ -830,7 +830,7 @@ DEVICE_ACCESS(mc146818)
 				INTERRUPT_DEASSERT(d->irq);
 			}
 
-			/*  debug("[ mc146818: write to MC_REGB, data[0] "
+			/*  debugmsg(SUBSYS_DEVICE, "dev_mc146818", VERBOSITY_DEBUG, "[ mc146818: write to MC_REGB, data[0] "
 			    "= 0x%02x ]\n", data[0]);  */
 			break;
 		case MC_REGC*4:

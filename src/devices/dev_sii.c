@@ -103,11 +103,11 @@ DEVICE_TICK(sii)
 	/*  SCSI Commands:  */
 
 	if (d->siiregs.comm & SII_CHRESET) {		/*  (I,T,D)  */
-		/*  debug("[ sii: command TODO: CHRESET ]\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dev_sii", VERBOSITY_DEBUG, "[ sii: command TODO: CHRESET ]\n");  */
 	}
 
 	if (d->siiregs.comm & SII_DISCON) {		/*  (I,T,D)  */
-		/*  debug("[ sii: command TODO: DISCON ]\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dev_sii", VERBOSITY_DEBUG, "[ sii: command TODO: DISCON ]\n");  */
 		d->siiregs.cstat &= ~SII_CON;	/*  Connected  */
 
 		if (d->connected) {
@@ -120,11 +120,11 @@ DEVICE_TICK(sii)
 	}
 
 	if (d->siiregs.comm & SII_REQDATA) {	/*  (T)  */
-		/*  debug("[ sii: command TODO: REQDATA ]\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dev_sii", VERBOSITY_DEBUG, "[ sii: command TODO: REQDATA ]\n");  */
 	}
 
 	if (d->siiregs.comm & SII_SELECT) {		/*  (D)  */
-		/*  debug("[ sii: command SELECT ]\n");  */
+		/*  debugmsg(SUBSYS_DEVICE, "dev_sii", VERBOSITY_DEBUG, "[ sii: command SELECT ]\n");  */
 		d->siiregs.comm &= ~SII_SELECT;
 
 		/*  slcsr contains the other target's id  */

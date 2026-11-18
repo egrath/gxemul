@@ -68,10 +68,10 @@ DEVICE_ACCESS(ps2_ether)
 
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ ps2_ether: read from addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_ether", VERBOSITY_DEBUG, "[ ps2_ether: read from addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)odata);
 		} else {
-			debug("[ ps2_ether: write to addr 0x%x: 0x%llx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_ether", VERBOSITY_DEBUG, "[ ps2_ether: write to addr 0x%x: 0x%llx ]\n",
 			    (int)relative_addr, (long long)idata);
 		}
 	}

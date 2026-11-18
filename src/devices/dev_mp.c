@@ -105,7 +105,7 @@ DEVICE_ACCESS(mp)
 			    " arch yet!\n");
 		}
 		d->cpus[which_cpu]->running = true;
-		/*  debug("[ dev_mp: starting up cpu%i at 0x%llx ]\n", 
+		/*  debugmsg(SUBSYS_DEVICE, "dev_mp", VERBOSITY_DEBUG, "[ dev_mp: starting up cpu%i at 0x%llx ]\n", 
 		    which_cpu, (long long)d->startup_addr);  */
 		break;
 

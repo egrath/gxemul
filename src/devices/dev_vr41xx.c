@@ -435,7 +435,7 @@ static uint64_t vr41xx_kiu(struct cpu *cpu, int ofs, uint64_t idata,
 		odata = d->d5; break;
 	case KIUSCANREP:
 		if (writeflag == MEM_WRITE) {
-			debug("[ vr41xx KIU: setting KIUSCANREP to 0x%04x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx KIU: setting KIUSCANREP to 0x%04x ]\n",
 			    (int)idata);
 			/*  TODO  */
 		} else
@@ -444,11 +444,11 @@ static uint64_t vr41xx_kiu(struct cpu *cpu, int ofs, uint64_t idata,
 		break;
 	case KIUSCANS:
 		if (writeflag == MEM_WRITE) {
-			debug("[ vr41xx KIU: write to KIUSCANS: 0x%04x: TODO"
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx KIU: write to KIUSCANS: 0x%04x: TODO"
 			    " ]\n", (int)idata);
 			/*  TODO  */
 		} else
-			debug("[ vr41xx KIU: unimplemented read from "
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx KIU: unimplemented read from "
 			    "KIUSCANS ]\n");
 		break;
 	case KIUINT:
@@ -465,11 +465,11 @@ static uint64_t vr41xx_kiu(struct cpu *cpu, int ofs, uint64_t idata,
 		break;
 	default:
 		if (writeflag == MEM_WRITE)
-			debug("[ vr41xx KIU: unimplemented write to offset "
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx KIU: unimplemented write to offset "
 			    "0x%x, data=0x%016" PRIx64" ]\n", ofs,
 			    (uint64_t) idata);
 		else
-			debug("[ vr41xx KIU: unimplemented read from offset "
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx KIU: unimplemented read from offset "
 			    "0x%x ]\n", ofs);
 	}
 
@@ -604,7 +604,7 @@ DEVICE_ACCESS(vr41xx)
 	case 0xd0:	/*  RTCL1_L_REG_W  */
 		if (writeflag == MEM_WRITE && idata != 0) {
 			int hz = RTCL1_L_HZ / idata;
-			debug("[ vr41xx: rtc interrupts at %i Hz ]\n", hz);
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx: rtc interrupts at %i Hz ]\n", hz);
 			if (d->timer == NULL)
 				d->timer = timer_add(hz, timer_tick, d);
 			else
@@ -636,11 +636,11 @@ DEVICE_ACCESS(vr41xx)
 
 	default:
 		if (writeflag == MEM_WRITE)
-			debug("[ vr41xx: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx: unimplemented write to address "
 			    "0x%" PRIx64", data=0x%016" PRIx64" ]\n",
 			    (uint64_t) relative_addr, (uint64_t) idata);
 		else
-			debug("[ vr41xx: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_vr41xx", VERBOSITY_DEBUG, "[ vr41xx: unimplemented read from address "
 			    "0x%" PRIx64" ]\n", (uint64_t) relative_addr);
 	}
 

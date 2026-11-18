@@ -68,13 +68,13 @@ DEVICE_TICK(malta_lcd)
 		return;
 	}
 
-	debug("[ malta_lcd: \"");
+	debugmsg(SUBSYS_DEVICE, "dev_malta_lcd", VERBOSITY_DEBUG, "[ malta_lcd: \"");
 	for (i=0; i<LCD_LEN; i++)
 		if (d->display[i] >= ' ')
-			debug("%c", d->display[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_malta_lcd", VERBOSITY_DEBUG, "%c", d->display[i]);
 		else
-			debug("?");
-	debug("\" ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_malta_lcd", VERBOSITY_DEBUG, "?");
+	debugmsg(SUBSYS_DEVICE, "dev_malta_lcd", VERBOSITY_DEBUG, "\" ]\n");
 
 	d->display_modified = 0;
 }

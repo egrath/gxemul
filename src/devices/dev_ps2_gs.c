@@ -93,7 +93,7 @@ DEVICE_ACCESS(ps2_gs)
 
 	regnr = relative_addr / 16;
 	if (relative_addr & 0xf) {
-		debug("[ gs unaligned access, addr 0x%x ]\n",
+		debugmsg(SUBSYS_DEVICE, "dev_ps2_gs", VERBOSITY_DEBUG, "[ gs unaligned access, addr 0x%x ]\n",
 		    (int)relative_addr);
 		return 0;
 	}
@@ -105,14 +105,14 @@ DEVICE_ACCESS(ps2_gs)
 	switch (relative_addr) {
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ gs read from addr 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_gs", VERBOSITY_DEBUG, "[ gs read from addr 0x%x ]\n",
 			    (int)relative_addr);
 			odata = d->reg[regnr];
 		} else {
-			debug("[ gs write to addr 0x%x:", (int)relative_addr);
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_gs", VERBOSITY_DEBUG, "[ gs write to addr 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
-				debug(" %02x", data[i]);
-			debug(" ]\n");
+				debugmsg(SUBSYS_DEVICE, "dev_ps2_gs", VERBOSITY_DEBUG, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "dev_ps2_gs", VERBOSITY_DEBUG, " ]\n");
 			d->reg[regnr] = idata;
 			return 1;
 		}

@@ -62,7 +62,7 @@ DEVICE_ACCESS(sgi_ip19)
 
 	case 0x08:	/*  cpu id  */
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip19: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip19", VERBOSITY_DEBUG, "[ sgi_ip19: unimplemented write to address "
 			    "0x%x (cpu id), data=0x%08x ]\n", (int)
 			    relative_addr, (int)idata);
 		} else {
@@ -72,7 +72,7 @@ DEVICE_ACCESS(sgi_ip19)
 
 	case 0x200:	/*  cpu available mask?  */
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip19: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip19", VERBOSITY_DEBUG, "[ sgi_ip19: unimplemented write to address "
 			    "0x%x (cpu available mask), data=0x%08x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
@@ -83,7 +83,7 @@ DEVICE_ACCESS(sgi_ip19)
 
 	case 0x20000:	/*  cycle counter or clock  */
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip19: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip19", VERBOSITY_DEBUG, "[ sgi_ip19: unimplemented write to address "
 			    "0x%x (cycle counter), data=0x%08x ]\n",
 			    (int)relative_addr, (int)idata);
 		} else {
@@ -95,11 +95,11 @@ DEVICE_ACCESS(sgi_ip19)
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip19: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip19", VERBOSITY_DEBUG, "[ sgi_ip19: unimplemented write to address "
 			    "0x%x, data=0x%08x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
-			debug("[ sgi_ip19: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip19", VERBOSITY_DEBUG, "[ sgi_ip19: unimplemented read from address "
 			    "0x%x: 0x%08x ]\n", (int)relative_addr, (int)odata);
 		}
 	}

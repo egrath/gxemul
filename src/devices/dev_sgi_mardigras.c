@@ -203,7 +203,7 @@ void mardigras_20400(struct cpu *cpu, struct sgi_mardigras_data *d,
 		return;
 	}
 
-	debug("mardigras_20400(): 0x%016" PRIx64"\n", (uint64_t) idata);
+	debugmsg(SUBSYS_DEVICE, "dev_sgi_mardigras", VERBOSITY_DEBUG, "mardigras_20400(): 0x%016" PRIx64"\n", (uint64_t) idata);
 }
 
 
@@ -247,7 +247,7 @@ DEVICE_ACCESS(sgi_mardigras)
 		if (writeflag == MEM_WRITE)
 			mardigras_20400(cpu, d, idata);
 		else
-			debug("[ sgi_mardigras: read from 0x20400? ]\n");
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mardigras", VERBOSITY_DEBUG, "[ sgi_mardigras: read from 0x20400? ]\n");
 		break;
 
 	case 0x58040:
@@ -282,10 +282,10 @@ DEVICE_ACCESS(sgi_mardigras)
 
 	default:
 		if (writeflag==MEM_READ) {
-			debug("[ sgi_mardigras: read from 0x%08lx ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mardigras", VERBOSITY_DEBUG, "[ sgi_mardigras: read from 0x%08lx ]\n",
 			    (long)relative_addr);
 		} else {
-			debug("[ sgi_mardigras: write to  0x%08lx: 0x%016" PRIx64
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_mardigras", VERBOSITY_DEBUG, "[ sgi_mardigras: write to  0x%08lx: 0x%016" PRIx64
 			    " ]\n", (long) relative_addr, (uint64_t) idata);
 		}
 	}

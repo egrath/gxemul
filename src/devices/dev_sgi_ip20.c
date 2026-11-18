@@ -54,7 +54,7 @@ DEVICE_ACCESS(sgi_ip20)
 
 	case 0x38:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip20: write to address 0x%x, "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip20", VERBOSITY_DEBUG, "[ sgi_ip20: write to address 0x%x, "
 			    "data=0x%02x ]\n", (int)relative_addr, (int)idata);
 		} else {
 			/*
@@ -69,18 +69,18 @@ DEVICE_ACCESS(sgi_ip20)
 			/*  instruction_trace = 1;  quiet_mode = 0;  */
 			odata = random() & 0xff;
 
-			debug("[ sgi_ip20: read from address 0x%x: 0x%x ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip20", VERBOSITY_DEBUG, "[ sgi_ip20: read from address 0x%x: 0x%x ]\n",
 			    (int)relative_addr, (int)odata);
 		}
 		break;
 
 	default:
 		if (writeflag == MEM_WRITE) {
-			debug("[ sgi_ip20: unimplemented write to address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip20", VERBOSITY_DEBUG, "[ sgi_ip20: unimplemented write to address "
 			    "0x%x, data=0x%02x ]\n", (int)relative_addr,
 			    (int)idata);
 		} else {
-			debug("[ sgi_ip20: unimplemented read from address "
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip20", VERBOSITY_DEBUG, "[ sgi_ip20: unimplemented read from address "
 			    "0x%x ]\n", (int)relative_addr);
 		}
 	}
