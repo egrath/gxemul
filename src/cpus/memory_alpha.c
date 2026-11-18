@@ -92,7 +92,7 @@ if (vaddr == 0xfffffffd80000000ULL) {
 		return 2;
 	}
 
-	// debug("base = 0x%016"PRIx64"\n", base);
+	// debugmsg(SUBSYS_CPU, "memory_alpha", VERBOSITY_DEBUG, "base = 0x%016"PRIx64"\n", base);
 if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
 
 	uint64_t addr, pte1, pte2, pte3;
@@ -107,7 +107,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
 	i2 = (vaddr >> (pageSizeShift + 1 * bitsPerLevel)) & maskPerLevel;
 	i3 = (vaddr >> (pageSizeShift + 0 * bitsPerLevel)) & maskPerLevel;
 
-	// debug("vaddr=%016llx i1=0x%x i2=0x%x i3=0x%x\n", (long long)vaddr, i1, i2, i3);
+	// debugmsg(SUBSYS_CPU, "memory_alpha", VERBOSITY_DEBUG, "vaddr=%016llx i1=0x%x i2=0x%x i3=0x%x\n", (long long)vaddr, i1, i2, i3);
 
 	addr = base + i1 * sizeof(uint64_t);
 	
@@ -118,7 +118,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
 	pte1 = *(uint64_t *)(pt_entry_ptr);
 	pte1 = LE64_TO_HOST(pte1);
 
-	// debug("pte1 = 0x%016"PRIx64"\n", pte1);
+	// debugmsg(SUBSYS_CPU, "memory_alpha", VERBOSITY_DEBUG, "pte1 = 0x%016"PRIx64"\n", pte1);
 	if (!(pte1 & ALPHA_PTE_VALID)) {
 		// TODO:
 		// IF level1_pte<KRE> EQ 0 THEN
@@ -139,7 +139,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
 	pte2 = *(uint64_t *)(pt_entry_ptr);
 	pte2 = LE64_TO_HOST(pte2);
 
-	// debug("pte2 = 0x%016"PRIx64"\n", pte2);
+	// debugmsg(SUBSYS_CPU, "memory_alpha", VERBOSITY_DEBUG, "pte2 = 0x%016"PRIx64"\n", pte2);
 	if (!(pte2 & ALPHA_PTE_VALID)) {
 		// TODO:
 		// IF level2_pte<KRE> EQ 0 THEN
@@ -160,7 +160,7 @@ if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
 	pte3 = *(uint64_t *)(pt_entry_ptr);
 	pte3 = LE64_TO_HOST(pte3);
 
-	// debug("pte3 = 0x%016"PRIx64"\n", pte3);
+	// debugmsg(SUBSYS_CPU, "memory_alpha", VERBOSITY_DEBUG, "pte3 = 0x%016"PRIx64"\n", pte3);
 
 	if (!(pte3 & ALPHA_PTE_VALID)) {
 		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: pte3 not valid.\n");

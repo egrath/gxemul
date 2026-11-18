@@ -1237,7 +1237,7 @@ static void dump_tb_entry(struct ev4_tb_entry *e, int i, int istream)
 	if (va & (1ULL << 42))
 		va |= 0xfffff80000000000ULL;
 
-	debug("  %s%2i: va 0x%016" PRIx64 " pa 0x%09" PRIx64 " gh %i%s"
+	debugmsg(SUBSYS_CPU, "cpu_alpha_ev4", VERBOSITY_DEBUG, "  %s%2i: va 0x%016" PRIx64 " pa 0x%09" PRIx64 " gh %i%s"
 	    " prot 0x%04x\n", istream? "itb" : "dtb", i, va,
 	    e->pfn << ALPHA_PAGESHIFT, e->gh, e->asm_bit? " asm" : "",
 	    (int) e->prot);
@@ -1249,10 +1249,10 @@ void ev4_tlbdump(struct cpu *cpu)
 	struct alpha_cpu *a = &cpu->cd.alpha;
 	int i;
 
-	debug("cpu%i: %s, mode %i, PAL_BASE 0x%" PRIx64 ", EXC_ADDR 0x%016"
+	debugmsg(SUBSYS_CPU, "cpu_alpha_ev4", VERBOSITY_DEBUG, "cpu%i: %s, mode %i, PAL_BASE 0x%" PRIx64 ", EXC_ADDR 0x%016"
 	    PRIx64 "\n", cpu->cpu_id, a->palmode? "PALmode" : "native",
 	    a->cm, a->pal_base, a->exc_addr);
-	debug("  ICCSR 0x%016" PRIx64 " ABOX_CTL 0x%04" PRIx64 " HIER 0x%02x"
+	debugmsg(SUBSYS_CPU, "cpu_alpha_ev4", VERBOSITY_DEBUG, "  ICCSR 0x%016" PRIx64 " ABOX_CTL 0x%04" PRIx64 " HIER 0x%02x"
 	    " SIER 0x%04x irq 0x%02x\n", a->iccsr, a->abox_ctl, a->hier,
 	    a->sier, a->irq_lines);
 

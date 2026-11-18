@@ -307,7 +307,7 @@ Make sure they are correct, as documented in the Manual.
 		 *	a0 = -1: invalidate everything with ASM=0.
 		 *	a0 = -2: invalidate everything
 		 */
-		// debug("[ Alpha PALcode: PAL_OSF1_tbi: a0=%" PRIi64" a1=0x%"
+		// debugmsg(SUBSYS_CPU, "cpu_alpha_palcode", VERBOSITY_DEBUG, "[ Alpha PALcode: PAL_OSF1_tbi: a0=%" PRIi64" a1=0x%"
 		//    PRIx64" ]\n", (int64_t)a0, (uint64_t)a1);
 		if (a0 >= 1)
 			cpu->invalidate_translation_caches(cpu, a1, INVALIDATE_VADDR);
