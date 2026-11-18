@@ -66,11 +66,12 @@ struct mvme393_data {
 	uint32_t            vram_dest;
 
 	int                 vram_dirty;
+	int                 mouse_buttons;	/*  last passed to the guest  */
 };
 
 static struct mvme393_data *s_mvme393 = NULL;
 
-#define MVME393_KBD_QUEUE_SIZE 128
+#define MVME393_KBD_QUEUE_SIZE 1024
 
 struct mvme393_kbd_event {
 	uint32_t key;
@@ -249,8 +250,29 @@ static void dev_mvme393_display_key(struct machine *m, int ch)
 		dev_mvme393_enqueue_key(127, 1);           /* XK_Delete press */
 		dev_mvme393_enqueue_key(127, 0);           /* XK_Delete release */
 	} else if (ch >= 32 && ch < 127) {
-		dev_mvme393_enqueue_key((uint32_t)ch, 1);  /* ASCII key press */
-		dev_mvme393_enqueue_key((uint32_t)ch, 0);  /* ASCII key release */
+		/*
+		 *  As from the SDL window: the unshifted key, with Shift
+		 *  held for capitals and the shifted symbols (US layout).
+		 */
+		static const char shifted[] = "!@#$%^&*()_+{}|:\"<>?~";
+		static const char unshifted[] = "1234567890-=[]\\;',./`";
+		const char *p = strchr(shifted, ch);
+		int key = ch, shift = 0;
+
+		if (ch >= 'A' && ch <= 'Z') {
+			key = ch + ('a' - 'A');
+			shift = 1;
+		} else if (p != NULL) {
+			key = unshifted[p - shifted];
+			shift = 1;
+		}
+
+		if (shift)
+			dev_mvme393_enqueue_key(16, 1);    /* XK_Shift_L press */
+		dev_mvme393_enqueue_key((uint32_t)key, 1);
+		dev_mvme393_enqueue_key((uint32_t)key, 0);
+		if (shift)
+			dev_mvme393_enqueue_key(16, 0);    /* XK_Shift_L release */
 	}
 }
 
@@ -750,8 +772,18 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 			d->vram_dirty = 1;
 		}
 
+		/*
+		 *  A change of the buttons waits until the guest has taken
+		 *  the event before it (event_pending is in[12..15]), so that
+		 *  a quick press and release are both seen. A release must be
+		 *  passed on even when the mouse doesn't move.
+		 */
 		console_getmouse(&dx, &dy, &buttons, &fb_nr);
-		if (dx != 0 || dy != 0 || buttons != 0) {
+		if (buttons != d->mouse_buttons && in[15] != 0 &&
+		    (uint32_t)(((uint32_t)in[8] << 24) | (in[9] << 16) |
+		    (in[10] << 8) | in[11]) != (uint32_t)buttons)
+			buttons = d->mouse_buttons;
+		if (dx != 0 || dy != 0 || buttons != d->mouse_buttons) {
 			int32_t cur_dx = ((int32_t)in[0]<<24) | ((int32_t)in[1]<<16) | ((int32_t)in[2]<<8) | in[3];
 			int32_t cur_dy = ((int32_t)in[4]<<24) | ((int32_t)in[5]<<16) | ((int32_t)in[6]<<8) | in[7];
 			cur_dx += dx;
@@ -760,6 +792,7 @@ static void dev_mvme393_tick(struct cpu *cpu, void *extra)
 			in[4] = (cur_dy >> 24) & 0xff; in[5] = (cur_dy >> 16) & 0xff; in[6] = (cur_dy >> 8) & 0xff; in[7] = cur_dy & 0xff;
 			in[8] = (buttons >> 24) & 0xff; in[9] = (buttons >> 16) & 0xff; in[10] = (buttons >> 8) & 0xff; in[11] = buttons & 0xff;
 			in[12] = 0; in[13] = 0; in[14] = 0; in[15] = 1;
+			d->mouse_buttons = buttons;
 		}
 
 		/* Deliver queued keyboard events if previous event was consumed */
