@@ -87,7 +87,7 @@ void mips_unaligned_loadstore(struct cpu *cpu, struct mips_instr_call *ic,
 			if ( (tmpaddr & ~(wlen-1)) != (addr & ~(wlen-1)) )
 				break;
 
-			/*  debug("unaligned byte at %016"PRIx64",
+			/*  debugmsg(SUBSYS_CPU, "cpu_mips_instr_unaligned", VERBOSITY_DEBUG, "unaligned byte at %016"PRIx64",
 			    reg_ofs=%i reg=0x%016"PRIx64"\n",
 			    tmpaddr, reg_ofs, (long long)result_value);  */
 
@@ -128,7 +128,7 @@ void mips_unaligned_loadstore(struct cpu *cpu, struct mips_instr_call *ic,
 		if ( (tmpaddr & ~(wlen-1)) != (addr & ~(wlen-1)) )
 			break;
 
-		/*  debug("unaligned byte at %016"PRIx64", reg_ofs=%i reg="
+		/*  debugmsg(SUBSYS_CPU, "cpu_mips_instr_unaligned", VERBOSITY_DEBUG, "unaligned byte at %016"PRIx64", reg_ofs=%i reg="
 		    "0x%016"PRIx64"\n", (uint64_t) tmpaddr,
 		    reg_ofs, (uint64_t)result_value); */
 

@@ -691,7 +691,7 @@ void coproc_register_write(struct cpu *cpu,
 				case 3:	// Cached
 					break;
 				default:if (tmp & ENTRYLO_V)
-						debug("[ MIPS coproc_register_write: unimplemented c = %i ]\n", c);
+						debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "[ MIPS coproc_register_write: unimplemented c = %i ]\n", c);
 				}
 			}
 			break;
@@ -957,7 +957,7 @@ void coproc_register_write(struct cpu *cpu,
 			 *  (that is, xcontext and context). On R10000, they
 			 *  are separate registers.
 			 */
-			/*  debug("[ xcontext 0x%016llx ]\n", tmp);  */
+			/*  debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "[ xcontext 0x%016llx ]\n", tmp);  */
 			unimpl = 0;
 			break;
 
@@ -1371,13 +1371,13 @@ static int fpu_op(struct cpu *cpu, struct mips_coproc *cp, int op, int fmt,
 		break;
 	case FPU_OP_ABS:
 		nf = fabs(float_value[0].f);
-		/*  debug("  abs: %f => %f\n", float_value[0].f, nf);  */
+		/*  debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "  abs: %f => %f\n", float_value[0].f, nf);  */
 		fpu_store_float_value(fr, cp, fd, nf, output_fmt,
 		    float_value[0].nan);
 		break;
 	case FPU_OP_NEG:
 		nf = - float_value[0].f;
-		/*  debug("  neg: %f => %f\n", float_value[0].f, nf);  */
+		/*  debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "  neg: %f => %f\n", float_value[0].f, nf);  */
 		fpu_store_float_value(fr, cp, fd, nf, output_fmt,
 		    float_value[0].nan);
 		break;
@@ -1409,7 +1409,7 @@ static int fpu_op(struct cpu *cpu, struct mips_coproc *cp, int op, int fmt,
 		}
 		break;
 	case FPU_OP_C:
-		/*  debug("  c: cond=%i\n", cond);  */
+		/*  debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "  c: cond=%i\n", cond);  */
 
 		unordered = 0;
 		if (float_value[0].nan || float_value[1].nan)
@@ -1504,7 +1504,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 		if (nd == 1 && tf == 1)  instr_mnem = "bc1tl";
 
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("%s\t%i,0x%016llx\n", instr_mnem, cc,
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "%s\t%i,0x%016llx\n", instr_mnem, cc,
 			    (long long) (cpu->pc + 4 + (imm << 2)));
 		if (unassemble_only)
 			return 1;
@@ -1517,7 +1517,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  add.fmt: Floating-point add  */
 	if ((function & 0x0000003f) == 0x00000000) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("add.%s\tr%i,r%i,r%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "add.%s\tr%i,r%i,r%i\n",
 			    fmtname[fmt], fd, fs, ft);
 		if (unassemble_only)
 			return 1;
@@ -1529,7 +1529,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  sub.fmt: Floating-point subtract  */
 	if ((function & 0x0000003f) == 0x00000001) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("sub.%s\tr%i,r%i,r%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "sub.%s\tr%i,r%i,r%i\n",
 			    fmtname[fmt], fd, fs, ft);
 		if (unassemble_only)
 			return 1;
@@ -1541,7 +1541,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  mul.fmt: Floating-point multiply  */
 	if ((function & 0x0000003f) == 0x00000002) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("mul.%s\tr%i,r%i,r%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "mul.%s\tr%i,r%i,r%i\n",
 			    fmtname[fmt], fd, fs, ft);
 		if (unassemble_only)
 			return 1;
@@ -1553,7 +1553,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  div.fmt: Floating-point divide  */
 	if ((function & 0x0000003f) == 0x00000003) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("div.%s\tr%i,r%i,r%i\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "div.%s\tr%i,r%i,r%i\n",
 			    fmtname[fmt], fd, fs, ft);
 		if (unassemble_only)
 			return 1;
@@ -1565,7 +1565,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  sqrt.fmt: Floating-point square-root  */
 	if ((function & 0x001f003f) == 0x00000004) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("sqrt.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "sqrt.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1576,7 +1576,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  abs.fmt: Floating-point absolute value  */
 	if ((function & 0x001f003f) == 0x00000005) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("abs.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "abs.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1587,7 +1587,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  mov.fmt: Floating-point (non-arithmetic) move  */
 	if ((function & 0x0000003f) == 0x00000006) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("mov.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "mov.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1598,7 +1598,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  neg.fmt: Floating-point negate  */
 	if ((function & 0x001f003f) == 0x00000007) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("neg.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "neg.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1609,7 +1609,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  trunc.l.fmt: Truncate  */
 	if ((function & 0x001f003f) == 0x00000009) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("trunc.l.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "trunc.l.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1622,7 +1622,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  trunc.w.fmt: Truncate  */
 	if ((function & 0x001f003f) == 0x0000000d) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("trunc.w.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "trunc.w.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1638,7 +1638,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 		int bit;
 
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("c.%s.%s\tcc%i,r%i,r%i\n", ccname[cond],
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "c.%s.%s\tcc%i,r%i,r%i\n", ccname[cond],
 			    fmtname[fmt], cc, fs, ft);
 		if (unassemble_only)
 			return 1;
@@ -1673,7 +1673,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  cvt.s.fmt: Convert to single floating-point  */
 	if ((function & 0x001f003f) == 0x00000020) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("cvt.s.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "cvt.s.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1684,7 +1684,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  cvt.d.fmt: Convert to double floating-point  */
 	if ((function & 0x001f003f) == 0x00000021) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("cvt.d.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "cvt.d.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -1695,7 +1695,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 	/*  cvt.w.fmt: Convert to word fixed-point  */
 	if ((function & 0x001f003f) == 0x00000024) {
 		if (cpu->machine->instruction_trace || unassemble_only)
-			debug("cvt.w.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "cvt.w.%s\tr%i,r%i\n", fmtname[fmt], fd, fs);
 		if (unassemble_only)
 			return 1;
 
@@ -2197,7 +2197,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 
 	if (cp == NULL) {
 		if (unassemble_only) {
-			debug("cop%i\t0x%08x (coprocessor not available)\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "cop%i\t0x%08x (coprocessor not available)\n",
 			    cpnr, (int)function);
 			return;
 		}
@@ -2220,15 +2220,15 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 	if (cpnr < 2 && (((function & 0x03e007f8) == (COPz_MFCz << 21))
 	              || ((function & 0x03e007f8) == (COPz_DMFCz << 21)))) {
 		if (unassemble_only) {
-			debug("%s%i\t%s,", copz==COPz_DMFCz? "dmfc" : "mfc",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "%s%i\t%s,", copz==COPz_DMFCz? "dmfc" : "mfc",
 			    cpnr, regnames[rt]);
 			if (cpnr == 0)
-				debug("%s", cop0_names[rd]);
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "%s", cop0_names[rd]);
 			else
-				debug("r%i", rd);
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "r%i", rd);
 			if (function & 7)
-				debug(",%i", (int)(function & 7));
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ",%i", (int)(function & 7));
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\n");
 			return;
 		}
 		coproc_register_read(cpu, cpu->cd.mips.coproc[cpnr],
@@ -2253,20 +2253,20 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 				tmpvalue |= 0xffffffff00000000ULL;
 		}
 		if (unassemble_only) {
-			debug("%s%i\t%s,", copz==COPz_DMTCz? "dmtc" : "mtc",
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "%s%i\t%s,", copz==COPz_DMTCz? "dmtc" : "mtc",
 			    cpnr, regnames[rt]);
 			if (cpnr == 0)
-				debug("%s", cop0_names[rd]);
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "%s", cop0_names[rd]);
 			else
-				debug("r%i", rd);
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "r%i", rd);
 			if (function & 7)
-				debug(",%i", (int)(function & 7));
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ",%i", (int)(function & 7));
 			/*  The value, if this is the instruction at the pc:  */
 			if (running && cpu->is_32bit)
-				debug(" [%08" PRIx32"]", (uint32_t) tmpvalue);
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, " [%08" PRIx32"]", (uint32_t) tmpvalue);
 			else if (running)
-				debug(" [%016" PRIx64"]", (uint64_t) tmpvalue);
-			debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, " [%016" PRIx64"]", (uint64_t) tmpvalue);
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\n");
 			return;
 		}
 		coproc_register_write(cpu, cpu->cd.mips.coproc[cpnr], rd,
@@ -2281,7 +2281,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 			rt = (function >> 16) & 31;
 			fs = (function >> 11) & 31;
 			if (unassemble_only) {
-				debug("cfc%i\t%s,r%i\n", cpnr,
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "cfc%i\t%s,r%i\n", cpnr,
 				    regnames[rt], fs);
 				return;
 			}
@@ -2293,7 +2293,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 			rt = (function >> 16) & 31;
 			fs = (function >> 11) & 31;
 			if (unassemble_only) {
-				debug("ctc%i\t%s,r%i\n", cpnr,
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "ctc%i\t%s,r%i\n", cpnr,
 				    regnames[rt], fs);
 				return;
 			}
@@ -2361,7 +2361,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 	if (cpu->cd.mips.cpu_type.rev == MIPS_R5900) {
 		if ((function & 0xfffff) == COP0_EI) {
 			if (unassemble_only) {
-				debug("ei\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "ei\n");
 				return;
 			}
 			cpu->cd.mips.coproc[0]->reg[COP0_STATUS] |=
@@ -2371,7 +2371,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 
 		if ((function & 0xfffff) == COP0_DI) {
 			if (unassemble_only) {
-				debug("di\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "di\n");
 				return;
 			}
 			cpu->cd.mips.coproc[0]->reg[COP0_STATUS] &=
@@ -2392,10 +2392,10 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 		switch (co_bit) {
 		case 0:
 			if ((function & 0x03e0ffdf) == 0x01606000) {
-				debug("%ci", function & 0x20? 'e' : 'd');
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "%ci", function & 0x20? 'e' : 'd');
 				if (rt != MIPS_GPR_ZERO)
-					debug("\t%s", regnames[rt]);
-				debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\t%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\n");
 				return;
 			}
 			break;
@@ -2403,62 +2403,62 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 			op = (function) & 0xff;
 			switch (op) {
 			case COP0_TLBR:		/*  Read indexed TLB entry  */
-				debug("tlbr\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "tlbr\n");
 				return;
 			case COP0_TLBWI:	/*  Write indexed  */
 			case COP0_TLBWR:	/*  Write random  */
 				if (op == COP0_TLBWI)
-					debug("tlbwi");
+					debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "tlbwi");
 				else
-					debug("tlbwr");
+					debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "tlbwr");
 				if (!running) {
-					debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\n");
 					return;
 				}
-				debug("\tindex=%08llx",
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\tindex=%08llx",
 				    (long long)cp->reg[COP0_INDEX]);
-				debug(", random=%08llx",
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ", random=%08llx",
 				    (long long)cp->reg[COP0_RANDOM]);
-				debug(", mask=%016llx",
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ", mask=%016llx",
 				    (long long)cp->reg[COP0_PAGEMASK]);
-				debug(", hi=%016llx",
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ", hi=%016llx",
 				    (long long)cp->reg[COP0_ENTRYHI]);
-				debug(", lo0=%016llx",
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ", lo0=%016llx",
 				    (long long)cp->reg[COP0_ENTRYLO0]);
-				debug(", lo1=%016llx\n",
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, ", lo1=%016llx\n",
 				    (long long)cp->reg[COP0_ENTRYLO1]);
 				return;
 			case COP0_TLBP:		/*  Probe TLB for
 						    matching entry  */
-				debug("tlbp\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "tlbp\n");
 				return;
 			case COP0_RFE:		/*  R2000/R3000 only:
 						    Return from Exception  */
-				debug("rfe\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "rfe\n");
 				return;
 			case COP0_ERET:	/*  R4000: Return from exception  */
-				debug("eret\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "eret\n");
 				return;
 			case COP0_DERET:
-				debug("deret\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "deret\n");
 				return;
 			case COP0_WAIT:
 				{
 					int code = (function >> 6) & 0x7ffff;
-					debug("wait");
+					debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "wait");
 					if (code > 0)
-						debug("\t0x%x", code);
-					debug("\n");
+						debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\t0x%x", code);
+					debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "\n");
 				}
 				return;
 			case COP0_STANDBY:
-				debug("standby\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "standby\n");
 				return;
 			case COP0_SUSPEND:
-				debug("suspend\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "suspend\n");
 				return;
 			case COP0_HIBERNATE:
-				debug("hibernate\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "hibernate\n");
 				return;
 			default:
 				;
@@ -2470,7 +2470,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 	/*  TODO: coprocessor R2020 on DECstation?  */
 	if ((cp->coproc_nr==0 || cp->coproc_nr==3) && function == 0x0100ffff) {
 		if (unassemble_only) {
-			debug("decstation_r2020_writeback\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "decstation_r2020_writeback\n");
 			return;
 		}
 		/*  TODO  */
@@ -2478,7 +2478,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 	}
 
 	if (unassemble_only) {
-		debug("cop%i\t0x%08x (unimplemented)\n", cpnr, (int)function);
+		debugmsg(SUBSYS_CPU, "cpu_mips_coproc", VERBOSITY_DEBUG, "cop%i\t0x%08x (unimplemented)\n", cpnr, (int)function);
 		return;
 	}
 

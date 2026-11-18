@@ -354,61 +354,61 @@ void mips_cpu_dumpinfo(struct cpu *cpu, bool verbose)
 		return;
 	}
 
-	debug("%s-endian (MIPS",
+	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s-endian (MIPS",
 	    cpu->byte_order == EMUL_BIG_ENDIAN? "Big" : "Little");
 
 	switch (ct->isa_level) {
-	case 1:	debug(" ISA I"); break;
-	case 2:	debug(" ISA II"); break;
-	case 3:	debug(" ISA III"); break;
-	case 4:	debug(" ISA IV"); break;
-	case 5:	debug(" ISA V"); break;
+	case 1:	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ISA I"); break;
+	case 2:	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ISA II"); break;
+	case 3:	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ISA III"); break;
+	case 4:	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ISA IV"); break;
+	case 5:	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ISA V"); break;
 	case 32:
-	case 64:debug("%i, revision %i", ct->isa_level, ct->isa_revision);
+	case 64:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%i, revision %i", ct->isa_level, ct->isa_revision);
 		break;
-	default:debug(" ISA level %i", ct->isa_level);
+	default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ISA level %i", ct->isa_level);
 	}
 
-	debug("), ");
+	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "), ");
 	if (ct->nr_of_tlb_entries)
-		debug("%i TLB entries", ct->nr_of_tlb_entries);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%i TLB entries", ct->nr_of_tlb_entries);
 	else
-		debug("no TLB");
-	debug("\n");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "no TLB");
+	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 
 	if (ct->picache) {
-		debug("L1 I-cache: %i KB", (1 << ct->picache) / 1024);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "L1 I-cache: %i KB", (1 << ct->picache) / 1024);
 		if (ct->pilinesize)
-			debug(", %i bytes per line", 1 << ct->pilinesize);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", %i bytes per line", 1 << ct->pilinesize);
 		if (ct->piways > 1)
-			debug(", %i-way", ct->piways);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", %i-way", ct->piways);
 		else
-			debug(", direct-mapped");
-		debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", direct-mapped");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 	}
 
 	if (ct->pdcache) {
-		debug("L1 D-cache: %i KB", (1 << ct->pdcache) / 1024);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "L1 D-cache: %i KB", (1 << ct->pdcache) / 1024);
 		if (ct->pdlinesize)
-			debug(", %i bytes per line", 1 << ct->pdlinesize);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", %i bytes per line", 1 << ct->pdlinesize);
 		if (ct->pdways > 1)
-			debug(", %i-way", ct->pdways);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", %i-way", ct->pdways);
 		else
-			debug(", direct-mapped");
-		debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", direct-mapped");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 	}
 
 	if (ct->scache) {
 		int kb = (1 << ct->scache) / 1024;
-		debug("L2 cache: %i %s",
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "L2 cache: %i %s",
 		    kb >= 1024? kb / 1024 : kb, kb >= 1024? "MB":"KB");
 		if (ct->slinesize)
-			debug(", %i bytes per line", 1 << ct->slinesize);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", %i bytes per line", 1 << ct->slinesize);
 		if (ct->sways > 1)
-			debug(", %i-way", ct->sways);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", %i-way", ct->sways);
 		else
-			debug(", direct-mapped");
-		debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", direct-mapped");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 	}
 }
 
@@ -425,12 +425,12 @@ void mips_cpu_list_available_types(void)
 
 	i = 0;
 	while (cpu_type_defs[i].name != NULL) {
-		debug("%s", cpu_type_defs[i].name);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", cpu_type_defs[i].name);
 		for (j=10 - strlen(cpu_type_defs[i].name); j>0; j--)
-			debug(" ");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ");
 		i++;
 		if ((i % 6) == 0 || cpu_type_defs[i].name == NULL)
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 	}
 }
 
@@ -716,15 +716,15 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 	symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset==0)
-		debug("<%s>\n", symbol);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debug("cpu%i: ", cpu->cpu_id);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i: ", cpu->cpu_id);
 
 	if (cpu->is_32bit)
-		debug("%08" PRIx32, (uint32_t)dumpaddr);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t)dumpaddr);
 	else
-		debug("%016" PRIx64, (uint64_t)dumpaddr);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t)dumpaddr);
 
 	memcpy(instr, originstr, sizeof(uint32_t));
 
@@ -739,13 +739,13 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		    instr[2] = tmp;
 	}
 
-	debug(": %02x%02x%02x%02x",
+	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ": %02x%02x%02x%02x",
 	    instr[3], instr[2], instr[1], instr[0]);
 
 	if (running && cpu->delay_slot)
-		debug(" (d)");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " (d)");
 	else
-		debug("    ");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "    ");
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -775,29 +775,29 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 
 			if (rd == 0 && special6 == SPECIAL_SLL) {
 				if (sa == 0)
-					debug("nop");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "nop");
 				else if (sa == 1)
-					debug("ssnop");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "ssnop");
 				else if (sa == 3)
-					debug("ehb");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "ehb");
 				else
-					debug("nop (weird, sa=%i)", sa);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "nop (weird, sa=%i)", sa);
 				break;
 			}
 
 			switch (sub) {
 			case 0x00:
-				debug("%s\t%s,", special_names[special6],
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s,", special_names[special6],
 				    regnames[rd]);
-				debug("%s,%i", regnames[rt], sa);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%i", regnames[rt], sa);
 				break;
 			case 0x01:
-				debug("%s\t%s,",
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s,",
 				    special_rot_names[special6],
 				    regnames[rd]);
-				debug("%s,%i", regnames[rt], sa);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%i", regnames[rt], sa);
 				break;
-			default:debug("UNIMPLEMENTED special, sub=0x%02x\n",
+			default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "UNIMPLEMENTED special, sub=0x%02x\n",
 				    sub);
 			}
 			break;
@@ -814,18 +814,18 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 
 			switch (sub) {
 			case 0x00:
-				debug("%s\t%s", special_names[special6],
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s", special_names[special6],
 				    regnames[rd]);
-				debug(",%s", regnames[rt]);
-				debug(",%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
 				break;
 			case 0x01:
-				debug("%s\t%s", special_rot_names[special6],
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s", special_rot_names[special6],
 				    regnames[rd]);
-				debug(",%s", regnames[rt]);
-				debug(",%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
 				break;
-			default:debug("UNIMPLEMENTED special, sub=0x%02x\n",
+			default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "UNIMPLEMENTED special, sub=0x%02x\n",
 				    sub);
 			}
 			break;
@@ -834,11 +834,11 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    cpu->cd.mips.gpr[rs], &offset);
 			/*  .hb = hazard barrier hint on MIPS32/64 rev 2  */
-			debug("jr%s\t%s",
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "jr%s\t%s",
 			    (instr[1] & 0x04) ? ".hb" : "",
 			    regnames[rs]);
 			if (running && symbol != NULL)
-				debug("\t<%s>", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t<%s>", symbol);
 			break;
 		case SPECIAL_JALR:
 			rs = ((instr[3] & 3) << 3) + ((instr[2] >> 5) & 7);
@@ -846,22 +846,22 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    cpu->cd.mips.gpr[rs], &offset);
 			/*  .hb = hazard barrier hint on MIPS32/64 rev 2  */
-			debug("jalr%s\t%s",
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "jalr%s\t%s",
 			    (instr[1] & 0x04) ? ".hb" : "",
 			    regnames[rd]);
-			debug(",%s", regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
 			if (running && symbol != NULL)
-				debug("\t<%s>", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t<%s>", symbol);
 			break;
 		case SPECIAL_MFHI:
 		case SPECIAL_MFLO:
 			rd = (instr[1] >> 3) & 31;
-			debug("%s\t%s", special_names[special6], regnames[rd]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s", special_names[special6], regnames[rd]);
 			break;
 		case SPECIAL_MTLO:
 		case SPECIAL_MTHI:
 			rs = ((instr[3] & 3) << 3) + ((instr[2] >> 5) & 7);
-			debug("%s\t%s", special_names[special6], regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s", special_names[special6], regnames[rs]);
 			break;
 		case SPECIAL_ADD:
 		case SPECIAL_ADDU:
@@ -886,19 +886,19 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			    special6 == SPECIAL_SUBU) && rt == 0) {
 				/*  Special case 1: addu/subu with
 				    rt = the zero register ==> move  */
-				debug("move\t%s", regnames[rd]);
-				debug(",%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "move\t%s", regnames[rd]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
 			} else if (special6 == SPECIAL_ADDU && cpu->is_32bit
 			    && rs == 0) {
 				/*  Special case 2: addu with
 				    rs = the zero register ==> move  */
-				debug("move\t%s", regnames[rd]);
-				debug(",%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "move\t%s", regnames[rd]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
 			} else {
-				debug("%s\t%s", special_names[special6],
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s", special_names[special6],
 				    regnames[rd]);
-				debug(",%s", regnames[rs]);
-				debug(",%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
 			}
 			break;
 		case SPECIAL_MULT:
@@ -912,20 +912,20 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			rs = ((instr[3] & 3) << 3) + ((instr[2] >> 5) & 7);
 			rt = instr[2] & 31;
 			rd = (instr[1] >> 3) & 31;
-			debug("%s\t", special_names[special6]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", special_names[special6]);
 			if (rd != 0) {
 				if (cpu->cd.mips.cpu_type.rev == MIPS_R5900) {
 					if (special6 == SPECIAL_MULT ||
 					    special6 == SPECIAL_MULTU)
-						debug("%s,", regnames[rd]);
+						debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,", regnames[rd]);
 					else
-						debug("WEIRD_R5900_RD,");
+						debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "WEIRD_R5900_RD,");
 				} else {
-					debug("WEIRD_RD_NONZERO,");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "WEIRD_RD_NONZERO,");
 				}
 			}
-			debug("%s", regnames[rs]);
-			debug(",%s", regnames[rt]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
 			break;
 		case SPECIAL_TGE:
 		case SPECIAL_TGEU:
@@ -936,51 +936,51 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			rs = ((instr[3] & 3) << 3) + ((instr[2] >> 5) & 7);
 			rt = instr[2] & 31;
 			rd = ((instr[1] << 8) + instr[0]) >> 6;	// code, not rd
-			debug("%s\t", special_names[special6]);
-			debug("%s", regnames[rs]);
-			debug(",%s", regnames[rt]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", special_names[special6]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
 			if (rd != 0)
-				debug(",0x%x", rd);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",0x%x", rd);
 			break;
 		case SPECIAL_SYNC:
 			imm = ((instr[1] & 7) << 2) + (instr[0] >> 6);
-			debug("sync\t0x%02x", imm);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "sync\t0x%02x", imm);
 			break;
 		case SPECIAL_SYSCALL:
 			imm = (((instr[3] << 24) + (instr[2] << 16) +
 			    (instr[1] << 8) + instr[0]) >> 6) & 0xfffff;
 			if (imm != 0)
-				debug("syscall\t0x%05x", imm);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "syscall\t0x%05x", imm);
 			else
-				debug("syscall");
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "syscall");
 			break;
 		case SPECIAL_BREAK:
 			imm = (((instr[3] << 24) + (instr[2] << 16) +
 			    (instr[1] << 8) + instr[0]) >> 6) & 0xfffff;
 			if (imm != 0)
-				debug("break\t0x%05x", imm);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "break\t0x%05x", imm);
 			else
-				debug("break");
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "break");
 			break;
 		case SPECIAL_MFSA:
 			if (cpu->cd.mips.cpu_type.rev == MIPS_R5900) {
 				rd = (instr[1] >> 3) & 31;
-				debug("mfsa\t%s", regnames[rd]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "mfsa\t%s", regnames[rd]);
 			} else {
-				debug("unimplemented special 0x28");
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "unimplemented special 0x28");
 			}
 			break;
 		case SPECIAL_MTSA:
 			if (cpu->cd.mips.cpu_type.rev == MIPS_R5900) {
 				rs = ((instr[3] & 3) << 3) +
 				    ((instr[2] >> 5) & 7);
-				debug("mtsa\t%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "mtsa\t%s", regnames[rs]);
 			} else {
-				debug("unimplemented special 0x29");
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "unimplemented special 0x29");
 			}
 			break;
 		default:
-			debug("%s\t= UNIMPLEMENTED", special_names[special6]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t= UNIMPLEMENTED", special_names[special6]);
 		}
 		break;
 	case HI6_BEQ:
@@ -1000,28 +1000,28 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 
 		if (hi6 == HI6_BEQ && rt == MIPS_GPR_ZERO &&
 		    rs == MIPS_GPR_ZERO)
-			debug("b\t");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "b\t");
 		else {
-			debug("%s\t", hi6_names[hi6]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", hi6_names[hi6]);
 			switch (hi6) {
 			case HI6_BEQ:
 			case HI6_BEQL:
 			case HI6_BNE:
 			case HI6_BNEL:
-				debug("%s,", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,", regnames[rt]);
 			}
-			debug("%s,", regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,", regnames[rs]);
 		}
 
 		if (cpu->is_32bit)
-			debug("0x%08" PRIx32, (uint32_t)addr);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t)addr);
 		else
-			debug("0x%016" PRIx64, (uint64_t)addr);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%016" PRIx64, (uint64_t)addr);
 
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL && offset != addr)
-			debug("\t<%s>", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t<%s>", symbol);
 		break;
 	case HI6_ADDI:
 	case HI6_ADDIU:
@@ -1037,17 +1037,17 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		imm = (instr[1] << 8) + instr[0];
 		if (imm >= 32768)
 			imm -= 65536;
-		debug("%s\t%s,", hi6_names[hi6], regnames[rt]);
-		debug("%s,", regnames[rs]);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s,", hi6_names[hi6], regnames[rt]);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,", regnames[rs]);
 		if (hi6 == HI6_ANDI || hi6 == HI6_ORI || hi6 == HI6_XORI)
-			debug("0x%04x", imm & 0xffff);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%04x", imm & 0xffff);
 		else
-			debug("%i", imm);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%i", imm);
 		break;
 	case HI6_LUI:
 		rt = instr[2] & 31;
 		imm = (instr[1] << 8) + instr[0];
-		debug("lui\t%s,0x%x", regnames[rt], imm);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "lui\t%s,0x%x", regnames[rt], imm);
 		break;
 	case HI6_LB:
 	case HI6_LBU:
@@ -1086,7 +1086,7 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 	case HI6_SDR:
 		if (hi6 == HI6_LQ_MDMX &&
 		    cpu->cd.mips.cpu_type.rev != MIPS_R5900) {
-			debug("mdmx\t(UNIMPLEMENTED)");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "mdmx\t(UNIMPLEMENTED)");
 			break;
 		}
 		if (hi6 == HI6_SQ_SPECIAL3 &&
@@ -1105,21 +1105,21 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			case SPECIAL3_DEXT:
 			case SPECIAL3_DEXTM:
 			case SPECIAL3_DEXTU:
-				debug("%s", special3_names[special6]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", special3_names[special6]);
 				if (special6 == SPECIAL3_DEXTM)
 					msbd += 32;
 				if (special6 == SPECIAL3_DEXTU)
 					lsb += 32;
-				debug("\t%s", regnames[rt]);
-				debug(",%s", regnames[rs]);
-				debug(",%i,%i", lsb, msbd + 1);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%i,%i", lsb, msbd + 1);
 				break;
 
 			case SPECIAL3_INS:
 			case SPECIAL3_DINS:
 			case SPECIAL3_DINSM:
 			case SPECIAL3_DINSU:
-				debug("%s", special3_names[special6]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", special3_names[special6]);
 				if (special6 == SPECIAL3_DINSM)
 					msbd += 32;
 				if (special6 == SPECIAL3_DINSU) {
@@ -1127,9 +1127,9 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 					msbd += 32;
 				}
 				msbd -= lsb;
-				debug("\t%s", regnames[rt]);
-				debug(",%s", regnames[rs]);
-				debug(",%i,%i", lsb, msbd + 1);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rs]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%i,%i", lsb, msbd + 1);
 				break;
 
 			case SPECIAL3_BSHFL:
@@ -1138,15 +1138,15 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 				case BSHFL_SEB:
 				case BSHFL_SEH:
 					switch (sub10) {
-					case BSHFL_WSBH: debug("wsbh"); break;
-					case BSHFL_SEB:  debug("seb"); break;
-					case BSHFL_SEH:  debug("seh"); break;
+					case BSHFL_WSBH: debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "wsbh"); break;
+					case BSHFL_SEB:  debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "seb"); break;
+					case BSHFL_SEH:  debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "seh"); break;
 					}
-					debug("\t%s", regnames[rd]);
-					debug(",%s", regnames[rt]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t%s", regnames[rd]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
 					break;
-				default:debug("%s", special3_names[special6]);
-					debug("\t(UNIMPLEMENTED)");
+				default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", special3_names[special6]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t(UNIMPLEMENTED)");
 				}
 				break;
 
@@ -1155,25 +1155,25 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 				case BSHFL_DSBH:
 				case BSHFL_DSHD:
 					switch (sub10) {
-					case BSHFL_DSBH: debug("dsbh"); break;
-					case BSHFL_DSHD: debug("dshd"); break;
+					case BSHFL_DSBH: debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "dsbh"); break;
+					case BSHFL_DSHD: debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "dshd"); break;
 					}
-					debug("\t%s", regnames[rd]);
-					debug(",%s", regnames[rt]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t%s", regnames[rd]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%s", regnames[rt]);
 					break;
-				default:debug("%s", special3_names[special6]);
-					debug("\t(UNIMPLEMENTED)");
+				default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", special3_names[special6]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t(UNIMPLEMENTED)");
 				}
 				break;
 
 			case SPECIAL3_RDHWR:
-				debug("%s", special3_names[special6]);
-				debug("\t%s", regnames[rt]);
-				debug(",hwr%i", rd);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", special3_names[special6]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t%s", regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",hwr%i", rd);
 				break;
 
-			default:debug("%s", special3_names[special6]);
-				debug("\t(UNIMPLEMENTED)");
+			default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", special3_names[special6]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t(UNIMPLEMENTED)");
 			}
 			break;
 		}
@@ -1189,49 +1189,49 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		/*  LWC3 is PREF in the newer ISA levels:  */
 		/*  TODO: Which ISAs? IV? V? 32? 64?  */
 		if (cpu->cd.mips.cpu_type.isa_level >= 4 && hi6 == HI6_LWC3) {
-			debug("pref\t0x%x,%i(%s)",
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "pref\t0x%x,%i(%s)",
 			    rt, imm, regnames[rs]);
 
 			if (running) {
-				debug("\t[0x%016" PRIx64" = %s]",
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t[0x%016" PRIx64" = %s]",
 				    (uint64_t)(cpu->cd.mips.gpr[rs] + imm));
 				if (symbol != NULL)
-					debug(" = %s", symbol);
-				debug("]");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " = %s", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "]");
 			}
 			goto disasm_ret;
 		}
 
-		debug("%s\t", hi6_names[hi6]);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", hi6_names[hi6]);
 
 		if (hi6 == HI6_SWC1 || hi6 == HI6_SWC2 || hi6 == HI6_SWC3 ||
 		    hi6 == HI6_SDC1 || hi6 == HI6_SDC2 ||
 		    hi6 == HI6_LWC1 || hi6 == HI6_LWC2 || hi6 == HI6_LWC3 ||
 		    hi6 == HI6_LDC1 || hi6 == HI6_LDC2)
-			debug("r%i", rt);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "r%i", rt);
 		else
-			debug("%s", regnames[rt]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", regnames[rt]);
 
-		debug(",%i(%s)", imm, regnames[rs]);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ",%i(%s)", imm, regnames[rs]);
 
 		if (running) {
-			debug("\t[");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t[");
 
 			if (cpu->is_32bit)
-				debug("0x%08" PRIx32,
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%08" PRIx32,
 				    (uint32_t) (cpu->cd.mips.gpr[rs] + imm));
 			else
-				debug("0x%016" PRIx64,
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%016" PRIx64,
 				    (uint64_t) (cpu->cd.mips.gpr[rs] + imm));
 
 			if (symbol != NULL)
-				debug(" = %s", symbol);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " = %s", symbol);
 
 			/*  TODO: In some cases, it is possible to peek into
 			    memory, and display that data here, like for the
 			    other emulation modes.  */
 
-			debug("]");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "]");
 		}
 		break;
 
@@ -1243,13 +1243,13 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		addr |= imm;
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
-		debug("%s\t0x", hi6_names[hi6]);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t0x", hi6_names[hi6]);
 		if (cpu->is_32bit)
-			debug("%08" PRIx32, (uint32_t) addr);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t) addr);
 		else
-			debug("%016" PRIx64, (uint64_t) addr);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t) addr);
 		if (symbol != NULL)
-			debug("\t<%s>", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\t<%s>", symbol);
 		break;
 
 	case HI6_COP0:
@@ -1272,28 +1272,28 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		cache_op    = copz >> 2;
 		which_cache = copz & 3;
 		showtag = 0;
-		debug("cache\t0x%02x,0x%04x(%s)", copz, imm, regnames[rt]);
-		if (which_cache==0)	debug("  [ primary I-cache");
-		if (which_cache==1)	debug("  [ primary D-cache");
-		if (which_cache==2)	debug("  [ secondary I-cache");
-		if (which_cache==3)	debug("  [ secondary D-cache");
-		debug(", ");
-		if (cache_op==0)	debug("index invalidate");
-		if (cache_op==1)	debug("index load tag");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cache\t0x%02x,0x%04x(%s)", copz, imm, regnames[rt]);
+		if (which_cache==0)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "  [ primary I-cache");
+		if (which_cache==1)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "  [ primary D-cache");
+		if (which_cache==2)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "  [ secondary I-cache");
+		if (which_cache==3)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "  [ secondary D-cache");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", ");
+		if (cache_op==0)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "index invalidate");
+		if (cache_op==1)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "index load tag");
 		if (cache_op==2)	debug("index store tag"), showtag=1;
-		if (cache_op==3)	debug("create dirty exclusive");
-		if (cache_op==4)	debug("hit invalidate");
-		if (cache_op==5)     debug("fill OR hit writeback invalidate");
-		if (cache_op==6)	debug("hit writeback");
-		if (cache_op==7)	debug("hit set virtual");
+		if (cache_op==3)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "create dirty exclusive");
+		if (cache_op==4)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "hit invalidate");
+		if (cache_op==5)     debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "fill OR hit writeback invalidate");
+		if (cache_op==6)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "hit writeback");
+		if (cache_op==7)	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "hit set virtual");
 		if (running)
-			debug(", addr 0x%016" PRIx64,
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", addr 0x%016" PRIx64,
 			    (uint64_t)(cpu->cd.mips.gpr[rt] + imm));
 		if (showtag)
-		debug(", taghi=%08lx lo=%08lx",
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, ", taghi=%08lx lo=%08lx",
 		    (long)cpu->cd.mips.coproc[0]->reg[COP0_TAGDATA_HI],
 		    (long)cpu->cd.mips.coproc[0]->reg[COP0_TAGDATA_LO]);
-		debug(" ]");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " ]");
 		break;
 
 	case HI6_SPECIAL2:
@@ -1308,20 +1308,20 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 			int c790mmifunc = (instrword >> 6) & 0x1f;
 			if (special6 != MMI_MMI0 && special6 != MMI_MMI1 &&
 			    special6 != MMI_MMI2 && special6 != MMI_MMI3)
-				debug("%s\t", mmi_names[special6]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", mmi_names[special6]);
 
 			switch (special6) {
 
 			case MMI_MADD:
 			case MMI_MADDU:
 				if (rd != MIPS_GPR_ZERO) {
-					debug("%s,", regnames[rd]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,", regnames[rd]);
 				}
-				debug("%s,%s", regnames[rs], regnames[rt]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s", regnames[rs], regnames[rt]);
 				break;
 
 			case MMI_MMI0:
-				debug("%s\t", mmi0_names[c790mmifunc]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", mmi0_names[c790mmifunc]);
 				switch (c790mmifunc) {
 
 				case MMI0_PEXTLB:
@@ -1332,16 +1332,16 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 				case MMI0_PPACB:
 				case MMI0_PPACH:
 				case MMI0_PPACW:
-					debug("%s,%s,%s", regnames[rd],
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s,%s", regnames[rd],
 					    regnames[rs], regnames[rt]);
 					break;
 
-				default:debug("(UNIMPLEMENTED)");
+				default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "(UNIMPLEMENTED)");
 				}
 				break;
 
 			case MMI_MMI1:
-				debug("%s\t", mmi1_names[c790mmifunc]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", mmi1_names[c790mmifunc]);
 				switch (c790mmifunc) {
 
 				case MMI1_PEXTUB:
@@ -1349,21 +1349,21 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 				case MMI1_PEXTUW:
 				case MMI1_PMINH:
 				case MMI1_PMINW:
-					debug("%s,%s,%s", regnames[rd],
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s,%s", regnames[rd],
 					    regnames[rs], regnames[rt]);
 					break;
 
-				default:debug("(UNIMPLEMENTED)");
+				default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "(UNIMPLEMENTED)");
 				}
 				break;
 
 			case MMI_MMI2:
-				debug("%s\t", mmi2_names[c790mmifunc]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", mmi2_names[c790mmifunc]);
 				switch (c790mmifunc) {
 
 				case MMI2_PMFHI:
 				case MMI2_PMFLO:
-					debug("%s", regnames[rd]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", regnames[rd]);
 					break;
 
 				case MMI2_PHMADH:
@@ -1376,21 +1376,21 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 				case MMI2_PMULTH:
 				case MMI2_PMULTW:
 				case MMI2_PSLLVW:
-					debug("%s,%s,%s", regnames[rd],
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s,%s", regnames[rd],
 					    regnames[rs], regnames[rt]);
 					break;
 
-				default:debug("(UNIMPLEMENTED)");
+				default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "(UNIMPLEMENTED)");
 				}
 				break;
 
 			case MMI_MMI3:
-				debug("%s\t", mmi3_names[c790mmifunc]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", mmi3_names[c790mmifunc]);
 				switch (c790mmifunc) {
 
 				case MMI3_PMTHI:
 				case MMI3_PMTLO:
-					debug("%s", regnames[rs]);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s", regnames[rs]);
 					break;
 
 				case MMI3_PINTEH:
@@ -1399,21 +1399,21 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 				case MMI3_PNOR:
 				case MMI3_POR:
 				case MMI3_PSRAVW:
-					debug("%s,%s,%s", regnames[rd],
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s,%s", regnames[rd],
 					    regnames[rs], regnames[rt]);
 					break;
 
-				default:debug("(UNIMPLEMENTED)");
+				default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "(UNIMPLEMENTED)");
 				}
 				break;
 
-			default:debug("(UNIMPLEMENTED)");
+			default:debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "(UNIMPLEMENTED)");
 			}
 			break;
 		}
 
 		/*  SPECIAL2:  */
-		debug("%s\t", special2_names[special6]);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t", special2_names[special6]);
 
 		switch (special6) {
 
@@ -1422,15 +1422,15 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		case SPECIAL2_MSUB:
 		case SPECIAL2_MSUBU:
 			if (rd != MIPS_GPR_ZERO) {
-				debug("WEIRD_NONZERO_RD(%s),",
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "WEIRD_NONZERO_RD(%s),",
 				    regnames[rd]);
 			}
-			debug("%s,%s", regnames[rs], regnames[rt]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s", regnames[rs], regnames[rt]);
 			break;
 
 		case SPECIAL2_MUL:
 			/*  Apparently used both on R5900 and MIPS32:  */
-			debug("%s,%s,%s", regnames[rd],
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s,%s", regnames[rd],
 			    regnames[rs], regnames[rt]);
 			break;
 
@@ -1438,11 +1438,11 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		case SPECIAL2_CLO:
 		case SPECIAL2_DCLZ:
 		case SPECIAL2_DCLO:
-			debug("%s,%s", regnames[rd], regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s,%s", regnames[rd], regnames[rs]);
 			break;
 
 		default:
-			debug("(UNIMPLEMENTED)");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "(UNIMPLEMENTED)");
 		}
 		break;
 
@@ -1463,14 +1463,14 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		case REGIMM_BLTZALL:
 		case REGIMM_BGEZAL:
 		case REGIMM_BGEZALL:
-			debug("%s\t%s,", regimm_names[regimm5], regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s,", regimm_names[regimm5], regnames[rs]);
 
 			addr = (dumpaddr + 4) + (imm << 2);
 
 			if (cpu->is_32bit)
-				debug("0x%08" PRIx32, (uint32_t) addr);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t) addr);
 			else
-				debug("0x%016" PRIx64, (uint64_t) addr);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%016" PRIx64, (uint64_t) addr);
 			break;
 
 		case REGIMM_TGEI:
@@ -1479,29 +1479,29 @@ int mips_cpu_disassemble_instr(struct cpu *cpu, unsigned char *originstr,
 		case REGIMM_TLTIU:
 		case REGIMM_TEQI:
 		case REGIMM_TNEI:
-			debug("%s\t%s,", regimm_names[regimm5], regnames[rs]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%s,", regimm_names[regimm5], regnames[rs]);
 
 			if (cpu->is_32bit)
-				debug("0x%" PRIx32, (uint32_t) imm);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%" PRIx32, (uint32_t) imm);
 			else
-				debug("0x%" PRIx64, (uint64_t) imm);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) imm);
 			break;
 
 		case REGIMM_SYNCI:
-			debug("%s\t%i(%s)", regimm_names[regimm5],
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%s\t%i(%s)", regimm_names[regimm5],
 			    imm, regnames[rs]);
 			break;
 
 		default:
-			debug("unimplemented regimm5 = 0x%02x", regimm5);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "unimplemented regimm5 = 0x%02x", regimm5);
 		}
 		break;
 	default:
-		debug("unimplemented hi6 = 0x%02x", hi6);
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "unimplemented hi6 = 0x%02x", hi6);
 	}
 
 disasm_ret:
-	debug("\n");
+	debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 	return sizeof(instrword);
 }
 
@@ -1529,29 +1529,29 @@ void mips_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		    cpu->pc, &offset);
 
 		if (bits32)
-			debug("cpu%i:  pc = %08" PRIx32,
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:  pc = %08" PRIx32,
 			    cpu->cpu_id, (uint32_t) cpu->pc);
 		else if (bits128)
-			debug("cpu%i:  pc=%016" PRIx64,
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:  pc=%016" PRIx64,
 			    cpu->cpu_id, (uint64_t) cpu->pc);
 		else
-			debug("cpu%i:    pc = 0x%016" PRIx64,
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:    pc = 0x%016" PRIx64,
 			    cpu->cpu_id, (uint64_t) cpu->pc);
 
-		debug("    <%s>\n", symbol != NULL? symbol :
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "    <%s>\n", symbol != NULL? symbol :
 		    " no symbol ");
 
 		if (bits32)
-			debug("cpu%i:  hi = %08" PRIx32"  lo = %08" PRIx32"\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:  hi = %08" PRIx32"  lo = %08" PRIx32"\n",
 			    cpu->cpu_id, (uint32_t) cpu->cd.mips.hi,
 			    (uint32_t) cpu->cd.mips.lo);
 		else if (bits128) {
-			debug("cpu%i:  hi=%016" PRIx64"%016" PRIx64"  lo="
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:  hi=%016" PRIx64"%016" PRIx64"  lo="
 			    "%016" PRIx64"%016" PRIx64"\n", cpu->cpu_id,
 			    cpu->cd.mips.hi1, cpu->cd.mips.hi,
 			    cpu->cd.mips.lo1, cpu->cd.mips.lo);
 		} else {
-			debug("cpu%i:    hi = 0x%016" PRIx64"    lo = 0x%016"
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:    hi = 0x%016" PRIx64"    lo = 0x%016"
 			    PRIx64"\n", cpu->cpu_id,
 			    (uint64_t) cpu->cd.mips.hi,
 			    (uint64_t) cpu->cd.mips.lo);
@@ -1563,45 +1563,45 @@ void mips_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 			for (i=0; i<32; i++) {
 				int r = (i >> 1) + ((i & 1) << 4);
 				if ((i & 1) == 0)
-					debug("cpu%i:", cpu->cpu_id);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:", cpu->cpu_id);
 				if (r == MIPS_GPR_ZERO)
-					debug("                           "
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "                           "
 					    "          ");
 				else
-					debug(" %3s=%016" PRIx64"%016" PRIx64,
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " %3s=%016" PRIx64"%016" PRIx64,
 					    regnames[r], (uint64_t)
 					    cpu->cd.mips.gpr_quadhi[r],
 					    (uint64_t)cpu->cd.mips.gpr[r]);
 				if ((i & 1) == 1)
-					debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 			}
 		} else if (bits32) {
 			/*  32-bit:  */
 			for (i=0; i<32; i++) {
 				if ((i & 3) == 0)
-					debug("cpu%i:", cpu->cpu_id);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:", cpu->cpu_id);
 				if (i == MIPS_GPR_ZERO)
-					debug("               ");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "               ");
 				else
-					debug(" %3s = %08" PRIx32, regnames[i],
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " %3s = %08" PRIx32, regnames[i],
 					    (uint32_t)cpu->cd.mips.gpr[i]);
 				if ((i & 3) == 3)
-					debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 			}
 		} else {
 			/*  64-bit:  */
 			for (i=0; i<32; i++) {
 				int r = (i >> 1) + ((i & 1) << 4);
 				if ((i & 1) == 0)
-					debug("cpu%i:", cpu->cpu_id);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:", cpu->cpu_id);
 				if (r == MIPS_GPR_ZERO)
-					debug("                           ");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "                           ");
 				else
-					debug("   %3s = 0x%016" PRIx64,
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "   %3s = 0x%016" PRIx64,
 					    regnames[r],
 					    (uint64_t)cpu->cd.mips.gpr[r]);
 				if ((i & 1) == 1)
-					debug("\n");
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 			}
 		}
 	}
@@ -1615,7 +1615,7 @@ void mips_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		if (!(coprocs & (1<<coprocnr)))
 			continue;
 		if (cpu->cd.mips.coproc[coprocnr] == NULL) {
-			debug("cpu%i: no coprocessor %i\n",
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i: no coprocessor %i\n",
 			    cpu->cpu_id, coprocnr);
 			continue;
 		}
@@ -1624,31 +1624,31 @@ void mips_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		for (i=0; i<32; i++) {
 			/*  32-bit:  */
 			if ((i & nm1) == 0)
-				debug("cpu%i:", cpu->cpu_id);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i:", cpu->cpu_id);
 
 			if (coprocnr == 0)
-				debug(" %8s", cop0_names[i]);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " %8s", cop0_names[i]);
 			else
-				debug(" c%i,%02i", coprocnr, i);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " c%i,%02i", coprocnr, i);
 
 			if (bits32)
-				debug("=%08x", (int)cpu->cd.mips.
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "=%08x", (int)cpu->cd.mips.
 				    coproc[coprocnr]->reg[i]);
 			else {
 				if (coprocnr == 0 && (i == COP0_COUNT
 				    || i == COP0_COMPARE || i == COP0_INDEX
 				    || i == COP0_RANDOM || i == COP0_WIRED))
-					debug(" =         0x%08x",
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " =         0x%08x",
 					    (int) cpu->cd.mips.coproc[
 					    coprocnr]->reg[i]);
 				else
-					debug(" = 0x%016" PRIx64, (uint64_t)
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " = 0x%016" PRIx64, (uint64_t)
 					    cpu->cd.mips.coproc[
 					    coprocnr]->reg[i]);
 			}
 
 			if ((i & nm1) == nm1)
-				debug("\n");
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 
 			/*  Skip the last 16 cop0 registers on R3000 etc.  */
 			if (coprocnr == 0 && cpu->cd.mips.cpu_type.isa_level < 3
@@ -1657,15 +1657,15 @@ void mips_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		}
 
 		if (coprocnr == 0 && cpu->cd.mips.cpu_type.isa_level >= 32) {
-			debug("cpu%i: ", cpu->cpu_id);
-			debug("config_select1 = 0x");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i: ", cpu->cpu_id);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "config_select1 = 0x");
 			if (cpu->is_32bit)
-				debug("%08" PRIx32,
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%08" PRIx32,
 				    (uint32_t)cpu->cd.mips.cop0_config_select1);
 			else
-				debug("%016" PRIx64,
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "%016" PRIx64,
 				    (uint64_t)cpu->cd.mips.cop0_config_select1);
-			debug("\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "\n");
 		}
 
 		/*  Floating point control registers:  */
@@ -1763,65 +1763,65 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 		//debugmsg_cpu(cpu, SUBSYS_EXCEPTION, exception_names[exccode], VERBOSITY_INFO, "todo");
 
 
-		debug("[ ");
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "[ ");
 		if (cpu->machine->ncpus > 1)
-			debug("cpu%i: ", cpu->cpu_id);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "cpu%i: ", cpu->cpu_id);
 
-		debug("exception %s%s",
+		debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "exception %s%s",
 		    exception_names[exccode], tlb? " <tlb>" : "");
 
 		switch (exccode) {
 
 		case EXCEPTION_INT:
-			debug(" cause_im=0x%02x", (int)
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " cause_im=0x%02x", (int)
 			    ((reg[COP0_CAUSE] & CAUSE_IP_MASK)
 			    >> CAUSE_IP_SHIFT));
 			break;
 
 		case EXCEPTION_SYS:
-			debug(" v0=%i", (int)cpu->cd.mips.gpr[MIPS_GPR_V0]);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " v0=%i", (int)cpu->cd.mips.gpr[MIPS_GPR_V0]);
 			for (x=0; x<4; x++) {
 				int64_t d = cpu->cd.mips.gpr[MIPS_GPR_A0 + x];
 				char strbuf[30];
 
 				if (d > -256 && d < 256) {
-					debug(" a%i=%i", x, (int)d);
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " a%i=%i", x, (int)d);
 				} else if (memory_points_to_string(cpu,
 				    cpu->mem, d, 1)) {
-					debug(" a%i=\"%s\"", x,
+					debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " a%i=\"%s\"", x,
 					    memory_conv_to_string(cpu, cpu->mem,
 					    d, strbuf, sizeof(strbuf)));
 				} else {
 					if (cpu->is_32bit)
-						debug(" a%i=0x%" PRIx32, x,
+						debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " a%i=0x%" PRIx32, x,
 						    (uint32_t)d);
 					else
-						debug(" a%i=0x%" PRIx64, x,
+						debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " a%i=0x%" PRIx64, x,
 						    (uint64_t)d);
 				}
 			}
 			break;
 
 		case EXCEPTION_CPU:
-			debug(" coproc_nr=%i", coproc_nr);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " coproc_nr=%i", coproc_nr);
 			break;
 
 		default:
 			if (cpu->is_32bit)
-				debug(" vaddr=0x%08x", (int)vaddr);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " vaddr=0x%08x", (int)vaddr);
 			else
-				debug(" vaddr=0x%016" PRIx64, (uint64_t)vaddr);
+				debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " vaddr=0x%016" PRIx64, (uint64_t)vaddr);
 		}
 
 		if (cpu->is_32bit)
-			debug(" pc=0x%08" PRIx32" ", (uint32_t)cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " pc=0x%08" PRIx32" ", (uint32_t)cpu->pc);
 		else
-			debug(" pc=0x%016" PRIx64" ", (uint64_t)cpu->pc);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, " pc=0x%016" PRIx64" ", (uint64_t)cpu->pc);
 
 		if (symbol != NULL)
-			debug("<%s> ]\n", symbol);
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "<%s> ]\n", symbol);
 		else
-			debug("]\n");
+			debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "]\n");
 	}
 
 	if (tlb && vaddr < 0x1000) {
@@ -1937,7 +1937,7 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 		 *  they handle interrupts and/or tlb updates, I think, so
 		 *  printing this with debug() looks better than with fatal().
 		 */
-		/*  debug("[ warning: cpu%i exception while EXL is set,"
+		/*  debugmsg(SUBSYS_CPU, "cpu_mips", VERBOSITY_DEBUG, "[ warning: cpu%i exception while EXL is set,"
 		    " not setting EPC ]\n", cpu->cpu_id);  */
 	} else {
 		if (cpu->delay_slot) {
