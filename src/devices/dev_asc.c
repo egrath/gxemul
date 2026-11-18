@@ -395,7 +395,7 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 		} else {
 			/*  Copy from the incoming data into dma memory:  */
 			if (d->xferp->data_in == NULL) {
-				fatal_error(SUBSYS_DEVICE, "asc", "no incoming DMA data?\n");
+				fatal_error_cpu(cpu, SUBSYS_DEVICE, "asc", "no incoming DMA data?\n");
 				res = 0;
 			} else {
 				size_t lenIn = d->xferp->data_in_len;
@@ -515,7 +515,7 @@ debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "TODO.......asdgasin\n");
 			/*  TODO: Make sure that len2 doesn't go outside
 			    of the dma memory?  */
 
-			/*  fatal_error(SUBSYS_DEVICE, "asc", "    data out offset=%5i len=%5i",
+			/*  fatal_error_cpu(cpu, SUBSYS_DEVICE, "asc", "    data out offset=%5i len=%5i",
 			    d->xferp->data_out_offset, len2);  */
 
 			if (d->xferp->data_out_offset + len2 >
@@ -598,7 +598,7 @@ debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "TODO.......asdgasin\n");
 			int newlen;
 
 			if (oldlen != 1) {
-				fatal_error(SUBSYS_DEVICE, "asc", " (PHASE OUT MSG len == %i, "
+				fatal_error_cpu(cpu, SUBSYS_DEVICE, "asc", " (PHASE OUT MSG len == %i, "
 				    "should be 1)", oldlen);
 			}
 
@@ -625,7 +625,7 @@ debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "TODO.......asdgasin\n");
 			    d->xferp->msg_out[3] == 0x01 &&
 			    d->xferp->msg_out[4] == 0x32 &&
 			    d->xferp->msg_out[5] == 0x0f) {
-				fatal_error(SUBSYS_DEVICE, "asc", " !! Mach/PMAX hack !! ");
+				fatal_error_cpu(cpu, SUBSYS_DEVICE, "asc", " !! Mach/PMAX hack !! ");
 				all_done = 0;
 				d->cur_phase = PHASE_MSG_IN;
 			}

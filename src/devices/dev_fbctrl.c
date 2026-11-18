@@ -97,7 +97,7 @@ static void fbctrl_command(struct cpu *cpu, struct fbctrl_data *d)
 
 	/*  TODO: Block copy and fill.  */
 
-	default:fatal_error(SUBSYS_DEVICE, "fbctrl", "fbctrl_command: Unimplemented command %i.", cmd);
+	default:fatal_error_cpu(cpu, SUBSYS_DEVICE, "fbctrl", "fbctrl_command: Unimplemented command %i.", cmd);
 	}
 }
 

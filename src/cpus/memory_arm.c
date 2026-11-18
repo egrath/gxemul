@@ -75,7 +75,7 @@ static int arm_check_access(struct cpu *cpu, int ap, int dav, int user)
 		return 0;
 	case 1:	/*  Normal access check.  */
 		break;
-	case 2:	fatal_error(SUBSYS_CPU, "cpu", "arm_check_access(): 1 shouldn't be used");
+	case 2:	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_check_access(): 1 shouldn't be used");
 		break;
 	case 3:	/*  Anything is allowed.  */
 		return 2;
@@ -89,7 +89,7 @@ static int arm_check_access(struct cpu *cpu, int ap, int dav, int user)
 		case 1:	return user? 0 : 1;
 		case 2:	return 1;
 		}
-		fatal_error(SUBSYS_CPU, "cpu", "arm_check_access: UNPREDICTABLE s+r value!\n");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_check_access: UNPREDICTABLE s+r value!\n");
 		return 0;
 	case 1:	return user? 0 : 2;
 	case 2:	return user? 1 : 2;
@@ -168,7 +168,7 @@ int arm_translate_v2p_mmu(struct cpu *cpu, uint64_t vaddr64,
 
 		q = memory_paddr_to_hostaddr(cpu->mem, addr & 0x0fffffff, 0);
 		if (q == NULL) {
-			fatal_error(SUBSYS_CPU, "arm", "arm memory: no host address for paddr");
+			fatal_error_cpu(cpu, SUBSYS_CPU, "arm", "arm memory: no host address for paddr");
 		}
 		d2 = *(uint32_t *)(q);
 #ifdef HOST_LITTLE_ENDIAN
@@ -258,7 +258,7 @@ exception_return:
 		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ arm memory fault: vaddr=0x%08x domain=%i dav=%i ap=%i "
 		    "access=%i user=%i", (int)vaddr, domain, dav, ap,
 		    access, user);
-		fatal_error(SUBSYS_CPU, "cpu", " d=0x%08x d2=0x%08x pc=0x%08x }", d, d2, (int)cpu->pc);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " d=0x%08x d2=0x%08x pc=0x%08x }", d, d2, (int)cpu->pc);
 	}
 
 	if (instr)

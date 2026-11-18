@@ -299,7 +299,7 @@ static void initialize_cop0_config(struct cpu *cpu, struct mips_coproc *c)
 						(TODO)  */
 		    ;
 		break;
-	default:fatal_error(SUBSYS_CPU, "cpu", "Internal error: No initialization code for"
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Internal error: No initialization code for"
 		    " config0? cpu rev = 0x%x", cpu->cd.mips.cpu_type.rev);
 	}
 }
@@ -441,14 +441,14 @@ void mips_coproc_tlb_set_entry(struct cpu *cpu, int entrynr, int size,
 	int cachealgo0, int cachealgo1)
 {
 	if (entrynr < 0 || entrynr >= cpu->cd.mips.coproc[0]->nr_of_tlbs) {
-		fatal_error(SUBSYS_CPU, "mips_coproc", "mips_coproc_tlb_set_entry(): invalid entry nr: %i",
+		fatal_error_cpu(cpu, SUBSYS_CPU, "mips_coproc", "mips_coproc_tlb_set_entry(): invalid entry nr: %i",
 		    entrynr);
 	}
 
 	switch (cpu->cd.mips.cpu_type.mmu_model) {
 	case MMU3K:
 		if (size != 4096) {
-			fatal_error(SUBSYS_CPU, "mips_coproc", "mips_coproc_tlb_set_entry(): invalid pagesize "
+			fatal_error_cpu(cpu, SUBSYS_CPU, "mips_coproc", "mips_coproc_tlb_set_entry(): invalid pagesize "
 			    "(%i) for MMU3K", size);
 		}
 		cpu->cd.mips.coproc[0]->tlbs[entrynr].hi =
@@ -602,7 +602,7 @@ void coproc_register_read(struct cpu *cpu,
 			switch (select) {
 			case 1:	*ptr = cpu->cd.mips.cop0_config_select1;
 				break;
-			default:fatal_error(SUBSYS_CPU, "cpu", "coproc_register_read(): unimplemented"
+			default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "coproc_register_read(): unimplemented"
 				    " config register select %i", select);
 			}
 			return;
@@ -629,7 +629,7 @@ void coproc_register_read(struct cpu *cpu,
 	if (cp->coproc_nr==1)	unimpl = 0;
 
 	if (unimpl) {
-		fatal_error(SUBSYS_CPU, "cpu", "cpu%i: warning: read from unimplemented coproc%i"
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu%i: warning: read from unimplemented coproc%i"
 		    " register %i (%s)", cpu->cpu_id, cp->coproc_nr, reg_nr,
 		    cp->coproc_nr==0? cop0_names[reg_nr] : "?");
 
@@ -673,7 +673,7 @@ void coproc_register_write(struct cpu *cpu,
 				/*  char *symbol;
 				    uint64_t offset;
 				    symbol = get_symbol_name(cpu->pc, &offset);
-				    fatal_error(SUBSYS_CPU, "cpu", "YO! pc = 0x%08llx <%s> "
+				    fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "YO! pc = 0x%08llx <%s> "
 				    "lo=%016llx", (long long)
 				    cpu->pc, symbol? symbol :
 				    "no symbol", (long long)tmp); */
@@ -852,7 +852,7 @@ void coproc_register_write(struct cpu *cpu,
 				   uint64_t offset;
 				   symbol = get_symbol_name(cpu->pc,
 				    &offset);
-				   fatal_error(SUBSYS_CPU, "cpu", "YO! pc = 0x%08llx <%s> "
+				   fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "YO! pc = 0x%08llx <%s> "
 				    "hi=%016llx", (long long)cpu->pc,
 				    symbol? symbol :
 				    "no symbol", (long long)tmp);  */
@@ -889,12 +889,12 @@ void coproc_register_write(struct cpu *cpu,
 				return;
 			}
 
-			/*  fatal_error(SUBSYS_CPU, "cpu", "COP0_CONFIG: modifying K0 bits: "
+			/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "COP0_CONFIG: modifying K0 bits: "
 			    "0x%08x => ", cp->reg[reg_nr]);  */
 			tmp = *ptr;
 			tmp &= 0x3;	/*  only bits 2..0 can be written  */
 			cp->reg[reg_nr] &= ~(0x3);  cp->reg[reg_nr] |= tmp;
-			/*  fatal_error(SUBSYS_CPU, "cpu", "0x%08x", cp->reg[reg_nr]);  */
+			/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%08x", cp->reg[reg_nr]);  */
 			return;
 		case COP0_STATUS:
 			oldmode = cp->reg[COP0_STATUS];
@@ -1453,12 +1453,12 @@ case 15:return !(float_value[0].f > float_value[1].f);	/*  Not greater than  */
 #endif
 
 		default:
-			fatal_error(SUBSYS_CPU, "cpu", "fpu_op(): unimplemented condition "
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "fpu_op(): unimplemented condition "
 			    "code %i. see cpu_mips_coproc.c", cond);
 		}
 		break;
 	default:
-		fatal_error(SUBSYS_CPU, "cpu", "fpu_op(): unimplemented op %i", op);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "fpu_op(): unimplemented op %i", op);
 	}
 
 	return 0;
@@ -1509,7 +1509,7 @@ static int fpu_function(struct cpu *cpu, struct mips_coproc *cp,
 		if (unassemble_only)
 			return 1;
 
-		fatal_error(SUBSYS_CPU, "cpu", "INTERNAL ERROR: MIPS coprocessor branches should not"
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "INTERNAL ERROR: MIPS coprocessor branches should not"
 		    " be implemented in cpu_mips_coproc.c, but in"
 		    " cpu_mips_instr.c!\n");
 	}
@@ -1859,7 +1859,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 	}
 
 	if (index >= cp->nr_of_tlbs) {
-		fatal_error(SUBSYS_CPU, "cpu", "warning: tlb index %i too high (max is %i)",
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "warning: tlb index %i too high (max is %i)",
 		    index, cp->nr_of_tlbs - 1);
 		/*  TODO:  cause an exception?  */
 		return;
@@ -1870,22 +1870,22 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 	/*  Debug dump of the previous entry at that index:  */
 	debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ old TLB entry at index %02x:", index);
 	if (cpu->cd.mips.cpu_type.mmu_model == MMU3K) {
-		fatal_error(SUBSYS_CPU, "cpu", " hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
-		fatal_error(SUBSYS_CPU, "cpu", " lo=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " lo=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
 	} else {
 		if (cpu->is_32bit) {
-			fatal_error(SUBSYS_CPU, "cpu", " mask=%08" PRIx32,(uint32_t)cp->tlbs[index].mask);
-			fatal_error(SUBSYS_CPU, "cpu", " hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
-			fatal_error(SUBSYS_CPU, "cpu", " lo0=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
-			fatal_error(SUBSYS_CPU, "cpu", " lo1=%08" PRIx32, (uint32_t)cp->tlbs[index].lo1);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " mask=%08" PRIx32,(uint32_t)cp->tlbs[index].mask);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " hi=%08" PRIx32, (uint32_t)cp->tlbs[index].hi);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " lo0=%08" PRIx32, (uint32_t)cp->tlbs[index].lo0);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " lo1=%08" PRIx32, (uint32_t)cp->tlbs[index].lo1);
 		} else {
-			fatal_error(SUBSYS_CPU, "cpu", " mask=%016" PRIx64, cp->tlbs[index].mask);
-			fatal_error(SUBSYS_CPU, "cpu", " hi=%016" PRIx64, cp->tlbs[index].hi);
-			fatal_error(SUBSYS_CPU, "cpu", " lo0=%016" PRIx64, cp->tlbs[index].lo0);
-			fatal_error(SUBSYS_CPU, "cpu", " lo1=%016" PRIx64, cp->tlbs[index].lo1);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " mask=%016" PRIx64, cp->tlbs[index].mask);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " hi=%016" PRIx64, cp->tlbs[index].hi);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " lo0=%016" PRIx64, cp->tlbs[index].lo0);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " lo1=%016" PRIx64, cp->tlbs[index].lo1);
 		}
 	}
-	fatal_error(SUBSYS_CPU, "cpu", " }\n");
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " }\n");
 #endif
 
 	/*
@@ -1937,7 +1937,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 			if (dpmask == 0x7ff) {
 				if (cp->tlbs[index].lo0 & ENTRYLO_V ||
 				    cp->tlbs[index].lo1 & ENTRYLO_V) {
-					fatal_error(SUBSYS_CPU, "cpu", "1KB pages don't work with dyntrans.\n");
+					fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "1KB pages don't work with dyntrans.\n");
 				}
 			}
 
@@ -2025,7 +2025,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 		cpu->cd.mips.last_written_tlb_index = index;
 
 		if (cp->reg[COP0_STATUS] & MIPS1_ISOL_CACHES) {
-			fatal_error(SUBSYS_CPU, "cpu", "Wow! Interesting case; tlbw* while caches"
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Wow! Interesting case; tlbw* while caches"
 			    " are isolated. TODO");
 			/*  Don't update the translation table in this
 			    case...  */
@@ -2062,7 +2062,7 @@ void coproc_tlbwri(struct cpu *cpu, int randomflag)
 		if (dpmask == 0x7ff) {
 			if (cp->tlbs[index].lo0 & ENTRYLO_V ||
 			    cp->tlbs[index].lo1 & ENTRYLO_V) {
-				fatal_error(SUBSYS_CPU, "cpu", "1KB pages don't work with dyntrans.\n");
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "1KB pages don't work with dyntrans.\n");
 			}
 		}
 
@@ -2385,7 +2385,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 	/*  TLB operations and other things:  */
 	if (cp->coproc_nr == 0) {
 		if (!unassemble_only) {
-			fatal_error(SUBSYS_CPU, "cpu", "FATAL INTERNAL ERROR: Should be implemented"
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "FATAL INTERNAL ERROR: Should be implemented"
 			    " with dyntrans instead.\n");
 		}
 
@@ -2482,7 +2482,7 @@ void coproc_function(struct cpu *cpu, struct mips_coproc *cp, int cpnr,
 		return;
 	}
 
-	fatal_error(SUBSYS_CPU, "cpu", "cpu%i: UNIMPLEMENTED coproc%i function %08" PRIx32" "
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu%i: UNIMPLEMENTED coproc%i function %08" PRIx32" "
 	    "(pc = %016" PRIx64")", cpu->cpu_id, cp->coproc_nr,
 	    (uint32_t)function, cpu->pc);
 

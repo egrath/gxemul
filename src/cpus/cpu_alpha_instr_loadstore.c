@@ -157,12 +157,12 @@ static void LS_N(struct cpu *cpu, struct alpha_instr_call *ic)
 	x1 = (addr >> (64-DYNTRANS_L1N)) & mask1;
 	x2 = (addr >> (64-DYNTRANS_L1N-DYNTRANS_L2N)) & mask2;
 	x3 = (addr >> (64-DYNTRANS_L1N-DYNTRANS_L2N-DYNTRANS_L3N)) & mask3;
-	/*  fatal_error(SUBSYS_CPU, "cpu", "X3: addr=%016" PRIx64" x1=%x x2=%x x3=%x",
+	/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "X3: addr=%016" PRIx64" x1=%x x2=%x x3=%x",
 	    (uint64_t) addr, (int) x1, (int) x2, (int) x3);  */
 	l2 = cpu->cd.DYNTRANS_ARCH.l1_64[x1];
-	/*  fatal_error(SUBSYS_CPU, "cpu", "  l2 = %p", l2);  */
+	/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "  l2 = %p", l2);  */
 	l3 = l2->l3[x2];
-	/*  fatal_error(SUBSYS_CPU, "cpu", "  l3 = %p", l3);  */
+	/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "  l3 = %p", l3);  */
 #ifdef LS_LOAD
 	page = l3->host_load[x3];
 #else

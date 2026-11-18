@@ -343,7 +343,7 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 	case CHCR_TS_2BYTE: transmit_size = 2; break;
 	case CHCR_TS_4BYTE: transmit_size = 4; break;
 	case CHCR_TS_32BYTE: transmit_size = 32; break;
-	default: fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented transmit size?! CHCR[%i] = 0x%08x",
+	default: fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "Unimplemented transmit size?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
 	}
 
@@ -351,7 +351,7 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 	case CHCR_DM_FIXED:       dst_delta = 0; break;
 	case CHCR_DM_INCREMENTED: dst_delta = 1; break;
 	case CHCR_DM_DECREMENTED: dst_delta = -1; break;
-	default: fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented destination delta?! CHCR[%i] = 0x%08x",
+	default: fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "Unimplemented destination delta?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
 	}
 
@@ -359,7 +359,7 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 	case CHCR_SM_FIXED:       src_delta = 0; break;
 	case CHCR_SM_INCREMENTED: src_delta = 1; break;
 	case CHCR_SM_DECREMENTED: src_delta = -1; break;
-	default: fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented source delta?! CHCR[%i] = 0x%08x",
+	default: fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "Unimplemented source delta?! CHCR[%i] = 0x%08x",
 	    channel, chcr);
 	}
 
@@ -367,12 +367,12 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 	dst_delta *= transmit_size;
 
 #ifdef SH4_DEBUG
-	fatal_error(SUBSYS_DEVICE, "sh4", "|SH4 DMA transfer, channel %i", channel);
-	fatal_error(SUBSYS_DEVICE, "sh4", "|Source addr:      0x%08x (delta %i)", (int) sar, src_delta);
-	fatal_error(SUBSYS_DEVICE, "sh4", "|Destination addr: 0x%08x (delta %i)", (int) dar, dst_delta);
-	fatal_error(SUBSYS_DEVICE, "sh4", "|Count:            0x%08x", (int) count);
-	fatal_error(SUBSYS_DEVICE, "sh4", "|Transmit size:    0x%08x", (int) transmit_size);
-	fatal_error(SUBSYS_DEVICE, "sh4", "|Interrupt:        %s", cause_interrupt? "yes" : "no");
+	fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "|SH4 DMA transfer, channel %i", channel);
+	fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "|Source addr:      0x%08x (delta %i)", (int) sar, src_delta);
+	fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "|Destination addr: 0x%08x (delta %i)", (int) dar, dst_delta);
+	fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "|Count:            0x%08x", (int) count);
+	fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "|Transmit size:    0x%08x", (int) transmit_size);
+	fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "|Interrupt:        %s", cause_interrupt? "yes" : "no");
 #else
 	/*  TODO: The transfer below ignores the source and destination
 	    address modes.  */
@@ -395,7 +395,7 @@ void sh4_dmac_transfer(struct cpu *cpu, struct sh4_data *d, int channel)
 		    external device to do the transfer itself!  */
 		break;
 
-	default:fatal_error(SUBSYS_DEVICE, "sh4", "Unimplemented SH4 RS DMAC: 0x%08x",
+	default:fatal_error_cpu(cpu, SUBSYS_DEVICE, "sh4", "Unimplemented SH4 RS DMAC: 0x%08x",
 		    (int) (chcr & CHCR_RS));
 	}
 

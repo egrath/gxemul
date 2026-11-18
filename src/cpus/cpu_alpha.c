@@ -641,7 +641,7 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			break;
 		case 2:	debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "ret");
 			break;
-		default:fatal_error(SUBSYS_CPU, "cpu", "unimpl JSR!");
+		default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "unimpl JSR!");
 		}
 		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
 		break;

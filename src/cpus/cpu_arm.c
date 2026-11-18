@@ -535,7 +535,7 @@ void arm_save_register_bank(struct cpu *cpu)
 		cpu->cd.arm.und_r13_r14[0] = cpu->cd.arm.r[13];
 		cpu->cd.arm.und_r13_r14[1] = cpu->cd.arm.r[14];
 		break;
-	default:fatal_error(SUBSYS_CPU, "cpu", "arm_save_register_bank: unimplemented mode %i",
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_save_register_bank: unimplemented mode %i",
 		    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 	}
 }
@@ -581,7 +581,7 @@ void arm_load_register_bank(struct cpu *cpu)
 		cpu->cd.arm.r[13] = cpu->cd.arm.und_r13_r14[0];
 		cpu->cd.arm.r[14] = cpu->cd.arm.und_r13_r14[1];
 		break;
-	default:fatal_error(SUBSYS_CPU, "cpu", "arm_load_register_bank: unimplemented mode %i",
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_load_register_bank: unimplemented mode %i",
 		    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 	}
 }
@@ -596,7 +596,7 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 	uint32_t retaddr;
 
 	if (exception_nr < 0 || exception_nr >= N_ARM_EXCEPTIONS) {
-		fatal_error(SUBSYS_CPU, "cpu", "arm_exception(): exception_nr = %i", exception_nr);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_exception(): exception_nr = %i", exception_nr);
 	}
 
 	retaddr = cpu->pc;
@@ -658,7 +658,7 @@ void arm_exception(struct cpu *cpu, int exception_nr)
 		cpu->cd.arm.spsr_irq = cpu->cd.arm.cpsr; break;
 	case ARM_MODE_FIQ32:
 		cpu->cd.arm.spsr_fiq = cpu->cd.arm.cpsr; break;
-	default:fatal_error(SUBSYS_CPU, "cpu", "arm_exception(): unimplemented exception nr\n");
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_exception(): unimplemented exception nr\n");
 	}
 
 	/*
@@ -1083,7 +1083,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 	uint32_t addr = cpu->pc & ~1;
 
 	if (!(cpu->pc & 1) || !(cpu->cd.arm.cpsr & ARM_FLAG_T)) {
-		fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW called when not in "
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW called when not in "
 			"THUMB mode?\n");
 		cpu->running = 0;
 		return 0;
@@ -1091,7 +1091,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 	if (!cpu->memory_rw(cpu, cpu->mem, addr, &ib[0],
 			sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
-		fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not read "
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not read "
 			"the instruction\n");
 		cpu->running = 0;
 		return 0;
@@ -1423,7 +1423,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 			if (!cpu->memory_rw(cpu, cpu->mem, tmp, &word[0],
 					sizeof(word), MEM_READ, CACHE_INSTRUCTION)) {
-				fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load pc-relative word\n");
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load pc-relative word\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -1466,7 +1466,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 				len, isLoad ? MEM_READ : MEM_WRITE, CACHE_DATA)) {
-			fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load with immediate offset\n");
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load with immediate offset\n");
 			cpu->running = 0;
 			return 0;
 		}
@@ -1495,7 +1495,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			addr = (cpu->cd.arm.r[ARM_SP] + (iw & 0xff) * 4) & ~3;
 			if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 					sizeof(word), MEM_READ, CACHE_DATA)) {
-				fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load sp-relative word\n");
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load sp-relative word\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -1519,7 +1519,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			addr = (cpu->cd.arm.r[ARM_SP] + (iw & 0xff) * 4) & ~3;
 			if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 					sizeof(word), MEM_WRITE, CACHE_DATA)) {
-				fatal_error(SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not store sp-relative word\n");
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not store sp-relative word\n");
 				cpu->running = 0;
 				return 0;
 			}
@@ -1635,7 +1635,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			addr = (cpu->pc + 4 + (cpu->cd.arm.tmp_branch + (((iw >> 1) & 0x3ff) << 2))) & ~3;
 
 			if (iw & 1) {
-				fatal_error(SUBSYS_CPU, "cpu", "lowest bit set in thumb blx instruction?\n");
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "lowest bit set in thumb blx instruction?\n");
 				cpu->running = 0;
 				return 0;
 			}

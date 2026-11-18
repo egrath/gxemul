@@ -268,7 +268,7 @@ void reg_access_msr(struct cpu *cpu, uint64_t *valuep, int writeflag,
 	uint64_t old = cpu->cd.ppc.msr;
 
 	if (valuep == NULL) {
-		fatal_error(SUBSYS_CPU, "cpu", "reg_access_msr(): NULL\n");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "reg_access_msr(): NULL\n");
 		return;
 	}
 

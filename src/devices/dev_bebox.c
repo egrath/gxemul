@@ -115,7 +115,7 @@ static void check_cpu_masks(struct cpu *cpu, struct bebox_data *d)
 	d->cpu1_int_mask &= 0x7fffffff;
 	if ((d->cpu0_int_mask | d->cpu1_int_mask) !=
 	    (d->cpu0_int_mask ^ d->cpu1_int_mask))
-		fatal_error(SUBSYS_DEVICE, "bebox", "check_cpu_masks(): BeBox cpu int masks collide!\n");
+		fatal_error_cpu(cpu, SUBSYS_DEVICE, "bebox", "check_cpu_masks(): BeBox cpu int masks collide!\n");
 }
 
 

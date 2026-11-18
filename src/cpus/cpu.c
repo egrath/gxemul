@@ -184,7 +184,7 @@ void cpu_destroy(struct cpu *cpu)
 void cpu_tlbdump(struct cpu *cpu, int rawflag)
 {
 	if (cpu->cpu_family == NULL || cpu->cpu_family->tlbdump == NULL)
-		fatal_error(SUBSYS_CPU, "cpu", "cpu_tlbdump(): NULL\n");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu_tlbdump(): NULL\n");
 	else
 		cpu->cpu_family->tlbdump(cpu, rawflag);
 }
@@ -200,7 +200,7 @@ int cpu_disassemble_instr(struct machine *m, struct cpu *cpu,
 	unsigned char *instr, int running, uint64_t addr)
 {
 	if (cpu->cpu_family == NULL || cpu->cpu_family->disassemble_instr == NULL) {
-		fatal_error(SUBSYS_CPU, "cpu", "cpu_disassemble_instr(): NULL\n");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu_disassemble_instr(): NULL\n");
 		return 0;
 	} else
 		return cpu->cpu_family->disassemble_instr(cpu, instr,
@@ -220,7 +220,7 @@ void cpu_register_dump(struct machine *m, struct cpu *cpu,
 	int gprs, int coprocs)
 {
 	if (cpu->cpu_family == NULL || cpu->cpu_family->register_dump == NULL)
-		fatal_error(SUBSYS_CPU, "cpu", "cpu_register_dump(): NULL\n");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu_register_dump(): NULL\n");
 	else
 		cpu->cpu_family->register_dump(cpu, gprs, coprocs);
 }
@@ -245,32 +245,32 @@ void cpu_functioncall_trace(struct cpu *cpu, uint64_t f)
 		show_symbolic_function_name = 0;
 
 	if (cpu->machine->ncpus > 1)
-		fatal_error(SUBSYS_CPU, "cpu", "cpu%i:\t", cpu->cpu_id);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu%i:\t", cpu->cpu_id);
 
 	if (cpu->trace_tree_depth > 100)
 		cpu->trace_tree_depth = 100;
 	for (i=0; i<cpu->trace_tree_depth; i++)
-		fatal_error(SUBSYS_CPU, "cpu", "  ");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "  ");
 
 	cpu->trace_tree_depth ++;
 
-	fatal_error(SUBSYS_CPU, "cpu", "<");
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "<");
 	symbol = get_symbol_name_and_n_args(&cpu->machine->symbol_context,
 	    f, &offset, &n_args);
 	if (symbol != NULL && show_symbolic_function_name && offset == 0)
-		fatal_error(SUBSYS_CPU, "cpu", "%s", symbol);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "%s", symbol);
 	else {
 		if (cpu->is_32bit)
-			fatal_error(SUBSYS_CPU, "cpu", "0x%" PRIx32, (uint32_t) f);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%" PRIx32, (uint32_t) f);
 		else
-			fatal_error(SUBSYS_CPU, "cpu", "0x%" PRIx64, (uint64_t) f);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%" PRIx64, (uint64_t) f);
 	}
-	fatal_error(SUBSYS_CPU, "cpu", "(");
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "(");
 
 	if (cpu->cpu_family->functioncall_trace != NULL)
 		cpu->cpu_family->functioncall_trace(cpu, n_args);
 
-	fatal_error(SUBSYS_CPU, "cpu", ")>\n");
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", ")>\n");
 }
 
 

@@ -180,7 +180,7 @@ void bus_pci_data_access(struct cpu *cpu, struct pci_data *pci_data,
 			    detection of PCI devices fails:  */
 			if (pci_data->cur_reg == PCI_COMMAND_STATUS_REG
 			    && !((*data) & PCI_COMMAND_IO_ENABLE)) {
-				fatal_error(SUBSYS_DEVICE, "bus_pci", "\n[ NetBSD PCI detection stuff not"
+				fatal_error_cpu(cpu, SUBSYS_DEVICE, "bus_pci", "\n[ NetBSD PCI detection stuff not"
 				    " yet implemented for device '%s' ]",
 				    dev->name);
 			}
@@ -259,7 +259,7 @@ void bus_pci_setaddr(struct cpu *cpu, struct pci_data *pci_data,
 	int bus, int device, int function, int reg)
 {
 	if (cpu == NULL || pci_data == NULL) {
-		fatal_error(SUBSYS_DEVICE, "bus_pci", "bus_pci_setaddr(): NULL ptr\n");
+		fatal_error_cpu(cpu, SUBSYS_DEVICE, "bus_pci", "bus_pci_setaddr(): NULL ptr\n");
 	}
 
 	pci_data->cur_bus = bus;

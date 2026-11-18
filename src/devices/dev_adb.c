@@ -179,7 +179,7 @@ static void adb_process_cmd(struct cpu *cpu, struct adb_data *d)
 			/*  ADBTALK:  */
 			reg = d->output_buf[1] & 3;
 			dev = d->output_buf[1] >> 4;
-			fatal_error(SUBSYS_DEVICE, "adb", "dev=%i reg=%i", dev, reg);
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "adb", "dev=%i reg=%i", dev, reg);
 			/*  Default values: nothing here  */
 			d->input_buf[0] = 0x00;
 			d->input_buf[1] = 0x00;

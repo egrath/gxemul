@@ -97,7 +97,7 @@ int sh_cpu_new(struct cpu *cpu, struct memory *mem, struct machine *machine,
 	cpu->is_32bit = cpu->cd.sh.cpu_type.bits == 32;
 
 	if (!cpu->is_32bit) {
-		fatal_error(SUBSYS_CPU, "cpu", "SH64 emulation not implemented. Sorry.\n");
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "SH64 emulation not implemented. Sorry.\n");
 	}
 
 	cpu->instruction_has_delayslot = sh_cpu_instruction_has_delayslot;
@@ -731,7 +731,7 @@ void sh_exception(struct cpu *cpu, int expevt, int intevt, uint32_t vaddr)
 		 *  these are not very common.
 		 */
 #if 1
-		fatal_error(SUBSYS_CPU, "sh", "RESERVED SuperH instruction at spc=%08" PRIx32,
+		fatal_error_cpu(cpu, SUBSYS_CPU, "sh", "RESERVED SuperH instruction at spc=%08" PRIx32,
 		    cpu->cd.sh.spc);
 #else
 		break;
@@ -740,7 +740,7 @@ void sh_exception(struct cpu *cpu, int expevt, int intevt, uint32_t vaddr)
 	case EXPEVT_FPU_DISABLE:
 		break;
 
-	default:fatal_error(SUBSYS_CPU, "cpu", "sh_exception(): exception 0x%x is not yet "
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "sh_exception(): exception 0x%x is not yet "
 		    "implemented.", expevt);
 	}
 

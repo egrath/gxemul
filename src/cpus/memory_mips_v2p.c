@@ -179,7 +179,7 @@ int TRANSLATE_ADDRESS(struct cpu *cpu, uint64_t vaddr,
 		/*  FALLTHROUGH, since supervisor address spaces are not
 		    really implemented yet.  */
 		// fall through
-	default:fatal_error(SUBSYS_CPU, "cpu", "memory_mips_v2p.c: ksu=%i not yet implemented yet",
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "memory_mips_v2p.c: ksu=%i not yet implemented yet",
 		    ksu);
 	}
 
@@ -294,7 +294,7 @@ int TRANSLATE_ADDRESS(struct cpu *cpu, uint64_t vaddr,
 				case 0x07fffff:	pageshift = 22; break;
 				case 0x1ffffff:	pageshift = 24; break;
 				case 0x7ffffff:	pageshift = 26; break;
-				default:fatal_error(SUBSYS_CPU, "cpu", "pmask=%08" PRIx32"", pmask);
+				default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "pmask=%08" PRIx32"", pmask);
 				}
 
 				entry_vpn2 = (cached_hi &

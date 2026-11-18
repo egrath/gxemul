@@ -133,7 +133,7 @@ void horrible_getputpixel(int put, struct cpu* cpu, struct sgi_re_data* d,
 		// TODO... probably not correct!
 		// printf("tileptr = %08x x = %i y = %i tile_nr = %i ofs = %i\n", tileptr, x, y, tile_nr, ofs);
 		break;
-	default:fatal_error(SUBSYS_DEVICE, "sgi_re", "unimplemented dst_mode %i for horrible_getputpixel (%s), x=%i y=%i",
+	default:fatal_error_cpu(cpu, SUBSYS_DEVICE, "sgi_re", "unimplemented dst_mode %i for horrible_getputpixel (%s), x=%i y=%i",
 			mode, put ? "put" : "get", x, y);
 		// exit(1);
 		*color = random();
@@ -143,7 +143,7 @@ void horrible_getputpixel(int put, struct cpu* cpu, struct sgi_re_data* d,
 	// The highest bit seems to be set for a "valid" tile pointer.
 	if (!(tileptr & 0x80000000)) {
 		//printf("dst_mode %i, tile_nr = %i,  tileptr = 0x%llx\n", dst_mode, tile_nr, (long long)tileptr);
-		//fatal_error(SUBSYS_DEVICE, "sgi_re", "sgi gbe horrible_getputpixel: unexpected non-set high bit of tileptr?\n");
+		//fatal_error_cpu(cpu, SUBSYS_DEVICE, "sgi_re", "sgi gbe horrible_getputpixel: unexpected non-set high bit of tileptr?\n");
 		//exit(1);
 		return;
 	}
@@ -1027,7 +1027,7 @@ void do_mte_transfer(struct cpu* cpu, struct sgi_re_data *d)
 		    (long long)dstlen, dst_y_step, (int)bg, (int)bytemask);
 
 		if (bytemask != 0xffffffff) {
-			fatal_error(SUBSYS_DEVICE, "sgi_re", "unimplemented MTE bytemask 0x%08x", (int)bytemask);
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "sgi_re", "unimplemented MTE bytemask 0x%08x", (int)bytemask);
 		}
 
 		/*

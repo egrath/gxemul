@@ -1834,18 +1834,18 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 
 		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ");
 		if (cpu->machine->ncpus > 1)
-			fatal_error(SUBSYS_CPU, "cpu", "cpu%i: ", cpu->cpu_id);
-		fatal_error(SUBSYS_CPU, "cpu", "warning: LOW reference: vaddr=");
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu%i: ", cpu->cpu_id);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "warning: LOW reference: vaddr=");
 		if (cpu->is_32bit)
-			fatal_error(SUBSYS_CPU, "cpu", "0x%08" PRIx32, (uint32_t) vaddr);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%08" PRIx32, (uint32_t) vaddr);
 		else
-			fatal_error(SUBSYS_CPU, "cpu", "0x%016" PRIx64, (uint64_t) vaddr);
-		fatal_error(SUBSYS_CPU, "cpu", ", exception %s, pc=", exception_names[exccode]);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%016" PRIx64, (uint64_t) vaddr);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", ", exception %s, pc=", exception_names[exccode]);
 		if (cpu->is_32bit)
-			fatal_error(SUBSYS_CPU, "cpu", "0x%08" PRIx32, (uint32_t) cpu->pc);
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%08" PRIx32, (uint32_t) cpu->pc);
 		else
-			fatal_error(SUBSYS_CPU, "cpu", "0x%016" PRIx64, (uint64_t)cpu->pc);
-		fatal_error(SUBSYS_CPU, "cpu", " <%s> ]", symbol? symbol : "(no symbol)");
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%016" PRIx64, (uint64_t)cpu->pc);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", " <%s> ]", symbol? symbol : "(no symbol)");
 	}
 
 	/*  Clear the exception code bits of the cause register...  */

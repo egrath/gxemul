@@ -1479,7 +1479,7 @@ void arm_pop(struct cpu* cpu, uint32_t* np, int p_bit, int u_bit, int s_bit, int
 			new_cpsr = cpu->cd.arm.spsr_irq; break;
 		case ARM_MODE_SVC32:
 			new_cpsr = cpu->cd.arm.spsr_svc; break;
-		default:fatal_error(SUBSYS_CPU, "cpu", "bdt_load: unimplemented mode %i",
+		default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "bdt_load: unimplemented mode %i",
 			    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 			cpu->running = 0;
 			cpu->cd.arm.next_ic = &nothing_call;

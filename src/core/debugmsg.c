@@ -370,6 +370,25 @@ void debug_indentation(int diff)
  */
 bool fatal_error_dropped = false;
 
+/*
+ *  fatal_error_cpu_stop():
+ *
+ *  Graceful stop of one CPU after a fatal error in its context: stop the
+ *  CPU, flush its dyntrans caches (so the debugger sees consistent state),
+ *  and ask the emulation loop to drop to the debugger console.
+ */
+static void fatal_error_cpu_stop(struct cpu *cpu)
+{
+	if (cpu == NULL)
+		return;
+
+	cpu->running = false;
+	if (cpu->translation_cache != NULL) {
+		cpu_create_or_reset_tc(cpu);
+		cpu->invalidate_translation_caches(cpu, 0, INVALIDATE_ALL);
+	}
+}
+
 void fatal_error(int subsystem, const char *name, const char *fmt, ...)
 {
 	va_list argp;
@@ -388,6 +407,35 @@ void fatal_error(int subsystem, const char *name, const char *fmt, ...)
 		debugger_ctl_stop("fatal error");
 	} else {
 		/*  Not emulating yet: behave like the legacy fatal()+exit():  */
+		exit(1);
+	}
+}
+
+
+/*
+ *  fatal_error_cpu():
+ *
+ *  Like fatal_error(), but in the context of a specific CPU: in addition to
+ *  dropping to the debugger console, the offending CPU is stopped
+ *  gracefully (cpu->running = false, dyntrans caches flushed) so that it
+ *  does not keep hitting the same error, while all other CPUs in the
+ *  machine keep running.
+ */
+void fatal_error_cpu(struct cpu *cpu, int subsystem, const char *name,
+	const char *fmt, ...)
+{
+	va_list argp;
+
+	va_start(argp, fmt);
+	debugmsg_va(cpu, subsystem, name, VERBOSITY_ERROR, argp, fmt);
+	va_end(argp);
+	fflush(NULL);
+
+	if (emul_executing) {
+		fatal_error_cpu_stop(cpu);
+		fatal_error_dropped = true;
+		debugger_ctl_stop("fatal error");
+	} else {
 		exit(1);
 	}
 }

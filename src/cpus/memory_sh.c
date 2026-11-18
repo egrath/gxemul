@@ -80,11 +80,11 @@ static int translate_via_mmu(struct cpu *cpu, uint32_t vaddr,
 		urc = (cpu->cd.sh.mmucr & SH4_MMUCR_URC_MASK) >>
 		    SH4_MMUCR_URC_SHIFT;
 
-		/*  fatal_error(SUBSYS_CPU, "cpu", "urc = %i  ==>  ", urc);  */
+		/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "urc = %i  ==>  ", urc);  */
 		urc ++;
 		if (urc >= SH_N_UTLB_ENTRIES || (urb > 0 && urc == urb))
 			urc = 0;
-		/*  fatal_error(SUBSYS_CPU, "cpu", "%i", urc);  */
+		/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "%i", urc);  */
 
 		cpu->cd.sh.mmucr &= ~SH4_MMUCR_URC_MASK;
 		cpu->cd.sh.mmucr |= (urc << SH4_MMUCR_URC_SHIFT);
@@ -311,7 +311,7 @@ int sh_translate_v2p(struct cpu *cpu, uint64_t vaddr64, uint64_t *return_paddr,
 
 	/*  The ugly 'if' is just here to fool Compaq CC.  */
 	if (!(flags & FLAG_NOEXCEPTIONS)) {
-		fatal_error(SUBSYS_CPU, "cpu", "Unimplemented SH vaddr 0x%08" PRIx32"", vaddr);
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Unimplemented SH vaddr 0x%08" PRIx32"", vaddr);
 	}
 
 	return 0;

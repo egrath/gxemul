@@ -117,7 +117,7 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		 *  See NetBSD's sys/arch/dreamcast/dev/gdrom.c: gdrom_read_toc().
 		 */
 		if (d->cnt != 408) {
-			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM Read TOC not 408 bytes?\n");
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM Read TOC not 408 bytes?\n");
 		}
 		alloc_data(d);
 
@@ -165,9 +165,9 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		 *  See NetBSD's sys/arch/dreamcast/dev/gdrom.c: gdrom_read_sectors().
 		 */
 		if (d->cmd[1] == 0x24) {
-			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM unimplemented data format 0x%02x. Continuing anway.", d->cmd[1]);
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM unimplemented data format 0x%02x. Continuing anway.", d->cmd[1]);
 		} else if (d->cmd[1] != 0x20) {
-			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM unimplemented data format 0x%02x",
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM unimplemented data format 0x%02x",
 			    d->cmd[1]);
 		}
 		sector_nr = d->cmd[2] * 65536 + d->cmd[3] * 256 + d->cmd[4];
@@ -182,7 +182,7 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 			d->cnt = 2048 * sector_count;
 
 		if (sector_count * 2048 != d->cnt) {
-			fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "Huh? GDROM data_len=0x%x, but sector_count"
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "dreamcast_gdrom", "Huh? GDROM data_len=0x%x, but sector_count"
 			    "=0x%x", (int)d->cnt, (int)sector_count);
 		}
 
@@ -236,7 +236,7 @@ static void handle_command(struct cpu *cpu, struct dreamcast_gdrom_data *d)
 		// Note/TODO: This is ignored for now.
 		break;
 
-	default:fatal_error(SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM handle_command: unimplemented command 0x%02x"
+	default:fatal_error_cpu(cpu, SUBSYS_DEVICE, "dreamcast_gdrom", "GDROM handle_command: unimplemented command 0x%02x"
 		    "", d->cmd[0]);
 	}
 

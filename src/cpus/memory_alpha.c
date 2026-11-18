@@ -76,7 +76,7 @@ int alpha_translate_v2p(struct cpu *cpu, uint64_t vaddr,
 	if (!userMode && base == 0) {
 		*return_paddr = vaddr & 0x000003ffffffffffULL;
 if (vaddr == 0xfffffffd80000000ULL) {
-	fatal_error(SUBSYS_CPU, "cpu", "Alpha kernel virtual memory seems to want to be used. Not yet implemented.\n");
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha kernel virtual memory seems to want to be used. Not yet implemented.\n");
 }
 #if 1
 		if ((vaddr & ~0x7fff) == 0x0000000010000000ULL)
@@ -93,7 +93,7 @@ if (vaddr == 0xfffffffd80000000ULL) {
 	}
 
 	// debugmsg(SUBSYS_CPU, "memory_alpha", VERBOSITY_DEBUG, "base = 0x%016"PRIx64"\n", base);
-if (vaddr == 0xfffffffd80000000ULL) fatal_error(SUBSYS_CPU, "cpu", "AYONA3\n");
+if (vaddr == 0xfffffffd80000000ULL) fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "AYONA3\n");
 
 	uint64_t addr, pte1, pte2, pte3;
 	int i1, i2, i3;

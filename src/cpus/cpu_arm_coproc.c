@@ -96,7 +96,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			case 1:	cpu->cd.arm.r[rd] = cpu->cd.arm.auxctrl;
 				break;
 			default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: Unimplemented opcode2 = %i ", opcode2);
-				fatal_error(SUBSYS_CPU, "cpu", "(opcode1=%i crn=%i crm=%i rd=%i l=%i) ]",
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "(opcode1=%i crn=%i crm=%i rd=%i l=%i) ]",
 				    opcode1, crn, crm, rd, l_bit);
 				// exit(1);
 			}
@@ -122,7 +122,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			return;
 		} else if (opcode2 != 0) {
 			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Unimplemented write, opcode2 = %i ", opcode2);
-			fatal_error(SUBSYS_CPU, "cpu", "(opcode1=%i crn=%i crm=%i rd=%i l=%i)]",
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "(opcode1=%i crn=%i crm=%i rd=%i l=%i)]",
 			    opcode1, crn, crm, rd, l_bit);
 			// exit(1);
 		}
@@ -159,7 +159,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 
 		if ((old_control & ARM_CONTROL_BIG) !=
 		    (cpu->cd.arm.control & ARM_CONTROL_BIG)) {
-			fatal_error(SUBSYS_CPU, "cpu", "ERROR: Trying to switch endianness. Not "
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ERROR: Trying to switch endianness. Not "
 			    "supported yet.\n");
 		}
 		if ((old_control & ARM_CONTROL_ICACHE) !=
@@ -274,7 +274,7 @@ void arm_coproc_15(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		break;
 
 	default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ TODO: arm_coproc_15: unimplemented crn = %i ", crn);
-		fatal_error(SUBSYS_CPU, "cpu", "(opcode1=%i opcode2=%i crm=%i rd=%i l=%i) ]",
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "(opcode1=%i opcode2=%i crm=%i rd=%i l=%i) ]",
 		    opcode1, opcode2, crm, rd, l_bit);
 		// exit(1);
 	}
@@ -303,7 +303,7 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 			else {
 				cpu->cd.arm.i80321_isteer = cpu->cd.arm.r[rd];
 				if (cpu->cd.arm.r[rd] != 0) {
-					fatal_error(SUBSYS_CPU, "cpu", "ARM xscale interrupt steering"
+					fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ARM xscale interrupt steering"
 					    " is not yet implemented\n");
 				}
 			}
@@ -319,7 +319,7 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 		}
 		break;
 
-	case 1:	/*  fatal_error(SUBSYS_CPU, "cpu", "TIMER opcode1=%i opcode2=%i crn="
+	case 1:	/*  fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "TIMER opcode1=%i opcode2=%i crn="
     "%i crm=%i rd=%i l=%i)", opcode1, opcode2, crn, crm, rd, l_bit);  */
 
 		switch (crn) {
@@ -396,7 +396,7 @@ void arm_coproc_i80321_6(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 	return;
 
 unknown:
-	fatal_error(SUBSYS_CPU, "cpu", "arm_coproc_i80321_6: unimplemented opcode1=%i opcode2=%i crn="
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_coproc_i80321_6: unimplemented opcode1=%i opcode2=%i crn="
 	    "%i crm=%i rd=%i l=%i)", opcode1, opcode2, crn, crm, rd, l_bit);
 }
 
@@ -505,7 +505,7 @@ void arm_coproc_xscale_14(struct cpu *cpu, int opcode1, int opcode2, int l_bit,
 	return;
 
 unknown:
-	fatal_error(SUBSYS_CPU, "cpu", "arm_coproc_xscale_14: unimplemented opcode1=%i opcode2="
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_coproc_xscale_14: unimplemented opcode1=%i opcode2="
 	    "%i crn=%i crm=%i rd=%i l=%i)", opcode1, opcode2, crn,
 	    crm, rd, l_bit);
 }
