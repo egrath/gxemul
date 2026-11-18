@@ -362,7 +362,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			config_options_used = true;
 			if (using_switch_E ++ > 0) {
 				fatal_error(SUBSYS_STARTUP, "main", "-E already used.");
-				exit(1);
+
 			}
 			type = optarg;
 			machine_specific_options_used = true;
@@ -371,7 +371,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			config_options_used = true;
 			if (using_switch_e ++ > 0) {
 				fatal_error(SUBSYS_STARTUP, "main", "-e already used.");
-				exit(1);
+
 			}
 			subtype = optarg;
 			machine_specific_options_used = true;
@@ -408,7 +408,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			if (dyntrans_cache_size < 1) {
 				fatal_error(SUBSYS_STARTUP, "main", "The dyntrans cache size must"
 				    " be at least 1 MB.");
-				exit(1);
+
 			}
 			break;
 		case 'K':
@@ -505,7 +505,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			}
 			if (m->display_md.scaledown < 1) {
 				fatal_error(SUBSYS_STARTUP, "main", "Invalid scaledown value.");
-				exit(1);
+
 			}
 			machine_specific_options_used = true;
 			break;
@@ -528,7 +528,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		default:
 			fatal_error(SUBSYS_STARTUP, "main", "Run  %s -h  for help on command "
 			    "line options.", progname);
-			exit(1);
+
 		}
 	}
 
@@ -547,7 +547,6 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 			    "(such as -E, -e, -d, -M, or -X) can't be used with\na "
 			    "machine configuration file; change the file "
 			    "instead (%s --edit %s).", progname, cfg);
-			exit(1);
 		}
 		if (config_file == NULL) {
 			config_file = extra_argv[0];
@@ -557,7 +556,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		if (extra_argc > 0) {
 			fatal_error(SUBSYS_STARTUP, "main", "unexpected extra argument \"%s\" after "
 			    "machine configuration file \"%s\"", extra_argv[0], config_file);
-			exit(1);
+
 		}
 		return 0;
 	}
@@ -577,13 +576,13 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		res = machine_name_to_type(type, subtype,
 		    &m->machine_type, &m->machine_subtype);
 		if (!res)
-			exit(1);
+			fatal_error(SUBSYS_STARTUP, "main", "Unknown machine type/subtype.");
 	}
 
 	if (m->machine_type == MACHINE_NONE && machine_specific_options_used) {
 		fatal_error(SUBSYS_STARTUP, "main", "Machine specific options used directly on "
 		    "the command line, but no machine\nemulation specified?");
-		exit(1);
+
 	}
 
 
@@ -622,7 +621,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 		} else {
 			usage(false);
 			fatal_error(SUBSYS_STARTUP, "main", "\nNo filename given. Aborting.");
-			exit(1);
+
 		}
 	} else if (m->boot_kernel_filename[0] == '\0') {
 		/*
@@ -647,7 +646,7 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 
 	if (m->n_gfx_cards < 0 || m->n_gfx_cards > 3) {
 		fatal_error(SUBSYS_STARTUP, "main", "Bad number of gfx cards (-Z).");
-		exit(1);
+
 	}
 
 	if (!using_switch_Z && !m->display_md.in_use)

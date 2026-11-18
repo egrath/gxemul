@@ -1430,9 +1430,12 @@ static void handle_event(const SDL_Event *ev)
 
 	switch (ev->type) {
 
-	case SDL_QUIT:
-		printf("[ the framebuffer window was closed; exiting ]\n");
-		exit(0);
+	case SDL_QUIT: {
+		extern bool emul_shutdown;
+		printf("[ the framebuffer window was closed; shutting down ]\n");
+		emul_shutdown = true;
+		break;
+	}
 
 	case SDL_WINDOWEVENT:
 		if ((win = fb_window_of(ev->window.windowID)) == NULL)

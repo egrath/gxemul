@@ -73,11 +73,12 @@ DEVICE_ACCESS(cons)
 
 	/*  Exit the emulator:  */
 	if (relative_addr == DEV_CONS_HALT) {
-		/*  cpu->running = 0;
-		    return 1;  */
-		/*  TODO: this doesn't work yet. for now, let's
-		    simply use exit()  */
-		exit(0);
+		extern bool emul_shutdown;
+		debugmsg(SUBSYS_DEVICE, "dev_cons", VERBOSITY_INFO,
+		    "emulated machine requested halt");
+		cpu->running = false;
+		emul_shutdown = true;
+		return 1;
 	}
 
 	if (writeflag == MEM_WRITE) {

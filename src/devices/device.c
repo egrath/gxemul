@@ -41,7 +41,6 @@
 static struct device_entry *device_entries = NULL;
 static int device_entries_sorted = 0;
 static int n_device_entries = 0;
-static int device_exit_on_error = 1;
 
 static struct pci_entry *pci_entries = NULL;
 static int n_pci_entries = 0;
@@ -282,10 +281,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 	p = device_lookup(devinit.name);
 	if (p == NULL) {
 		fatal_error(SUBSYS_DEVICE, "device", "no such device (\"%s\")", devinit.name);
-		if (device_exit_on_error)
-			exit(1);
-		else
-			goto return_fail;
+		goto return_fail;
 	}
 
 	/*  Get params from name_and_params:  */
@@ -305,10 +301,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 			s3 ++;
 		if (s3 == s2) {
 			fatal_error(SUBSYS_DEVICE, "device", "weird param: %s", s2);
-			if (device_exit_on_error)
-				exit(1);
-			else
-				goto return_fail;
+			goto return_fail;
 		}
 		s3 ++;
 		/*  s3 now points to the parameter value ("1234")  */
@@ -354,10 +347,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 			snprintf(devinit.name2, len2 + 1, "%s", h);
 		} else {
 			fatal_error(SUBSYS_DEVICE, "device", "unknown param: %s", s2);
-			if (device_exit_on_error)
-				exit(1);
-			else
-				goto return_fail;
+			goto return_fail;
 		}
 
 		/*  skip to the next param:  */
@@ -380,10 +370,7 @@ void *device_add(struct machine *machine, const char *name_and_params)
 
 	if (!p->initf(&devinit)) {
 		fatal_error(SUBSYS_DEVICE, "device", "error adding device (\"%s\")", name_and_params);
-		if (device_exit_on_error)
-			exit(1);
-		else
-			goto return_fail;
+		goto return_fail;
 	}
 
 	free(devinit.interrupt_path);
@@ -426,10 +413,13 @@ void device_dumplist(void)
  *  found. During startup, it is nicest to abort the whole emulator session,
  *  but if a device addition is attempted from within the debugger, then it is
  *  nicer to just print a warning and continue.
+ *
+ *  (Kept for API compatibility; device_add() now always reports via
+ *  fatal_error() and returns NULL on failure instead of exiting.)
  */
 void device_set_exit_on_error(int exit_on_error)
 {
-	device_exit_on_error = exit_on_error;
+	(void) exit_on_error;
 }
 
 

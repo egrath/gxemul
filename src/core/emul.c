@@ -136,8 +136,13 @@ static void fix_console(void)
 #ifndef _WIN32
 static void terminate_signal(int sig)
 {
+	/*  Termination signals (SIGTERM etc.): shut down cleanly through
+	    the normal emulation-loop exit path instead of exit(0), so atexit
+	    handlers (console restore etc.) run.  */
 	(void) sig;
-	exit(0);
+	extern bool emul_shutdown;
+	emul_shutdown = true;
+	about_to_enter_single_step = false;
 }
 #endif
 

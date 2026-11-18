@@ -263,8 +263,8 @@ static void menu_ctrl_alt_del(struct machine *m, struct menu_item *item)
 
 static void menu_quit(struct machine *m, struct menu_item *item)
 {
-	printf("[ Quit was chosen in the menu; exiting ]\n");
-	exit(0);
+	printf("[ Quit was chosen in the menu; shutting down ]\n");
+	emul_shutdown = true;
 }
 
 
