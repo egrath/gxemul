@@ -2975,7 +2975,7 @@ X(pref_rn)
 	sq_nr = addr & 0x20? 1 : 0;
 
 	// if (addr & 0x0000001f)
-	//	debug("[ WARNING: SH4 Store Queue, addr = 0x%08x... lowest 5 "
+	//	debugmsg(SUBSYS_CPU, "cpu_sh_instr", VERBOSITY_DEBUG, "[ WARNING: SH4 Store Queue, addr = 0x%08x... lowest 5 "
 	//	    "bits are non-zero. Ignoring. ]\n", addr);
 
 	if (sq_nr == 0)
