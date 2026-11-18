@@ -1377,6 +1377,34 @@ X(rte)
 
 
 /*
+ *  ld_d_r0:  ld.d with the register pair r0/r1 as destination
+ *
+ *  The 88100 discards the word for r0 and loads the second word into r1.
+ *  The load writes the pair at arg[0] and arg[0]+4, so it is run with
+ *  arg[0] = &r[0] (which also gives the memory transaction registers the
+ *  right register numbers, 0 and 1), and r0 is cleared afterwards.
+ *
+ *  arg[0] = index into m88k_loadstore[] (a NO_PC_SYNC variant)
+ *  arg[1] = pointer to register s1
+ *  arg[2] = pointer to register s2, or the immediate offset
+ */
+X(ld_d_r0)
+{
+	struct m88k_instr_call call;
+
+	SYNCH_PC;
+
+	call.f = m88k_loadstore[ic->arg[0]];
+	call.arg[0] = (size_t) &cpu->cd.m88k.r[M88K_ZERO_REG];
+	call.arg[1] = ic->arg[1];
+	call.arg[2] = ic->arg[2];
+	call.f(cpu, &call);
+
+	cpu->cd.m88k.r[M88K_ZERO_REG] = 0;
+}
+
+
+/*
  *  xmem_slow:  Unoptimized xmem (exchange register with memory)
  *
  *  arg[0] = copy of the instruction word
@@ -2080,7 +2108,7 @@ X(to_be_translated)
 	case 0x0a:	/*  st.h   */
 	case 0x0b:	/*  st.b   */
 		{
-			int store = 0, signedness = 0, opsize = 0;
+			int store = 0, signedness = 0, opsize = 0, ls;
 
 			ic->arg[0] = (size_t) &cpu->cd.m88k.r[d];
 			ic->arg[1] = (size_t) &cpu->cd.m88k.r[s1];
@@ -2105,14 +2133,20 @@ X(to_be_translated)
 				goto bad;
 			}
 
-			ic->f = m88k_loadstore[ opsize
+			ls = opsize
 			    + (store? M88K_LOADSTORE_STORE : 0)
 			    + (signedness? M88K_LOADSTORE_SIGNEDNESS:0)
 			    + (cpu->byte_order == EMUL_BIG_ENDIAN?
-			       M88K_LOADSTORE_ENDIANNESS : 0) ];
+			       M88K_LOADSTORE_ENDIANNESS : 0);
+			ic->f = m88k_loadstore[ls];
 
-			if (!store && d == 0)
+			if (!store && d == 0) {
 				ic->arg[0] = (size_t) &cpu->cd.m88k.zero_scratch;
+				if (opsize == 3) {
+					ic->f = instr(ld_d_r0);
+					ic->arg[0] = ls + M88K_LOADSTORE_NO_PC_SYNC;
+				}
+			}
 		}
 		break;
 
@@ -2479,17 +2513,24 @@ X(to_be_translated)
 
 			if (op == 0 || op == 1) {
 				/*  ld or st:  */
-				ic->f = m88k_loadstore[ opsize
+				int ls = opsize
 				    + (op==1? M88K_LOADSTORE_STORE : 0)
 				    + (signedness? M88K_LOADSTORE_SIGNEDNESS:0)
 				    + (cpu->byte_order == EMUL_BIG_ENDIAN?
 				       M88K_LOADSTORE_ENDIANNESS : 0)
 				    + (scaled? M88K_LOADSTORE_SCALEDNESS : 0)
 				    + (user? M88K_LOADSTORE_USR : 0)
-				    + M88K_LOADSTORE_REGISTEROFFSET ];
+				    + M88K_LOADSTORE_REGISTEROFFSET;
+				ic->f = m88k_loadstore[ls];
 
-				if (d == M88K_ZERO_REG && op == 0)
+				if (d == M88K_ZERO_REG && op == 0) {
 					ic->arg[0] = (size_t)&cpu->cd.m88k.zero_scratch;
+					if (opsize == 3) {
+						ic->f = instr(ld_d_r0);
+						ic->arg[0] = ls +
+						    M88K_LOADSTORE_NO_PC_SYNC;
+					}
+				}
 
 				if (opsize == 3 && d == 31) {
 					fatal("m88k load/store of register "
