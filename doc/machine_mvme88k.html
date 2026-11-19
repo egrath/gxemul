@@ -116,8 +116,11 @@ in <tt>/etc/hosts</tt>; to use the simulated network, as root:
 # <b>route add default 10.0.0.254 1</b>
 </pre>
 (or change the address in <tt>/etc/hosts</tt>, and
-<tt>/etc/resolv.conf</tt> to use the nameserver 10.0.0.254). The
-interrupt character is DEL, not ^C.
+<tt>/etc/resolv.conf</tt> to use the nameserver 10.0.0.254). Addresses
+without a reverse DNS name get <tt>ip-a-b-c-d.nat</tt> from the gateway, as
+SYSTEM V/88's <tt>gethostbyname</tt> needs one; <tt>GXEMUL_NAMESERVER</tt>
+chooses the host's nameserver (see <a href="technical.html">the technical
+documentation</a>). The interrupt character is DEL, not ^C.
 
 <p>Debug messages of the board's devices can be turned on per subsystem
 (<tt>mvme187</tt>, <tt>clmpcc</tt>, <tt>osiop</tt>, <tt>i82596</tt>), e.g.

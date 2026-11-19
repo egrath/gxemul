@@ -176,6 +176,22 @@ as well:
 your nearest nameserver.)
 
 <p>
+The gateway at <tt>10.0.0.254</tt> is also a nameserver: UDP sent to it is
+forwarded to the host's own nameserver, which GXemul takes from
+the host's <tt>/etc/resolv.conf</tt> (or the Windows network settings).
+When that one cannot be reached from the emulator, for example
+<tt>127.0.0.53</tt> with systemd-resolved, set another in the environment:
+<pre>
+	$ <b>GXEMUL_NAMESERVER=1.1.1.1 gxemul ...</b>
+</pre>
+
+<p>
+Old resolvers, such as SYSTEM V/88's, do a reverse lookup of every address
+they get and give up when it has no name, which is common today. So when
+the nameserver has no PTR record for <tt>a.b.c.d</tt>, the gateway answers
+<tt>ip-a-b-c-d.nat</tt>.
+
+<p>
 Now, host lookups should work:
 <pre>
 	# <b>host -a www.netbsd.org</b>

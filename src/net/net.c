@@ -550,6 +550,21 @@ static void parse_resolvconf(struct net *net)
 	 *  TODO: This assumes that the first nameserver listed is the
 	 *        one to use.
 	 */
+
+	/*  GXEMUL_NAMESERVER overrides what the host uses (e.g. when that
+	    is 127.0.0.53, which the guest can't reach via the gateway).  */
+	{
+		const char *ns = getenv("GXEMUL_NAMESERVER");
+		if (ns != NULL && *ns != '\0') {
+			if (inet_pton(AF_INET, ns, &net->nameserver_ipv4) == 1) {
+				net->nameserver_known = 1;
+				return;
+			}
+			debugmsg(SUBSYS_NET, "net", VERBOSITY_WARNING,
+			    "GXEMUL_NAMESERVER: not an IPv4 address: %s", ns);
+		}
+	}
+
 #ifdef _WIN32
 	{
 		const char *ns = win32_nameserver();

@@ -944,6 +944,114 @@ static void udp_bind_reserved(int s, int port)
  *  first (udp_reassemble()), and one sent from a reserved port (as NFS's
  *  and mount's are) is sent from one of the host too (udp_bind_reserved()).
  */
+/*
+ *  net_dns_synth_ptr():
+ *
+ *  Old resolvers (SYSTEM V/88's libsocket gethostbyname, for one) do a
+ *  reverse lookup of every address they get, and give up when there is no
+ *  PTR record, which is common today. In a reply relayed from the host's
+ *  nameserver, an empty or NXDOMAIN answer to "d.c.b.a.in-addr.arpa PTR"
+ *  becomes "ip-a-b-c-d.nat".
+ *
+ *  Returns the (possibly new) length of the DNS message in buf.
+ */
+static int dns_label_is(const unsigned char *p, int l, const char *s)
+{
+	int i;
+
+	if (l != (int) strlen(s))
+		return 0;
+	for (i = 0; i < l; i++) {
+		int c = p[i];
+		if (c >= 'A' && c <= 'Z')
+			c += 'a' - 'A';
+		if (c != s[i])
+			return 0;
+	}
+	return 1;
+}
+
+static int net_dns_synth_ptr(unsigned char *buf, int len, int bufsize)
+{
+	int pos = 12, qend, i, nlab = 0, rcode, n;
+	int octet[4];
+	char name[32];
+	unsigned char *p;
+
+	/*  A response, standard query, one question, no answers.  */
+	if (len < 12 || !(buf[2] & 0x80) || (buf[2] & 0x78) != 0)
+		return len;
+	rcode = buf[3] & 0x0f;
+	if ((buf[4] << 8 | buf[5]) != 1 || (buf[6] << 8 | buf[7]) != 0 ||
+	    (rcode != 0 && rcode != 3))
+		return len;
+
+	/*  Question name: d.c.b.a.in-addr.arpa  */
+	while (pos < len && buf[pos] != 0) {
+		int l = buf[pos];
+		if (l > 63 || pos + 1 + l > len)
+			return len;
+		if (nlab < 4) {
+			int v = 0;
+			if (l < 1 || l > 3)
+				return len;
+			for (i = 0; i < l; i++) {
+				int c = buf[pos + 1 + i];
+				if (c < '0' || c > '9')
+					return len;
+				v = v * 10 + c - '0';
+			}
+			if (v > 255)
+				return len;
+			octet[3 - nlab] = v;
+		} else if (nlab == 4) {
+			if (!dns_label_is(buf + pos + 1, l, "in-addr"))
+				return len;
+		} else if (nlab == 5) {
+			if (!dns_label_is(buf + pos + 1, l, "arpa"))
+				return len;
+		} else
+			return len;
+		nlab ++;
+		pos += 1 + l;
+	}
+	if (nlab != 6 || pos + 5 > len)
+		return len;
+	qend = pos + 1 + 4;
+	if ((buf[pos + 1] << 8 | buf[pos + 2]) != 12)		/*  PTR  */
+		return len;
+	if ((buf[pos + 3] << 8 | buf[pos + 4]) != 1)		/*  IN  */
+		return len;
+
+	snprintf(name, sizeof(name), "ip-%d-%d-%d-%d",
+	    octet[0], octet[1], octet[2], octet[3]);
+	n = strlen(name);
+	if (qend + 12 + 1 + n + 5 > bufsize)
+		return len;
+
+	/*  Answer: c00c, PTR, IN, ttl 60, rdata = ip-a-b-c-d.nat.  */
+	p = buf + qend;
+	*p++ = 0xc0; *p++ = 0x0c;
+	*p++ = 0; *p++ = 12;
+	*p++ = 0; *p++ = 1;
+	*p++ = 0; *p++ = 0; *p++ = 0; *p++ = 60;
+	*p++ = 0; *p++ = 1 + n + 5;
+	*p++ = n;
+	memcpy(p, name, n);
+	p += n;
+	*p++ = 3;
+	memcpy(p, "nat", 3);
+	p += 3;
+	*p++ = 0;
+
+	buf[3] &= 0xf0;				/*  rcode = NOERROR  */
+	buf[6] = 0; buf[7] = 1;			/*  ancount = 1  */
+	buf[8] = 0; buf[9] = 0;			/*  nscount = 0  */
+	buf[10] = 0; buf[11] = 0;		/*  arcount = 0  */
+	return p - buf;
+}
+
+
 static void net_ip_udp(struct net *net, struct nic_data *nic,
 	unsigned char *packet, int len)
 {
@@ -1520,9 +1628,11 @@ void net_udp_rx_avail(struct net *net, struct nic_data *nic)
 		 *  received from the nameserver (if the nameserver's IP is
 		 *  known), fake it so that it comes from the gateway instead.
 		 */
-		if (net->udp_connections[con_id].fake_ns)
+		if (net->udp_connections[con_id].fake_ns) {
 			memcpy(((unsigned char *)(&from))+4,
 			    &net->gateway_ipv4_addr[0], 4);
+			res = net_dns_synth_ptr(buf, res, sizeof(buf));
+		}
 
 		/*
 		 *  We now have a UDP packet of size 'res' which we need
