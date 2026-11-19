@@ -182,6 +182,25 @@ static const struct machine_preset presets[] = {
 		"  \"serial\": { \"telnet\": true, \"vt100\": true } }"
 	},
 	{
+		"mvme88k", "mvme187",
+		"Motorola MVME187, an 88100 single-board computer, on its "
+		"serial console. Runs the real 187Bug firmware (choose its "
+		"image under Firmware), and from it UNIX SYSTEM V/88 Release 4 "
+		"or OpenBSD/mvme88k. The disk is a Seagate ST31200N, one of "
+		"the drives the SYSTEM V/88 installer knows; with its "
+		"installation tape in the tape drive, boot it with bo 0 50.",
+		"{ \"gxemul\": 1, \"name\": \"Motorola MVME187\","
+		"  \"machine\": { \"type\": \"mvme88k\", \"model\": \"mvme187\","
+		"                 \"memory_mb\": 64 },"
+		"  \"boot\": { \"prom_emulation\": false, \"rom\": \"187bug2.2.bin\","
+		"             \"nvram\": \"nvram.bin\", \"skip_failing_tests\": true },"
+		"  \"drives\": [ { \"file\": \"disk.img\", \"kind\": \"disk\","
+		"                  \"id\": 0, \"vendor\": \"SEAGATE\","
+		"                  \"product\": \"ST31200N\" },"
+		"                { \"file\": \"\", \"kind\": \"cdrom\", \"id\": 4 },"
+		"                { \"file\": \"\", \"kind\": \"tape\", \"id\": 5 } ] }"
+	},
+	{
 		"testalpha", "",
 		"gxemul's simple Alpha machine, for running a program of your "
 		"own (add it under Firmware, Files to load).",
@@ -234,6 +253,21 @@ static const struct mc_drive_model dec_drives[] = {
 
 
 /*
+ *  Drives that SYSTEM V/88's installer knows (its /etc/scsifmt.info, which
+ *  gives each SCSI vendor and product a disk definition); it doesn't use
+ *  other disks.  The sizes are those of its descriptions of them ("1.0GB
+ *  SCSI (SEAGATE)"), except the ST31200N's, which is the real one.
+ */
+static const struct mc_drive_model motorola_drives[] = {
+	{ MC_DRIVE_DISK, "Seagate ST5660N",  "SEAGATE", "ST5660N",  "", 1064453 },
+	{ MC_DRIVE_DISK, "Seagate ST31200N", "SEAGATE", "ST31200N", "", 2061108 },
+	{ MC_DRIVE_DISK, "Seagate ST32430N", "SEAGATE", "ST32430N", "", 3906250 },
+	{ MC_DRIVE_DISK, "Seagate ST15230N", "SEAGATE", "ST15230N", "", 7812500 },
+	{ MC_DRIVE_DISK, "Fujitsu M2624F",   "FUJITSU", "M2624F-512", "", 1025390 },
+};
+
+
+/*
  *  machine_drive_models():
  *
  *  Returns the real drives known for a machine type, and how many there
@@ -243,6 +277,11 @@ int machine_drive_models(const char *type,
 	const struct mc_drive_model **listp)
 {
 	int t = machine_config_machine_type(type);
+	if (t == MACHINE_MVME88K) {
+		*listp = motorola_drives;
+		return (int) (sizeof(motorola_drives) /
+		    sizeof(motorola_drives[0]));
+	}
 	*listp = dec_drives;
 	if (t == MACHINE_PMAX || t == MACHINE_DEC3000 || t == MACHINE_JENSEN ||
 	    t == MACHINE_AVANTI)

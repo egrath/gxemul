@@ -128,6 +128,22 @@ number of instructions run, so that 187Bug's calibration of the CPU
 speed works; with <tt>"emulated_hz"</tt> in the machine section, the host's
 clock is used instead.
 
+<p>SYSTEM V/88 is installed from its boot tape (a SIMH <tt>.tap</tt>
+image) in a tape drive, e.g. at SCSI id 5, booted with <tt>bo 0 50</tt>.
+Its installer only uses disks that it knows, by the vendor and product
+of their SCSI inquiry data (its <tt>/etc/scsifmt.info</tt>); with
+GXemul's own, it reports <tt>install-it: no usable disks found</tt> and
+reboots. Give the disk one of them, e.g. a Seagate ST31200N (which the
+configuration window's MVME187 machine has, and which its Drives page
+offers with the others):
+<pre>
+ "drives": [ { "file": "disk.img", "kind": "disk", "id": 0,
+               "vendor": "SEAGATE", "product": "ST31200N" },
+             { "file": "sysv_88k_install.tap", "kind": "tape", "id": 5 } ]
+</pre>
+<p>The disk can be empty (an ST31200N's image is 1055287296 bytes); it
+needs no label.
+
 <p>A SYSTEM V/88 disk installed on another board (e.g. an MVME197) names
 its disk devices after that board in <tt>/etc/vfstab</tt>
 (<tt>m197_c0d0s3</tt> instead of <tt>m187_c0d0s3</tt>), and comes up in
