@@ -286,7 +286,7 @@ DEVICE_ACCESS(crime)
 				odata = (int32_t)(odata >> 32);
 		}
 	} else {
-		fatal_error(SUBSYS_DEVICE, "sgi_ip32", "crime access len = %i!", len);
+		fatal_error(SUBSYS_DEVICE, "sgi_ip32", "crime access len = %zu!", len);
 	}
 
 	switch (relative_addr) {
@@ -365,7 +365,7 @@ DEVICE_ACCESS(crime)
 
 	default:
 		if (writeflag==MEM_READ) {
-			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ crime: read from 0x%x, len=%i:",
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ crime: read from 0x%x, len=%zu:",
 			    (int)relative_addr, len);
 			for (i=0; i<len; i++)
 				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
@@ -374,7 +374,7 @@ DEVICE_ACCESS(crime)
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ crime: write to 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
 				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
-			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%i) ]\n", len);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%zu) ]\n", len);
 		}
 	}
 
@@ -600,11 +600,11 @@ DEVICE_ACCESS(mace)
 	case MACE_ISA_INT_STATUS:	/*  Current interrupt assertions  */
 		/*  don't dump debug info for these  */
 		if (writeflag == MEM_WRITE) {
-			debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ NOTE/TODO: WRITE to mace intr: "
-			    "reladdr=0x%x data=", (int)relative_addr);
-			for (i=0; i<len; i++)
-				fatal_error(SUBSYS_DEVICE, "sgi_ip32", " %02x", data[i]);
-			fatal_error(SUBSYS_DEVICE, "sgi_ip32", " (len=%i) ]", len);
+			char hex[3 * 16 + 1] = "";
+			for (i=0; i<len && i<16; i++)
+				snprintf(hex + 3*i, sizeof(hex) - 3*i, " %02x", data[i]);
+			debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_WARNING, "NOTE/TODO: WRITE to mace intr: "
+			    "reladdr=0x%x data=%s (len=%zu)", (int)relative_addr, hex, len);
 		}
 		break;
 	case MACE_ISA_INT_MASK:		/*  Current interrupt mask  */
@@ -616,12 +616,12 @@ DEVICE_ACCESS(mace)
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ mace: read from 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
 				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
-			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%i) ]\n", len);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%zu) ]\n", len);
 		} else {
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, "[ mace: write to 0x%x:", (int)relative_addr);
 			for (i=0; i<len; i++)
 				debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " %02x", data[i]);
-			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%i) ]\n", len);
+			debugmsg(SUBSYS_DEVICE, "dev_sgi_ip32", VERBOSITY_DEBUG, " (len=%zu) ]\n", len);
 		}
 	}
 
@@ -693,7 +693,7 @@ DEVICE_ACCESS(macepci)
 	int res = 1, bus, dev, func, pcireg;
 
 	if (len != 4)
-		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: unimplemented len %i ]", len);
+		debugmsg(SUBSYS_DEVICE, "sgi_ip32", VERBOSITY_DEBUG, "[ macepci: unimplemented len %zu ]", len);
 
 	if (writeflag == MEM_WRITE) {
 		idata = memory_readmax64(cpu, data, len);

@@ -1919,7 +1919,7 @@ void mips_cpu_exception(struct cpu *cpu, int exccode, int tlb, uint64_t vaddr,
 				//  written into the EntryHi register."
 
 				if ((reg[COP0_ENTRYHI] & ENTRYHI_ASID) != (uint32_t)vaddr_asid)
-					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ huh? vaddr_asid 0x%02x not same as in ENTRYHI 0x%02x ]",
+					debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ huh? vaddr_asid 0x%02x not same as in ENTRYHI 0x%02" PRIx64 " ]",
 						vaddr_asid, reg[COP0_ENTRYHI] & ENTRYHI_ASID);
 
 				if (cpu->cd.mips.cpu_type.mmu_model == MMU10K)

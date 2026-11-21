@@ -250,11 +250,20 @@ extern int debugmsg_destinations;
 extern int *debugmsg_current_verbosity;
 extern size_t debugmsg_nr_of_subsystems;
 
+/*  Lets the compiler check debugmsg() etc. arguments like printf's:  */
+#if defined(__GNUC__) || defined(__clang__)
+#define	GXEMUL_PRINTF(fmt_arg, first_arg)	\
+	__attribute__ ((format (printf, fmt_arg, first_arg)))
+#else
+#define	GXEMUL_PRINTF(fmt_arg, first_arg)
+#endif
+
 void debug_indentation(int diff);
 extern bool fatal_error_dropped;
-void fatal_error(int subsystem, const char *name, const char *fmt, ...);
+void fatal_error(int subsystem, const char *name, const char *fmt, ...)
+	GXEMUL_PRINTF(3, 4);
 void fatal_error_cpu(struct cpu *cpu, int subsystem, const char *name,
-	const char *fmt, ...);
+	const char *fmt, ...) GXEMUL_PRINTF(4, 5);
 void fatal_error_cpu_stop(struct cpu *cpu);
 void debugmsg_init(void);
 int debugmsg_register_subsystem(const char* name);
@@ -272,8 +281,10 @@ void debugmsg_set_destinations(int dest_mask);
 int debugmsg_get_destinations(void);
 void debugmsg_recompute_active(void);
 
-void (debugmsg)(int subsystem, const char *name, int verbosity_required, const char *fmt, ...);
-void (debugmsg_cpu)(struct cpu* cpu, int subsystem, const char *name, int verbosity_required, const char *fmt, ...);
+void (debugmsg)(int subsystem, const char *name, int verbosity_required,
+	const char *fmt, ...) GXEMUL_PRINTF(4, 5);
+void (debugmsg_cpu)(struct cpu* cpu, int subsystem, const char *name,
+	int verbosity_required, const char *fmt, ...) GXEMUL_PRINTF(5, 6);
 
 static inline bool debugmsg_is_active(int subsys, int reqverb)
 {

@@ -1076,7 +1076,7 @@ void pvr_render(struct cpu *cpu, struct pvr_data *d)
 	double baseRed = 0.0, baseGreen = 0.0, baseBlue = 0.0;
 
 	debugmsg(SUBSYS_DEVICE, "dev_pvr", VERBOSITY_DEBUG, "[ pvr_render: rendering to FB offset 0x%x, "
-	    "%i Tile Accelerator commands ]\n", fb_base, d->n_ta_commands);
+	    "%zu Tile Accelerator commands ]\n", fb_base, d->n_ta_commands);
 
 	/*
 	 *  Clear all pixels first.

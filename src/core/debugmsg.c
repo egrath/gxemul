@@ -106,6 +106,9 @@ static size_t debug_indent = 0;
  */
 static void debugmsg_va(struct cpu* cpu, int subsystem,
 	const char *name, int verbosity, va_list argp, const char *fmt)
+	GXEMUL_PRINTF(6, 0);
+static void debugmsg_va(struct cpu* cpu, int subsystem,
+	const char *name, int verbosity, va_list argp, const char *fmt)
 {
 	/*  Subsystem breakpoints ("breakpoint subsystem <name> <level>"):  */
 	if (subsystem >= 0 && (size_t)subsystem < debugmsg_nr_of_subsystems)

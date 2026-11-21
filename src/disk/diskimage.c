@@ -329,7 +329,7 @@ void diskimage_set_baseoffset(struct machine *machine, int id, int type, int64_t
 		d = d->next;
 	}
 
-	fatal_error(SUBSYS_DISK, "diskimage", "diskimage_set_baseoffset(): disk id %i (type %i) not found?",
+	fatal_error(SUBSYS_DISK, "diskimage", "diskimage_set_baseoffset(): disk id %i (type %s) not found?",
 	    id, diskimage_types[type]);
 }
 
@@ -353,7 +353,7 @@ void diskimage_getchs(struct machine *machine, int id, int type,
 		}
 		d = d->next;
 	}
-	fatal_error(SUBSYS_DISK, "diskimage", "diskimage_getchs(): disk id %i (type %i) not found?",
+	fatal_error(SUBSYS_DISK, "diskimage", "diskimage_getchs(): disk id %i (type %s) not found?",
 	    id, diskimage_types[type]);
 }
 
@@ -1344,7 +1344,7 @@ void diskimage_dump_info(struct machine *machine)
 			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, "%lli MB", (long long) (s / 1048576));
 
 		if (d->type == DISKIMAGE_FLOPPY || d->chs_override)
-			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " (CHS=%i,%i,%i)", d->cylinders, d->heads,
+			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " (CHS=%" PRIi64 ",%i,%" PRIi64 ")", d->cylinders, d->heads,
 			    d->sectors_per_track);
 		else
 			debugmsg(SUBSYS_DISK, "diskimage", VERBOSITY_DEBUG, " (%lli %i-byte blocks)", (long long)d->nr_of_logical_blocks, d->logical_block_size);

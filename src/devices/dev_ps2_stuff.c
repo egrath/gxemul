@@ -237,7 +237,7 @@ DEVICE_ACCESS(ps2)
 			    timer_nr, (long long)odata);
 			if (timer_nr >= 2)
 				debugmsg(SUBSYS_DEVICE, "ps2_stuff", VERBOSITY_WARNING, "[ WARNING: ps2: read from non-"
-				    "existant timer %i hold register ]\n");
+				    "existant timer %i hold register ]\n", timer_nr);
 		} else {
 			d->timer_hold[timer_nr] = idata;
 			debugmsg(SUBSYS_DEVICE, "dev_ps2_stuff", VERBOSITY_DEBUG, "[ ps2: write timer %i hold: 0x%llx ]\n",

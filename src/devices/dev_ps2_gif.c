@@ -377,7 +377,7 @@ DEVICE_ACCESS(ps2_gif)
 					    MEM_WRITE, d->vfb_data);
 				}
 		} else {		/*  Unknown command:  */
-			debugmsg(SUBSYS_DEVICE, "ps2_gif", VERBOSITY_DEBUG, "[ gif write to addr 0x%x (len=%i):",
+			debugmsg(SUBSYS_DEVICE, "ps2_gif", VERBOSITY_DEBUG, "[ gif write to addr 0x%x (len=%zu):",
 			    (int)relative_addr, len);
 			for (i=0; i<len; i++)
 				fatal_error(SUBSYS_DEVICE, "ps2_gif", " %02x", data[i]);

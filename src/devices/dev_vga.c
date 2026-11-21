@@ -737,7 +737,7 @@ DEVICE_ACCESS(vga)
 			    "read from 0x%08lx\n", (long)relative_addr);
 		} else {
 			debugmsg(d->subsys, "vga", VERBOSITY_WARNING,
-			    "write to  0x%08lx: 0x%08x\n",
+			    "write to  0x%08lx: 0x%08" PRIx64 "\n",
 			    (long)relative_addr, idata);
 		}
 	}

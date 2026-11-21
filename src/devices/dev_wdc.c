@@ -589,8 +589,10 @@ DEVICE_ACCESS(wdc)
 					s = "0x%08" PRIx64;
 				if (len == 8)
 					s = "0x%016" PRIx64;
+				char val[24];
+				snprintf(val, sizeof(val), s, (uint64_t) odata);
 				debugmsg(d->subsys, "wdc", VERBOSITY_DEBUG,
-				    "read from DATA: %s\n", s, (uint64_t) odata);
+				    "read from DATA: %s\n", val);
 			}
 
 			if (d->atapi_cmd_in_progress) {
@@ -630,8 +632,10 @@ DEVICE_ACCESS(wdc)
 					s = "0x%08" PRIx64;
 				if (len == 8)
 					s = "0x%016" PRIx64;
+				char val[24];
+				snprintf(val, sizeof(val), s, (uint64_t) idata);
 				debugmsg(d->subsys, "wdc", VERBOSITY_DEBUG,
-				    "write to DATA: %s\n", s, (uint64_t) idata);
+				    "write to DATA: %s\n", val);
 			}
 			if (!d->write_in_progress &&
 			    !d->atapi_cmd_in_progress) {
@@ -652,7 +656,7 @@ DEVICE_ACCESS(wdc)
 					break;
 				case 1:	wdc_addtoinbuf(d, idata); break;
 				default:fatal_error(SUBSYS_DEVICE, "wdc", "wdc: unimplemented write "
-					    "len %i", len);
+					    "len %zu", len);
 				}
 			} else {
 				switch (len) {
@@ -666,7 +670,7 @@ DEVICE_ACCESS(wdc)
 					break;
 				case 1:	wdc_addtoinbuf(d, idata); break;
 				default:fatal_error(SUBSYS_DEVICE, "wdc", "wdc: unimplemented write "
-					    "len %i", len);
+					    "len %zu", len);
 				}
 			}
 

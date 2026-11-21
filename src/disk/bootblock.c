@@ -419,14 +419,14 @@ int load_bootblock(struct machine *m, struct cpu *cpu,
 			int32_t partitions_type = ntohl(sgi_boot_block.partitions[pi].type);
 
 			if (partitions_blocks != 0)
-				debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "partition %i: %i blocks at %i (type %i)\n",
+				debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "partition %zu: %i blocks at %i (type %i)\n",
 					pi, partitions_blocks, partitions_first, partitions_type);
 		}
 		debug_indentation(-1);
 
 		// Read OSLoader binary into emulated RAM. (Typically "sash.")
 		uint64_t diskoffset = found_osloader_block * 512;
-		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "Loading voldir entry \"%s\", 0x%x bytes from disk offset 0x%x\n",
+		debugmsg(SUBSYS_DISK, "bootblock", VERBOSITY_DEBUG, "Loading voldir entry \"%s\", 0x%x bytes from disk offset 0x%" PRIx64 "\n",
 			found_osloader, found_osloader_bytes, diskoffset);
 
 		CHECK_ALLOCATION(bootblock_buf = (unsigned char *) malloc(found_osloader_bytes));

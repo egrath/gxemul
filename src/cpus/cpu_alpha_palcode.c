@@ -133,7 +133,7 @@ void alpha_prom_call(struct cpu *cpu)
 		case PROM_E_TTY_DEV:
 			s = "";		/*  TODO  */
 			break;
-		default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha PALcode: GXemul PROM getenv %i: TODO "
+		default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha PALcode: GXemul PROM getenv %" PRIu64 ": TODO "
 			    "]", cpu->cd.alpha.r[ALPHA_A1]);
 			cpu->running = 0;
 		}

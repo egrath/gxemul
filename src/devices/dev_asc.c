@@ -404,7 +404,7 @@ static int dev_asc_transfer(struct cpu *cpu, struct asc_data *d, int dmaflag)
 				size_t count = lenIn2;
 
                                 if (lenIn < lenIn2 && !d->live_phase) {
-                                        debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "{ asc: data in, lenIn=%i lenIn2=%i "
+                                        debugmsg(SUBSYS_DEVICE, "asc", VERBOSITY_DEBUG, "{ asc: data in, lenIn=%zu lenIn2=%zu "
 					    "}", lenIn, lenIn2);
                                 }
 
@@ -749,7 +749,7 @@ static int dev_asc_select(struct cpu *cpu, struct asc_data *d, int from_id,
 
 		if (d->xferp->msg_out_len > 1) {
 			debugmsg(d->subsys, "asc", VERBOSITY_ERROR,
-			    "Long msg out, not implemented yet; len=%i\n",
+			    "Long msg out, not implemented yet; len=%zu\n",
 			    d->xferp->msg_out_len);
 			return 0;
 		}
@@ -759,7 +759,7 @@ static int dev_asc_select(struct cpu *cpu, struct asc_data *d, int from_id,
 	if (d->cur_phase == PHASE_MSG_OUT) {
 		if (d->xferp->msg_out_len != 1) {
 			debugmsg(d->subsys, "asc", VERBOSITY_ERROR,
-			    "SELATNS: msg out len == %i, should be 1\n",
+			    "SELATNS: msg out len == %zu, should be 1\n",
 			    d->xferp->msg_out_len);
 			return 0;
 		}
@@ -1010,18 +1010,18 @@ DEVICE_ACCESS(asc)
 	} else if (relative_addr >= 0x300 && relative_addr < 0x600
 	    && d->turbochannel != NULL) {
 		debugmsg(d->subsys, "asc", VERBOSITY_DEBUG,
-		    "offset 0x%x, redirecting to turbochannel access\n", relative_addr);
+		    "offset 0x%" PRIx64 ", redirecting to turbochannel access\n", relative_addr);
 		return dev_turbochannel_access(cpu, mem,
 		    relative_addr, data, len, writeflag,
 		    d->turbochannel);
 	} else {
 		if (writeflag==MEM_READ) {
 			debugmsg(d->subsys, "asc", VERBOSITY_WARNING,
-			    "read from 0x%04x: 0x%02x\n",
+			    "read from 0x%04" PRIx64 ": 0x%02x\n",
 			    relative_addr, (int)odata);
 		} else {
 			debugmsg(d->subsys, "asc", VERBOSITY_WARNING,
-			    "write to  0x%04x: 0x%02x\n",
+			    "write to  0x%04" PRIx64 ": 0x%02x\n",
 			    relative_addr, (int)idata);
 		}
 	}

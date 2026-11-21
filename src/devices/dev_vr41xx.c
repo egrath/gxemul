@@ -241,7 +241,7 @@ static void vr41xx_keytick(struct cpu *cpu, struct vr41xx_data *d)
 					case 'C': d->d0 = 0x1000; break;
 					case 'D': d->d0 = 0x10; break;
 					default:  debugmsg(SUBSYS_DEVICE, "vr41xx", VERBOSITY_DEBUG, "[ vr41xx kiu: unimpl"
-					    "emented escape 0x%02 ]", ch);
+					    "emented escape 0x%02x ]", ch);
 					}
 				} else {
 					switch (ch) {
@@ -250,7 +250,7 @@ static void vr41xx_keytick(struct cpu *cpu, struct vr41xx_data *d)
 					case 'C': d->d0 = 0x20; break;
 					case 'D': d->d0 = 0x10; break;
 					default:  debugmsg(SUBSYS_DEVICE, "vr41xx", VERBOSITY_DEBUG, "[ vr41xx kiu: unimpl"
-					    "emented escape 0x%02 ]", ch);
+					    "emented escape 0x%02x ]", ch);
 					}
 				}
 				d->escape_state = 0;

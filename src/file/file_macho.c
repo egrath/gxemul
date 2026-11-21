@@ -109,7 +109,7 @@ static void file_load_macho(struct machine *m, struct memory *mem,
 	}
 	if (!(flags & 1)) {
 		fatal_error(SUBSYS_DISK, "file_macho", "Error: File has 'undefined references'. Cannot"
-		    " be executed.", flags);
+		    " be executed.");
 	}
 
 	/*  I've only encountered flags == 1 so far.  */

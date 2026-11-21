@@ -545,6 +545,22 @@ else
 fi
 rm -f _testprog _testprog$EXEEXT _testprog.error _testprog.stdout
 
+#  -Wno-format-zero-length  (debugmsg(..., "") prints just a heading)
+printf "checking whether -Wno-format-zero-length can be used... "
+$CC $CFLAGS -Wno-format-zero-length _testprog.c -o _testprog 1> _testprog.stdout 2>&1
+cat _testprog.stdout >> _testprog.error
+if grep strict _testprog.error > /dev/null 2>&1; then
+	printf "no\n"
+else
+	if [ -x _testprog$EXEEXT ]; then
+		CWARNINGS="$CWARNINGS -Wno-format-zero-length"
+		printf "yes\n"
+	else
+		printf "no\n"
+	fi
+fi
+rm -f _testprog _testprog$EXEEXT _testprog.error _testprog.stdout
+
 #  -O optimization for non-debug builds. Try -O and -O3.
 if [ ! z"$DEBUG" = zYES ]; then
 	printf "checking whether -O3 or -O can be used (non-DEBUG build)... "

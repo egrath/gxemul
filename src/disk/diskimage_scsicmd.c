@@ -836,7 +836,7 @@ int diskimage_scsicommand(struct cpu *cpu, int id, int type,
 
 	if (xferp->cmd_len < 1) {
 		debugmsg_cpu(cpu, SUBSYS_DISK, "scsi",
-		    VERBOSITY_ERROR, "cmd_len = %i",
+		    VERBOSITY_ERROR, "cmd_len = %zu",
 		    xferp->cmd_len);
 		return 0;
 	}
@@ -1037,7 +1037,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 
 		if (xferp->cmd_len != 10)
 			debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-			    "weird READ_CAPACITY len=%i, should be 10\n",
+			    "weird READ_CAPACITY len=%zu, should be 10\n",
 			    xferp->cmd_len);
 		else {
 			if (xferp->cmd[8] & 1) {
@@ -1077,7 +1077,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 			retlen = xferp->cmd[7] * 256 + xferp->cmd[8];
 			break;
 		default:debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-			    "unimplemented mode_sense len=%i\n",
+			    "unimplemented mode_sense len=%zu\n",
 			    xferp->cmd_len);
 		}
 
@@ -1109,7 +1109,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 		pagecode = xferp->cmd[2] & 0x3f;
 
 		debugmsg(scsi_subsys, "scsi", VERBOSITY_DEBUG,
-		    "id=%i: MODE_SENSE (pagecode=%i, len=%i)\n", id, pagecode, xferp->cmd_len);
+		    "id=%i: MODE_SENSE (pagecode=%i, len=%zu)\n", id, pagecode, xferp->cmd_len);
 
 		/*  4 bytes of header for 6-byte command,
 		    8 bytes of header for 10-byte command.  */
@@ -1252,7 +1252,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 			if (xferp->cmd[0] == SCSICMD_READ) {
 				if (xferp->cmd_len != 6)
 					debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-					    "id=%i: READ weird len=%i\n",
+					    "id=%i: READ weird len=%zu\n",
 					    id, xferp->cmd_len);
 
 				/*
@@ -1271,7 +1271,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 			} else {
 				if (xferp->cmd_len != 10)
 					debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-					    "id=%i: READ weird len=%i\n",
+					    "id=%i: READ weird len=%zu\n",
 					    id, xferp->cmd_len);
 
 				/*
@@ -1345,7 +1345,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 		if (xferp->cmd[0] == SCSICMD_WRITE) {
 			if (xferp->cmd_len != 6)
 				debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-				    "id=%i: WRITE weird len=%i\n", id, xferp->cmd_len);
+				    "id=%i: WRITE weird len=%zu\n", id, xferp->cmd_len);
 
 			/*
 			 *  bits 4..0 of cmd[1], and cmd[2] and cmd[3] hold the
@@ -1363,7 +1363,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 		} else {
 			if (xferp->cmd_len != 10)
 				debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-				    "id=%i: WRITE weird len=%i\n", id, xferp->cmd_len);
+				    "id=%i: WRITE weird len=%zu\n", id, xferp->cmd_len);
 
 			/*
 			 *  cmd[2..5] hold the logical block address.
@@ -1869,7 +1869,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 			for (i=0; i<(ssize_t)xferp->cmd_len && p + 4 < sizeof(cbuf); i++)
 				p += snprintf(cbuf + p, sizeof(cbuf) - p, " %02x", xferp->cmd[i]);
 			debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-			    "id=%i: SCSI 0x%02x (len %i):%s\n",
+			    "id=%i: SCSI 0x%02x (len %zu):%s\n",
 			    id, xferp->cmd[0], xferp->cmd_len, cbuf);
 		}
 
@@ -1883,7 +1883,7 @@ xferp->data_in[4] = 0x2c - 4;	/*  Additional length  */
 
 		if (xferp->cmd_len < 12) {
 			debugmsg(scsi_subsys, "scsi", VERBOSITY_WARNING,
-			    "id=%i: SCSI 0xbd weird len %i\n", id, xferp->cmd_len);
+			    "id=%i: SCSI 0xbd weird len %zu\n", id, xferp->cmd_len);
 			retlen = 8;
 		} else {
 			retlen = xferp->cmd[8] * 256 + xferp->cmd[9];

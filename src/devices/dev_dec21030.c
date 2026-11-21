@@ -199,13 +199,13 @@ DEVICE_ACCESS(dec21030)
 	case TGA_REG_GCSR:
 		d->copy_source = idata;
 		debugmsg(d->subsys, "dec21030", VERBOSITY_DEBUG,
-		    "block copy source = 0x%08x\n", idata);
+		    "block copy source = 0x%08" PRIx64 "\n", idata);
 		break;
 
 	/*  Block copy destination:  */
 	case TGA_REG_GCDR:
 		debugmsg(d->subsys, "dec21030", VERBOSITY_DEBUG,
-		    "block copy destination = 0x%08x\n", idata);
+		    "block copy destination = 0x%08" PRIx64 "\n", idata);
 		newlen = 64;
 		/*  Both source and destination are raw framebuffer addresses,
 		    offset by 0x1000.  */

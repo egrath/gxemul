@@ -446,7 +446,7 @@ DEVICE_ACCESS(sgi_mec)
 		}
 	} else if (len == sizeof(uint16_t)) {
 		if (writeflag == MEM_WRITE) {
-			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]",
+			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %zu (addr 0x%llx) ]",
 				writeflag ? "write" : "read", len, (long long)relative_addr);
 		} else if ((relative_addr & 7) == 4) {
 			odata = d->reg[regnr];
@@ -455,11 +455,11 @@ DEVICE_ACCESS(sgi_mec)
 			odata = d->reg[regnr];
 			odata = (uint16_t)odata;
 		} else {
-			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]",
+			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %zu (addr 0x%llx) ]",
 				writeflag ? "write" : "read", len, (long long)relative_addr);
 		}
 	} else {
-		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %i (addr 0x%x) ]",
+		debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: unimplemented %s len %zu (addr 0x%llx) ]",
 			writeflag ? "write" : "read", len, (long long)relative_addr);
 	}
 
@@ -591,13 +591,13 @@ DEVICE_ACCESS(sgi_mec)
 	case MEC_STATION:	/*  0xa0  */
 		if (writeflag)
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: setting the MAC address to "
-			    "%02x:%02x:%02x:%02x:%02x:%02x ]\n",
+			    "%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 " ]\n",
 			    (idata >> 40) & 255, (idata >> 32) & 255,
 			    (idata >> 24) & 255, (idata >> 16) & 255,
 			    (idata >>  8) & 255, (idata >>  0) & 255);
 		else
 			debugmsg(SUBSYS_DEVICE, "sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: reading the MAC address as "
-			    "%02x:%02x:%02x:%02x:%02x:%02x ]",
+			    "%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 " ]",
 			    (odata >> 40) & 255, (odata >> 32) & 255,
 			    (odata >> 24) & 255, (odata >> 16) & 255,
 			    (odata >>  8) & 255, (odata >>  0) & 255);
@@ -605,13 +605,13 @@ DEVICE_ACCESS(sgi_mec)
 	case MEC_STATION_ALT:	/*  0xa8  */
 		if (writeflag)
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: setting the ALTERNATIVE MAC address"
-			    " to %02x:%02x:%02x:%02x:%02x:%02x ]\n",
+			    " to %02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 " ]\n",
 			    (idata >> 40) & 255, (idata >> 32) & 255,
 			    (idata >> 24) & 255, (idata >> 16) & 255,
 			    (idata >>  8) & 255, (idata >>  0) & 255);
 		else
 			debugmsg(SUBSYS_DEVICE, "dev_sgi_mec", VERBOSITY_DEBUG, "[ sgi_mec: reading the ALTERNATIVE MAC address"
-			    " as %02x:%02x:%02x:%02x:%02x:%02x ]\n",
+			    " as %02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 ":%02" PRIx64 " ]\n",
 			    (odata >> 40) & 255, (odata >> 32) & 255,
 			    (odata >> 24) & 255, (odata >> 16) & 255,
 			    (odata >>  8) & 255, (odata >>  0) & 255);

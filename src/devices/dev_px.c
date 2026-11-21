@@ -471,7 +471,7 @@ void dev_px_dma(struct cpu *cpu, uint32_t sys_addr, struct px_data *d)
 		y2 = ((v2 - 63) >> 3) & 1023;
 
 		if (px_debug)
-			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px putchar: v1 = 0x%08x  v2 = 0x%08x x=%i y=%i ]\n",
+			debugmsg(SUBSYS_DEVICE, "dev_px", VERBOSITY_DEBUG, "[ px putchar: v1 = 0x%08x  v2 = 0x%08x x=%i y=%i x2=%i y2=%i ]\n",
 			    (int)v1, (int)v2, x,y, x2,y2);
 
 		x %= PX_XSIZE;

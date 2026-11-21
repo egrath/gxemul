@@ -1025,7 +1025,7 @@ DEVICE_ACCESS(le)
 
 			if (idata >= N_REGISTERS)
 				debugmsg(d->subsys, "register select", VERBOSITY_WARNING,
-				    "WARNING! register %i (max is %i)",
+				    "WARNING! register %" PRIu64 " (max is %i)",
 				    idata, N_REGISTERS - 1);
 		}
 		break;
@@ -1046,7 +1046,7 @@ do_return:
 	if (writeflag == MEM_READ) {
 		memory_writemax64(cpu, data, len, odata);
 		debugmsg(d->subsys, "access", VERBOSITY_DEBUG,
-		    "read from addr 0x%06x: 0x%08x", relative_addr, odata);
+		    "read from addr 0x%06" PRIx64 ": 0x%08" PRIx64, relative_addr, odata);
 	}
 
 	dev_le_tick(cpu, extra);

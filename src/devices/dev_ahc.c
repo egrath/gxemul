@@ -74,7 +74,7 @@ DEVICE_ACCESS(ahc)
 		relative_addr ^= 3;
 
 	if (len != 1)
-		debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: ERROR! Unimplemented len %i ]", len);
+		debugmsg(SUBSYS_DEVICE, "ahc", VERBOSITY_DEBUG, "[ ahc: ERROR! Unimplemented len %zu ]", len);
 
 	if (writeflag == MEM_READ)
 		odata = d->reg[relative_addr];

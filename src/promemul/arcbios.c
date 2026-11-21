@@ -1563,7 +1563,7 @@ int arcbios_emul(struct cpu *cpu)
 	case 0x5c:  /*  Open(char *path, uint32_t mode, uint32_t *fileID)  */
 		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "[ ARCBIOS Open(\"");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
-		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\",0x%x,0x%x)", (int)cpu->cd.mips.gpr[MIPS_GPR_A0],
+		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\",0x%x,0x%x)",
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A1],
 		    (int)cpu->cd.mips.gpr[MIPS_GPR_A2]);
 

@@ -236,7 +236,7 @@ DEVICE_ACCESS(mp)
 		break;
 
 	default:
-		debugmsg(SUBSYS_DEVICE, "mp", VERBOSITY_DEBUG, "[ dev_mp: unimplemented relative addr 0x%x ]",
+		debugmsg(SUBSYS_DEVICE, "mp", VERBOSITY_DEBUG, "[ dev_mp: unimplemented relative addr 0x%" PRIx64 " ]",
 		    relative_addr);
 	}
 

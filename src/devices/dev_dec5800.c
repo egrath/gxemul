@@ -294,8 +294,7 @@ DEVICE_ACCESS(decbi)
 	default:
 		if (writeflag==MEM_READ) {
 			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) read from unimplemented "
-			    "0x%08lx ]\n", node_nr, (long)relative_addr,
-			    (int)odata);
+			    "0x%08lx ]\n", node_nr, (long)relative_addr);
 		} else {
 			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decbi: (node %i) write to unimplemented "
 			    "0x%08lx: 0x%08x ]\n", node_nr,
@@ -479,8 +478,7 @@ DEVICE_ACCESS(decxmi)
 	default:
 		if (writeflag==MEM_READ) {
 			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) read from unimplemented "
-			    "0x%08lx ]\n", node_nr, (long)relative_addr,
-			    (int)odata);
+			    "0x%08lx ]\n", node_nr, (long)relative_addr);
 		} else {
 			debugmsg(SUBSYS_DEVICE, "dev_dec5800", VERBOSITY_DEBUG, "[ decxmi: (node %i) write to unimplemented "
 			    "0x%08lx: 0x%08x ]\n", node_nr,

@@ -340,7 +340,7 @@ int luna88k_lcd_access(struct luna88k_data *d, int writeflag, int idata)
 			tmp[b + 16*2] = '|';
 			tmp[b + 16*2 + 1] = 0;
 
-			debugmsg(SUBSYS_DEVICE, "luna88k", VERBOSITY_INFO, tmp);
+			debugmsg(SUBSYS_DEVICE, "luna88k", VERBOSITY_INFO, "%s", tmp);
 		}
 
 		break;
@@ -860,13 +860,13 @@ DEVICE_ACCESS(luna88k)
 	default:
 		if (writeflag == MEM_WRITE)
 			debugmsg_cpu(cpu, SUBSYS_DEVICE, "luna88k", VERBOSITY_ERROR,
-		    	    "unimplemented %i-bit WRITE to address 0x%x: 0x%x",
+		    	    "unimplemented %zu-bit WRITE to address 0x%x: 0x%x",
 		    	    len * 8,
 			    (int) addr,
 			    (int) idata);
 		else
 			debugmsg_cpu(cpu, SUBSYS_DEVICE, "luna88k", VERBOSITY_ERROR,
-		    	    "unimplemented %i-bit READ from address 0x%x",
+		    	    "unimplemented %zu-bit READ from address 0x%x",
 		    	    len * 8,
 			    (int) addr);
 

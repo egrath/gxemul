@@ -175,7 +175,7 @@ DEVICE_ACCESS(ether)
 			break;
 
 		default:debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: UNIMPLEMENTED command 0x"
-			    "%02x ]", idata);
+			    "%02" PRIx64 " ]", idata);
 			cpu->running = 0;
 		}
 		break;

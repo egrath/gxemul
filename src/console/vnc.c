@@ -149,9 +149,9 @@ static struct vnc_client clients[VNC_MAX_CLIENTS];
 
 
 /*  The protocol, as it happens, with vnc debug verbosity set:  */
-#define	TRACE(c, ...)	do {						\
-		debugmsg(vnc_subsys, "vnc", VERBOSITY_DEBUG,		\
-		    "[%i] " __VA_ARGS__, (int) ((c) - clients));	\
+#define	TRACE(c, fmt, ...)	do {					\
+		debugmsg(vnc_subsys, "vnc", VERBOSITY_DEBUG, "[%i] " fmt,	\
+		    (int) ((c) - clients), ##__VA_ARGS__);		\
 	} while (0)
 
 

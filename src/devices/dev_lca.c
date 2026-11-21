@@ -154,7 +154,7 @@ DEVICE_ACCESS(lca_isa)
 
 	ofs = relative_addr & 3;
 	if (ofs > len) {
-		debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "[ ofs=%i len=%i in lca_isa access function. "
+		debugmsg(SUBSYS_DEVICE, "lca", VERBOSITY_DEBUG, "[ ofs=%i len=%zu in lca_isa access function. "
 		    "aborting ]", ofs, len);
 	}
 

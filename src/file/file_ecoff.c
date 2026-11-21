@@ -251,7 +251,7 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 			}
 			
 			if (!relocated) {
-				debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "relocating from base 0x%08x to 0x%08x\n",
+				debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "relocating from base 0x%08" PRIx64 " to 0x%08x\n",
 					a_tstart, relocationTarget);
 				a_tstart += relocationOffset;
 				a_dstart += relocationOffset;
@@ -368,8 +368,8 @@ static void file_load_ecoff(struct machine *m, struct memory *mem,
 
 		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "symbol header: magic = 0x%x\n", sym_magic);
 
-		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%i symbols @ 0x%08x (strings @ 0x%08x)\n",
-		    iextMax, cbExtOffset, cbSsExtOffset);
+		debugmsg(SUBSYS_DISK, "file_ecoff", VERBOSITY_DEBUG, "%i symbols @ 0x%08" PRIx64 " (strings @ 0x%08" PRIx64 ")\n",
+		    iextMax, (uint64_t) cbExtOffset, (uint64_t) cbSsExtOffset);
 
 		CHECK_ALLOCATION(symbol_data = (char *) malloc(issExtMax + 2));
 		memset(symbol_data, 0, issExtMax + 2);
