@@ -289,7 +289,7 @@ int DYNTRANS_RUN_INSTR_DEF(struct cpu *cpu)
 		 */
 		struct DYNTRANS_IC *ic = cpu->cd.DYNTRANS_ARCH.next_ic;
 		if (cpu->machine->register_dump) {
-			debugmsg(SUBSYS_CPU, "cpu_dyntrans", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 			cpu_register_dump(cpu->machine, cpu, 1, 0x1);
 		}
 		if (single_step || cpu->machine->instruction_trace) {

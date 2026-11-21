@@ -167,12 +167,12 @@ void alpha_cpu_list_available_types(void)
 
 	i = 0;
 	while (tdefs[i].name != NULL) {
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s", tdefs[i].name);
+		printf("%s", tdefs[i].name);
 		for (j=13 - strlen(tdefs[i].name); j>0; j--)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, " ");
+			printf(" ");
 		i++;
 		if ((i % 4) == 0 || tdefs[i].name == NULL)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 	}
 }
 
@@ -195,21 +195,21 @@ void alpha_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		uint64_t pc = alpha_pc_to_arch(cpu, cpu->pc);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    pc, &offset);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "cpu%i:\t pc = 0x%016" PRIx64, x, pc);
+		printf("cpu%i:\t pc = 0x%016" PRIx64, x, pc);
 		if (cpu->cd.alpha.ev4_palcode && cpu->cd.alpha.palmode)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, " (PALmode)");
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
+			printf(" (PALmode)");
+		printf("  <%s>\n", symbol != NULL? symbol : " no symbol ");
 		for (i=0; i<N_ALPHA_REGS; i++) {
 			int r = (i >> 1) + ((i & 1) << 4);
 			if ((i % 2) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "cpu%i:\t", x);
+				printf("cpu%i:\t", x);
 			if (r != ALPHA_ZERO)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%3s = 0x%016" PRIx64, alpha_regname[r],
+				printf("%3s = 0x%016" PRIx64, alpha_regname[r],
 				    (uint64_t) cpu->cd.alpha.r[r]);
 			if ((i % 2) == 1)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 			else
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "   ");
+				printf("   ");
 		}
 	}
 }
@@ -276,15 +276,15 @@ static void alpha_print_imm16_disp(int imm, int rb)
 	imm = (int16_t)imm;
 
 	if (imm < 0) {
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "-");
+		printf("-");
 		imm = -imm;
 	}
 	if (imm <= 256)
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%i", imm);
+		printf("%i", imm);
 	else
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "0x%x", imm);
+		printf("0x%x", imm);
 	if (rb != ALPHA_ZERO)
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "(%s)", alpha_regname[rb]);
+		printf("(%s)", alpha_regname[rb]);
 }
 
 
@@ -315,15 +315,15 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset == 0)
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "<%s>\n", symbol);
+		printf("<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "cpu%i:\t", cpu->cpu_id);
+		printf("cpu%i:\t", cpu->cpu_id);
 
-	debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%016" PRIx64":  ", (uint64_t) dumpaddr);
+	printf("%016" PRIx64":  ", (uint64_t) dumpaddr);
 
 	iw = ib[0] + (ib[1]<<8) + (ib[2]<<16) + (ib[3]<<24);
-	debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%08x", (int)iw);
+	printf("%08x", (int)iw);
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -338,13 +338,13 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	case 0x00:
 		alpha_palcode_name(iw & 0x3ffffff, palcode_name,
 		    sizeof(palcode_name));
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "call_pal %s\n", palcode_name);
+		printf("call_pal %s\n", palcode_name);
 		break;
 	case 0x08:
 	case 0x09:
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "lda%s\t%s,", opcode == 9? "h" : "", alpha_regname[ra]);
+		printf("lda%s\t%s,", opcode == 9? "h" : "", alpha_regname[ra]);
 		alpha_print_imm16_disp(imm, rb);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x0a:
 	case 0x0b:
@@ -394,16 +394,16 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x2f: mnem = "stq_c"; break;
 		}
 		if (opcode == 0x0b && ra == ALPHA_ZERO) {
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "unop");
+			printf("unop");
 		} else {
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t", mnem);
+			printf("%s\t", mnem);
 			if (floating)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "f%i,", ra);
+				printf("f%i,", ra);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s,", alpha_regname[ra]);
+				printf("%s,", alpha_regname[ra]);
 			alpha_print_imm16_disp(imm, rb);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x10:
 		switch (func & 0x7f) {
@@ -429,17 +429,17 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x60: mnem = "addq/v"; break;
 		case 0x69: mnem = "subq/v"; break;
 		case 0x6d: mnem = "cmple"; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
 		if (func & 0x80)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,0x%x,%s\n", mnem,
+			printf("%s\t%s,0x%x,%s\n", mnem,
 			    alpha_regname[ra], (rb << 3) + (func >> 8),
 			    alpha_regname[rc]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
+			printf("%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
 			    alpha_regname[rb], alpha_regname[rc]);
 		break;
 	case 0x11:
@@ -460,33 +460,33 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x064: mnem = "cmovle"; break;
 		case 0x066: mnem = "cmovgt"; break;
 		case 0x06c: mnem = "implver"; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
 		/*  Special cases: "nop" etc:  */
 		if (func == 0x020 && rc == ALPHA_ZERO)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "nop\n");
+			printf("nop\n");
 		else if (func == 0x020 && (ra == ALPHA_ZERO
 		    || rb == ALPHA_ZERO)) {
 			if (ra == ALPHA_ZERO && rb == ALPHA_ZERO)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "clr\t%s\n", alpha_regname[rc]);
+				printf("clr\t%s\n", alpha_regname[rc]);
 			else if (ra == ALPHA_ZERO)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "mov\t%s,%s\n", alpha_regname[rb],
+				printf("mov\t%s,%s\n", alpha_regname[rb],
 				    alpha_regname[rc]);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "mov\t%s,%s\n", alpha_regname[ra],
+				printf("mov\t%s,%s\n", alpha_regname[ra],
 				    alpha_regname[rc]);
 		} else if (func == 0x1ec) {
 			/*  implver  */
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s\n", mnem, alpha_regname[rc]);
+			printf("%s\t%s\n", mnem, alpha_regname[rc]);
 		} else if (func & 0x80)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,0x%x,%s\n", mnem,
+			printf("%s\t%s,0x%x,%s\n", mnem,
 			    alpha_regname[ra], (rb << 3) + (func >> 8),
 			    alpha_regname[rc]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
+			printf("%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
 			    alpha_regname[rb], alpha_regname[rc]);
 		break;
 	case 0x12:
@@ -517,17 +517,17 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x72: mnem = "mskqh"; break;
 		case 0x77: mnem = "insqh"; break;
 		case 0x7a: mnem = "extqh"; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
 		if (func & 0x80)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,0x%x,%s\n", mnem,
+			printf("%s\t%s,0x%x,%s\n", mnem,
 			    alpha_regname[ra], (rb << 3) + (func >> 8),
 			    alpha_regname[rc]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
+			printf("%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
 			    alpha_regname[rb], alpha_regname[rc]);
 		break;
 	case 0x13:
@@ -537,17 +537,17 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x30: mnem = "umulh"; break;
 		case 0x40: mnem = "mull/v"; break;
 		case 0x60: mnem = "mulq/v"; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
 		if (func & 0x80)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,0x%x,%s\n", mnem,
+			printf("%s\t%s,0x%x,%s\n", mnem,
 			    alpha_regname[ra], (rb << 3) + (func >> 8),
 			    alpha_regname[rc]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
+			printf("%s\t%s,%s,%s\n", mnem, alpha_regname[ra],
 			    alpha_regname[rb], alpha_regname[rc]);
 		break;
 	case 0x16:
@@ -565,31 +565,31 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x0a6: mnem = "cmptlt"; break;
 		case 0x0a7: mnem = "cmptle"; break;
 		case 0x0be: mnem = "cvtqt"; rbrc = 1; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
 		if (rbrc)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\tf%i,f%i\n", mnem, rb, rc);
+			printf("%s\tf%i,f%i\n", mnem, rb, rc);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\tf%i,f%i,f%i\n", mnem, ra, rb, rc);
+			printf("%s\tf%i,f%i,f%i\n", mnem, ra, rb, rc);
 		break;
 	case 0x17:
 		switch (func & 0x7ff) {
 		case 0x020: mnem = "fabs"; rbrc = 1; break;
 		case 0x021: mnem = "fneg"; rbrc = 1; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
 		if ((func & 0x7ff) == 0x020 && ra == 31 && rb == 31)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "fclr\tf%i\n", rc);
+			printf("fclr\tf%i\n", rc);
 		else if (rbrc)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\tf%i,f%i\n", mnem, rb, rc);
+			printf("%s\tf%i,f%i\n", mnem, rb, rc);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\tf%i,f%i,f%i\n", mnem, ra, rb, rc);
+			printf("%s\tf%i,f%i,f%i\n", mnem, ra, rb, rc);
 		break;
 	case 0x18:
 		switch (iw & 0xffff) {
@@ -604,20 +604,20 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0xe800: mnem = "ecb"; indir = 1; break;
 		case 0xf000: mnem = "rs"; break;
 		case 0xf800: mnem = "wh64"; indir = 1; break;
-		default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x func 0x%x\n",
+		default:printf("UNIMPLEMENTED opcode 0x%x func 0x%x\n",
 			    opcode, func);
 		}
 		if (mnem == NULL)
 			break;
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s", mnem);
+		printf("%s", mnem);
 		if ((iw & 0xffff) >= 0x8000) {
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\t");
+			printf("\t");
 			if (indir)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "(%s)", alpha_regname[rb]);
+				printf("(%s)", alpha_regname[rb]);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s", alpha_regname[ra]);
+				printf("%s", alpha_regname[ra]);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x1a:
 		tmp = iw & 0x3fff;
@@ -628,22 +628,22 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		switch ((iw >> 14) & 3) {
 		case 0:
 		case 1:	if (((iw >> 14) & 3) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "jmp");
+				printf("jmp");
 			else
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "jsr");
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\t%s,", alpha_regname[ra]);
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "(%s),", alpha_regname[rb]);
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) tmp);
+				printf("jsr");
+			printf("\t%s,", alpha_regname[ra]);
+			printf("(%s),", alpha_regname[rb]);
+			printf("0x%" PRIx64, (uint64_t) tmp);
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    tmp, &offset);
 			if (symbol != NULL)
-				debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\t<%s>", symbol);
+				printf("\t<%s>", symbol);
 			break;
-		case 2:	debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "ret");
+		case 2:	printf("ret");
 			break;
-		default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "unimpl JSR!");
+		default:printf("unimpl JSR!");
 		}
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x30:
 	case 0x34:
@@ -652,15 +652,15 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			tmp |= 0xffffffffffe00000ULL;
 		tmp <<= 2;
 		tmp += dumpaddr + sizeof(uint32_t);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t", opcode==0x30? "br" : "bsr");
+		printf("%s\t", opcode==0x30? "br" : "bsr");
 		if (ra != ALPHA_ZERO)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s,", alpha_regname[ra]);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) tmp);
+			printf("%s,", alpha_regname[ra]);
+		printf("0x%" PRIx64, (uint64_t) tmp);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    tmp, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\t<%s>", symbol);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+			printf("\t<%s>", symbol);
+		printf("\n");
 		break;
 	case 0x31:
 	case 0x35:
@@ -690,33 +690,33 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			tmp |= 0xffffffffffe00000ULL;
 		tmp <<= 2;
 		tmp += dumpaddr + sizeof(uint32_t);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s\t", mnem);
+		printf("%s\t", mnem);
 		if (floating)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "f%i,", ra);
+			printf("f%i,", ra);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s,", alpha_regname[ra]);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) tmp);
+			printf("%s,", alpha_regname[ra]);
+		printf("0x%" PRIx64, (uint64_t) tmp);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    tmp, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\t<%s>", symbol);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+			printf("\t<%s>", symbol);
+		printf("\n");
 		break;
 	case 0x19:
 	case 0x1d:
 		/*  21064: PAL, ABX, IBX bits and the index  */
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "hw_m%spr\t%s,", opcode == 0x19? "f" : "t",
+		printf("hw_m%spr\t%s,", opcode == 0x19? "f" : "t",
 		    alpha_regname[ra]);
 		if (iw & 0x80)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "pal_temp%i", (int)(iw & 31));
+			printf("pal_temp%i", (int)(iw & 31));
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "%s%s%i", iw & 0x40? "abox:" : "",
+			printf("%s%s%i", iw & 0x40? "abox:" : "",
 			    iw & 0x20? "ibox:" : "", (int)(iw & 31));
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x1b:
 	case 0x1f:
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "hw_%s%s%s%s%s\t%s,", opcode == 0x1b? "ld" : "st",
+		printf("hw_%s%s%s%s%s\t%s,", opcode == 0x1b? "ld" : "st",
 		    iw & 0x1000? "q" : "l", iw & 0x8000? "/p" : "",
 		    iw & 0x4000? "/a" : "", iw & 0x2000? "/r" : "",
 		    alpha_regname[ra]);
@@ -724,15 +724,15 @@ int alpha_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		if (imm & 0x800)
 			imm -= 0x1000;
 		if (imm < 0)
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "-0x%x", -imm);
+			printf("-0x%x", -imm);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "0x%x", imm);
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "(%s)\n", alpha_regname[rb]);
+			printf("0x%x", imm);
+		printf("(%s)\n", alpha_regname[rb]);
 		break;
 	case 0x1e:
-		debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "hw_rei\n");
+		printf("hw_rei\n");
 		break;
-	default:debugmsg(SUBSYS_CPU, "cpu_alpha", VERBOSITY_DEBUG, "UNIMPLEMENTED opcode 0x%x\n", opcode);
+	default:printf("UNIMPLEMENTED opcode 0x%x\n", opcode);
 	}
 
 	return sizeof(uint32_t);

@@ -218,12 +218,12 @@ void m88k_cpu_list_available_types(void)
 
 	i = 0;
 	while (tdefs[i].name != NULL) {
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s", tdefs[i].name);
+		printf("%s", tdefs[i].name);
 		for (j=13 - strlen(tdefs[i].name); j>0; j--)
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, " ");
+			printf(" ");
 		i++;
 		if ((i % 5) == 0 || tdefs[i].name == NULL)
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 	}
 }
 
@@ -278,19 +278,19 @@ void m88k_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 	if (gprs) {
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    cpu->pc, &offset);
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "cpu%i:  pc  = 0x%08" PRIx32, x, (uint32_t)cpu->pc);
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
+		printf("cpu%i:  pc  = 0x%08" PRIx32, x, (uint32_t)cpu->pc);
+		printf("  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
 		for (i=0; i<N_M88K_REGS; i++) {
 			if ((i % 4) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "cpu%i:", x);
+				printf("cpu%i:", x);
 			if (i == 0)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "                  ");
+				printf("                  ");
 			else
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "  r%-2i = 0x%08" PRIx32,
+				printf("  r%-2i = 0x%08" PRIx32,
 				    i, cpu->cd.m88k.r[i]);
 			if ((i % 4) == 3)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 
@@ -303,11 +303,11 @@ void m88k_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 
 		for (i=0; i<n_control_regs; i++) {
 			if ((i % 4) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "  %4s=0x%08" PRIx32,
+				printf("cpu%i:", x);
+			printf("  %4s=0x%08" PRIx32,
 			    m88k_cr_name(cpu, i), cpu->cd.m88k.cr[i]);
 			if ((i % 4) == 3)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 
@@ -316,11 +316,11 @@ void m88k_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 
 		for (i=0; i<n_fpu_control_regs; i++) {
 			if ((i % 4) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "  %5s=0x%08" PRIx32,
+				printf("cpu%i:", x);
+			printf("  %5s=0x%08" PRIx32,
 			    m88k_fcr_name(cpu, i), cpu->cd.m88k.fcr[i]);
 			if ((i % 4) == 3)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 }
@@ -978,12 +978,12 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset == 0 && supervisor)
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "<%s>\n", symbol);
+		printf("<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "cpu%i:\t", cpu->cpu_id);
+		printf("cpu%i:\t", cpu->cpu_id);
 
-	debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%c%08" PRIx32": ",
+	printf("%c%08" PRIx32": ",
 	    cpu->cd.m88k.cr[M88K_CR_PSR] & M88K_PSR_MODE? 's' : 'u',
 	    (uint32_t) dumpaddr);
 
@@ -992,12 +992,12 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	else
 		iw = ib[3] + (ib[2]<<8) + (ib[1]<<16) + (ib[0]<<24);
 
-	debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t) iw);
+	printf("%08" PRIx32, (uint32_t) iw);
 
 	if (running && cpu->delay_slot)
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, " (d)");
+		printf(" (d)");
 	else
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "    ");
+		printf("    ");
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -1028,42 +1028,42 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	case 0x0a:	/*  st.h     */
 	case 0x0b:	/*  st.b     */
 		if (iw == 0x00000000) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "-\n");
+			printf("-\n");
 			break;
 		}
 		switch (op26) {
-		case 0x00:  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "xmem.bu"); break;
-		case 0x01:  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "xmem"); break;
-		case 0x02:  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "ld.hu"); break;
-		case 0x03:  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "ld.bu"); break;
-		default:    debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s%s", op26 >= 0x08? "st" : "ld",
+		case 0x00:  printf("xmem.bu"); break;
+		case 0x01:  printf("xmem"); break;
+		case 0x02:  printf("ld.hu"); break;
+		case 0x03:  printf("ld.bu"); break;
+		default:    printf("%s%s", op26 >= 0x08? "st" : "ld",
 				memop[op26 & 3]);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\tr%i,r%i,0x%x", d, s1, imm16);
+		printf("\tr%i,r%i,0x%x", d, s1, imm16);
 		if (running) {
 			uint32_t tmpaddr = cpu->cd.m88k.r[s1] + imm16;
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    tmpaddr, &offset);
 			if (symbol != NULL && supervisor)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [<%s>]", symbol);
+				printf("\t; [<%s>]", symbol);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [0x%08" PRIx32"]", tmpaddr);
+				printf("\t; [0x%08" PRIx32"]", tmpaddr);
 			if (op26 >= 0x08) {
 				/*  Store:  */
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, " = ");
+				printf(" = ");
 				switch (op26 & 3) {
-				case 0:	debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%016" PRIx64, (uint64_t)
+				case 0:	printf("0x%016" PRIx64, (uint64_t)
 					    ((((uint64_t) cpu->cd.m88k.r[d])
 					    << 32) + ((uint64_t)
 					    cpu->cd.m88k.r[d+1])) );
 					break;
-				case 1:	debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%08" PRIx32,
+				case 1:	printf("0x%08" PRIx32,
 					    (uint32_t) cpu->cd.m88k.r[d]);
 					break;
-				case 2:	debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%04" PRIx16,
+				case 2:	printf("0x%04" PRIx16,
 					    (uint16_t) cpu->cd.m88k.r[d]);
 					break;
-				case 3:	debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%02" PRIx8,
+				case 3:	printf("0x%02" PRIx8,
 					    (uint8_t) cpu->cd.m88k.r[d]);
 					break;
 				}
@@ -1098,12 +1098,12 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				    &cpu->machine->symbol_context,
 				    tmpaddr, &offset);
 				if (symbol != NULL && supervisor)
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [<%s>]", symbol);
+					printf("\t; [<%s>]", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [0x%08" PRIx32"]", tmpaddr);
+					printf("\t; [0x%08" PRIx32"]", tmpaddr);
 			}
 		}
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 
 	case 0x10:	/*  and     */
@@ -1115,7 +1115,7 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	case 0x16:	/*  or      */
 	case 0x17:	/*  or.u    */
 		if (d == M88K_ZERO_REG)
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "nop");
+			printf("nop");
 
 		switch (op26) {
 		case 0x10:
@@ -1130,9 +1130,9 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 
 		if (d != M88K_ZERO_REG || op26 != 0x16 || s1 != M88K_ZERO_REG) {
 			if (d == M88K_ZERO_REG)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; weird nop encoding: ");
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s%s\t", mnem, op26 & 1? ".u" : "");
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "r%i,r%i,0x%x", d, s1, imm16);
+				printf("\t\t; weird nop encoding: ");
+			printf("%s%s\t", mnem, op26 & 1? ".u" : "");
+			printf("r%i,r%i,0x%x", d, s1, imm16);
 		}
 
 		if (op26 == 0x16 && d != M88K_ZERO_REG) {
@@ -1160,15 +1160,15 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				symbol = get_symbol_name(
 				    &cpu->machine->symbol_context,
 				    tmpaddr, &offset);
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; ");
+				printf("\t; ");
 				if (symbol != NULL && supervisor)
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "<%s>", symbol);
+					printf("<%s>", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%08" PRIx32, tmpaddr);
+					printf("0x%08" PRIx32, tmpaddr);
 			}
 		}
 
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 
 	case 0x18:	/*  addu    */
@@ -1189,48 +1189,48 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x1e:	mnem = "div"; break;
 		case 0x1f:	mnem = "cmp"; break;
 		}
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s\tr%i,r%i,%i\n", mnem, d, s1, imm16);
+		printf("%s\tr%i,r%i,%i\n", mnem, d, s1, imm16);
 		break;
 
 	case 0x20:
 		if ((iw & 0x001ff81f) == 0x00004000) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "ldcr\tr%i,%s", d, m88k_cr_name(cpu, cr6));
+			printf("ldcr\tr%i,%s", d, m88k_cr_name(cpu, cr6));
 			if (running)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; %s = 0x%08x", m88k_cr_name(cpu, cr6), cpu->cd.m88k.cr[cr6]);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+				printf("\t\t; %s = 0x%08x", m88k_cr_name(cpu, cr6), cpu->cd.m88k.cr[cr6]);
+			printf("\n");
 		} else if ((iw & 0x001ff81f) == 0x00004800) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "fldcr\tr%i,%s\n", d, m88k_fcr_name(cpu, cr6));
+			printf("fldcr\tr%i,%s\n", d, m88k_fcr_name(cpu, cr6));
 		} else if ((iw & 0x03e0f800) == 0x00008000) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "stcr\tr%i,%s", s1, m88k_cr_name(cpu, cr6));
+			printf("stcr\tr%i,%s", s1, m88k_cr_name(cpu, cr6));
 			if (s1 != s2)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; NOTE: weird encoding: "
+				printf("\t\t; NOTE: weird encoding: "
 				    "low 5 bits = 0x%02x", s2);
 			if (running)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; r%i = 0x%08x", s1, cpu->cd.m88k.r[s1]);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+				printf("\t\t; r%i = 0x%08x", s1, cpu->cd.m88k.r[s1]);
+			printf("\n");
 		} else if ((iw & 0x03e0f800) == 0x00008800) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "fstcr\tr%i,%s", s1,
+			printf("fstcr\tr%i,%s", s1,
 			    m88k_fcr_name(cpu, cr6));
 			if (s1 != s2)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; NOTE: weird encoding: "
+				printf("\t\t; NOTE: weird encoding: "
 				    "low 5 bits = 0x%02x", s2);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if ((iw & 0x0000f800) == 0x0000c000) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "xcr\tr%i,r%i,%s", d, s1,
+			printf("xcr\tr%i,r%i,%s", d, s1,
 			    m88k_cr_name(cpu, cr6));
 			if (s1 != s2)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; NOTE: weird encoding: "
+				printf("\t\t; NOTE: weird encoding: "
 				    "low 5 bits = 0x%02x", s2);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if ((iw & 0x0000f800) == 0x0000c800) {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "fxcr\tr%i,r%i,%s", d, s1,
+			printf("fxcr\tr%i,r%i,%s", d, s1,
 			    m88k_fcr_name(cpu, cr6));
 			if (s1 != s2)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; NOTE: weird encoding: "
+				printf("\t\t; NOTE: weird encoding: "
 				    "low 5 bits = 0x%02x", s2);
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "UNIMPLEMENTED 0x20\n");
+			printf("UNIMPLEMENTED 0x20\n");
 		}
 		break;
 
@@ -1248,7 +1248,7 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			case 0x07: mnem = "fcmp"; break;
 			case 0x0e: mnem = "fdiv"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s.%c%c%c r%i,r%i,r%i\n",
+			printf("%s.%c%c%c r%i,r%i,r%i\n",
 			    mnem,
 			    ((iw >> 5) & 1)? 'd' : 's',
 			    ((iw >> 9) & 1)? 'd' : 's',
@@ -1259,7 +1259,7 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			switch (op11) {
 			case 0x04: mnem = "flt"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s.%cs\tr%i,r%i\n",
+			printf("%s.%cs\tr%i,r%i\n",
 			    mnem,
 			    ((iw >> 5) & 1)? 'd' : 's',
 			    d, s2);
@@ -1272,12 +1272,12 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			case 0x0a: mnem = "nint"; break;
 			case 0x0b: mnem = "trnc"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s.s%c r%i,r%i\n",
+			printf("%s.s%c r%i,r%i\n",
 			    mnem,
 			    ((iw >> 7) & 1)? 'd' : 's',
 			    d, s2);
 			break;
-		default:debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "UNIMPLEMENTED 0x21, op11=0x%02x\n", op11);
+		default:printf("UNIMPLEMENTED 0x21, op11=0x%02x\n", op11);
 		}
 		break;
 
@@ -1285,15 +1285,15 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 	case 0x31:
 	case 0x32:
 	case 0x33:
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "b%sr%s\t",
+		printf("b%sr%s\t",
 		    op26 >= 0x32? "s" : "",
 		    op26 & 1? ".n" : "");
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t) (dumpaddr + d26));
+		printf("0x%08" PRIx32, (uint32_t) (dumpaddr + d26));
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    dumpaddr + d26, &offset);
 		if (symbol != NULL && supervisor)
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; <%s>", symbol);
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\t; <%s>", symbol);
+		printf("\n");
 		break;
 
 	case 0x34:	/*  bb0    */
@@ -1310,30 +1310,30 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 		case 0x3a:
 		case 0x3b: mnem = "bcnd"; break;
 		}
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s%s\t", mnem, op26 & 1? ".n" : "");
+		printf("%s%s\t", mnem, op26 & 1? ".n" : "");
 		if (op26 == 0x3a || op26 == 0x3b) {
 			/*  Attempt to decode bcnd condition:  */
 			switch (d) {
-			case 0x1: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "gt0"); break;
-			case 0x2: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "eq0"); break;
-			case 0x3: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "ge0"); break;
-			case 0x5: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "not_maxneg_nor_zero"); break;
-			case 0x7: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "not_maxneg"); break;
-			case 0x8: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "maxneg"); break;
-			case 0xc: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "lt0"); break;
-			case 0xd: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "ne0"); break;
-			case 0xe: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "le0"); break;
-			default:  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "unimplemented_%i", d);
+			case 0x1: printf("gt0"); break;
+			case 0x2: printf("eq0"); break;
+			case 0x3: printf("ge0"); break;
+			case 0x5: printf("not_maxneg_nor_zero"); break;
+			case 0x7: printf("not_maxneg"); break;
+			case 0x8: printf("maxneg"); break;
+			case 0xc: printf("lt0"); break;
+			case 0xd: printf("ne0"); break;
+			case 0xe: printf("le0"); break;
+			default:  printf("unimplemented_%i", d);
 			}
 		} else {
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%i", d);
+			printf("%i", d);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ",r%i,0x%08" PRIx32, s1, (uint32_t) (dumpaddr + d16));
+		printf(",r%i,0x%08" PRIx32, s1, (uint32_t) (dumpaddr + d16));
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    dumpaddr + d16, &offset);
 		if (symbol != NULL && supervisor)
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; <%s>", symbol);
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\t; <%s>", symbol);
+		printf("\n");
 		break;
 
 	case 0x3c:
@@ -1341,22 +1341,22 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			int scale = 0;
 
 			/*  Load/store:  */
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s", (iw & 0x0000f000) == 0x1000? "ld" : "st");
+			printf("%s", (iw & 0x0000f000) == 0x1000? "ld" : "st");
 			switch (iw & 0x00000c00) {
-			case 0x000: scale = 8; debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".d"); break;
+			case 0x000: scale = 8; printf(".d"); break;
 			case 0x400: scale = 4; break;
-			case 0x800: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".x"); break;
-			default: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".UNIMPLEMENTED");
+			case 0x800: printf(".x"); break;
+			default: printf(".UNIMPLEMENTED");
 			}
 			if (iw & 0x100)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".usr");
+				printf(".usr");
 			if (iw & 0x80)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".wt");
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\tr%i,r%i", d, s1);
+				printf(".wt");
+			printf("\tr%i,r%i", d, s1);
 			if (iw & 0x200)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "[r%i]", s2);
+				printf("[r%i]", s2);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ",r%i", s2);
+				printf(",r%i", s2);
 
 			if (running && scale >= 1) {
 				uint32_t tmpaddr = cpu->cd.m88k.r[s1];
@@ -1367,12 +1367,12 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				symbol = get_symbol_name(&cpu->machine->
 				    symbol_context, tmpaddr, &offset);
 				if (symbol != NULL && supervisor)
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [<%s>]", symbol);
+					printf("\t; [<%s>]", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [0x%08" PRIx32"]", tmpaddr);
+					printf("\t; [0x%08" PRIx32"]", tmpaddr);
 			}
 
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else switch (op10) {
 		case 0x20:	/*  clr  */
 		case 0x22:	/*  set  */
@@ -1387,13 +1387,14 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			case 0x26: mnem = "extu"; break;
 			case 0x28: mnem = "mak"; break;
 			case 0x2a: mnem = "rot"; break;
+			default:   mnem = "?"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s\tr%i,r%i,", mnem, d, s1);
+			printf("%s\tr%i,r%i,", mnem, d, s1);
 			/*  Don't include w5 for the rot instruction:  */
 			if (op10 != 0x2a)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%i", w5);
+				printf("%i", w5);
 			/*  Note: o5 = s2:  */
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "<%i>\n", s2);
+			printf("<%i>\n", s2);
 			break;
 		case 0x34:	/*  tb0  */
 		case 0x36:	/*  tb1  */
@@ -1401,9 +1402,9 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			case 0x34: mnem = "tb0"; break;
 			case 0x36: mnem = "tb1"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s\t%i,r%i,0x%x\n", mnem, d, s1, iw & 0x1ff);
+			printf("%s\t%i,r%i,0x%x\n", mnem, d, s1, iw & 0x1ff);
 			break;
-		default:debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "UNIMPLEMENTED 0x3c, op10=0x%02x\n", op10);
+		default:printf("UNIMPLEMENTED 0x3c, op10=0x%02x\n", op10);
 		}
 		break;
 
@@ -1413,39 +1414,39 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 
 			/*  Load, Store, xmem, and lda:  */
 			switch (iw & 0xf000) {
-			case 0x2000: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "st"); break;
-			case 0x3000: debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "lda"); break;
+			case 0x2000: printf("st"); break;
+			case 0x3000: printf("lda"); break;
 			default:     if ((iw & 0xf800) >= 0x0800)
-					  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "ld");
+					  printf("ld");
 				     else
-					  debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "xmem");
+					  printf("xmem");
 			}
 			if ((iw & 0xf000) >= 0x1000) {
 				/*  ld, st, lda  */
 				scale = 1 << (3 - ((iw >> 10) & 3));
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s", memop[(iw >> 10) & 3]);
+				printf("%s", memop[(iw >> 10) & 3]);
 			} else if ((iw & 0xf800) == 0x0000) {
 				/*  xmem  */
 				if (iw & 0x400)
 					scale = 4;
 				else
-					{ debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".bu"); scale = 1; }
+					{ printf(".bu"); scale = 1; }
 			} else {
 				/*  ld  */
 				if ((iw & 0xf00) < 0xc00)
-					{ debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".hu"); scale = 2; }
+					{ printf(".hu"); scale = 2; }
 				else
-					{ debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".bu"); scale = 1; }
+					{ printf(".bu"); scale = 1; }
 			}
 			if (iw & 0x100)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".usr");
+				printf(".usr");
 			if (iw & 0x80)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ".wt");
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\tr%i,r%i", d, s1);
+				printf(".wt");
+			printf("\tr%i,r%i", d, s1);
 			if (iw & 0x200)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "[r%i]", s2);
+				printf("[r%i]", s2);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, ",r%i", s2);
+				printf(",r%i", s2);
 
 			if (running && scale >= 1) {
 				uint32_t tmpaddr = cpu->cd.m88k.r[s1];
@@ -1456,12 +1457,12 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				symbol = get_symbol_name(&cpu->machine->
 				    symbol_context, tmpaddr, &offset);
 				if (symbol != NULL && supervisor)
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [<%s>]", symbol);
+					printf("\t; [<%s>]", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t; [0x%08" PRIx32"]", tmpaddr);
+					printf("\t; [0x%08" PRIx32"]", tmpaddr);
 			}
 
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else switch ((iw >> 8) & 0xff) {
 		case 0x40:	/*  and  */
 		case 0x44:	/*  and.c  */
@@ -1538,21 +1539,21 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 			}
 
 			if (((iw >> 8) & 0xff) == 0x58 && d == M88K_ZERO_REG)
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "nop");
+				printf("nop");
 
 			if (((iw >> 8) & 0xff) != 0x58 || d != M88K_ZERO_REG) {
 				if (d == M88K_ZERO_REG)
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; weird nop encoding: ");
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s\tr%i,r%i,r%i", mnem, d, s1, s2);
+					printf("\t\t; weird nop encoding: ");
+				printf("%s\tr%i,r%i,r%i", mnem, d, s1, s2);
 			}
 
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 			break;
 		case 0xc0:	/*  jmp  */
 		case 0xc4:	/*  jmp.n  */
 		case 0xc8:	/*  jsr  */
 		case 0xcc:	/*  jsr.n  */
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s%s\t(r%i)",
+			printf("%s%s\t(r%i)",
 			    op11 & 1? "jsr" : "jmp",
 			    iw & 0x400? ".n" : "",
 			    s2);
@@ -1560,49 +1561,49 @@ int m88k_cpu_disassemble_instr(struct cpu *cpu, unsigned char *ib,
 				uint32_t tmpaddr = cpu->cd.m88k.r[s2];
 				symbol = get_symbol_name(&cpu->machine->
 				    symbol_context, tmpaddr, &offset);
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\t\t; ");
+				printf("\t\t; ");
 				if (symbol != NULL && supervisor)
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "<%s>", symbol);
+					printf("<%s>", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "0x%08" PRIx32, tmpaddr);
+					printf("0x%08" PRIx32, tmpaddr);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 			break;
 		case 0xe8:	/*  ff1  */
 		case 0xec:	/*  ff0  */
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "%s\tr%i,r%i\n",
+			printf("%s\tr%i,r%i\n",
 			    ((iw >> 8) & 0xff) == 0xe8 ? "ff1" : "ff0", d, s2);
 			break;
 		case 0xf8:	/*  tbnd  */
-			debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "tbnd\tr%i,r%i\n", s1, s2);
+			printf("tbnd\tr%i,r%i\n", s1, s2);
 			break;
 		case 0xfc:
 			switch (iw & 0xff) {
 			case 0x00:
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "rte\n");
+				printf("rte\n");
 				break;
 			case 0x01:
 			case 0x02:
 			case 0x03:
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "illop%i\n", iw & 0xff);
+				printf("illop%i\n", iw & 0xff);
 				break;
 			case (M88K_PROM_INSTR & 0xff):
-				debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "gxemul_prom_call\n");
+				printf("gxemul_prom_call\n");
 				break;
-			default:debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "UNIMPLEMENTED 0x3d,0xfc: 0x%02x\n",
+			default:printf("UNIMPLEMENTED 0x3d,0xfc: 0x%02x\n",
 				    iw & 0xff);
 			}
 			break;
-		default:debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "UNIMPLEMENTED 0x3d, opbyte = 0x%02x\n",
+		default:printf("UNIMPLEMENTED 0x3d, opbyte = 0x%02x\n",
 			    (iw >> 8) & 0xff);
 		}
 		break;
 
 	case 0x3e:
-		debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "tbnd\tr%i,0x%x\n", s1, imm16);
+		printf("tbnd\tr%i,0x%x\n", s1, imm16);
 		break;
 
-	default:debugmsg(SUBSYS_CPU, "cpu_m88k", VERBOSITY_DEBUG, "UNIMPLEMENTED op26=0x%02x\n", op26);
+	default:printf("UNIMPLEMENTED op26=0x%02x\n", op26);
 	}
 
 	return sizeof(uint32_t);

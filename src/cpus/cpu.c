@@ -275,8 +275,11 @@ void cpu_functioncall_trace(struct cpu *cpu, uint64_t f)
 
 	strlcat(line, ")>", sizeof(line));
 
-	/*  -t asked for this, so it is shown at the default level:  */
-	debugmsg_cpu(cpu, SUBSYS_CPU, "trace", VERBOSITY_WARNING, "%s", line);
+	/*  Like -i's disassembly, this is console output that -t asked for,
+	    not a log message:  */
+	if (cpu->machine->ncpus > 1)
+		printf("cpu%i:\t", cpu->cpu_id);
+	printf("%s\n", line);
 }
 
 

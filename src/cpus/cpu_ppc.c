@@ -227,12 +227,12 @@ void ppc_cpu_list_available_types(void)
 
 	i = 0;
 	while (tdefs[i].name != NULL) {
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s", tdefs[i].name);
+		printf("%s", tdefs[i].name);
 		for (j=10 - strlen(tdefs[i].name); j>0; j--)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " ");
+			printf(" ");
 		i++;
 		if ((i % 6) == 0 || tdefs[i].name == NULL)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 	}
 }
 
@@ -364,96 +364,96 @@ void ppc_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    cpu->pc, &offset);
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: pc  = 0x", x);
+		printf("cpu%i: pc  = 0x", x);
 		if (bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t)cpu->pc);
+			printf("%08" PRIx32, (uint32_t)cpu->pc);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t)cpu->pc);
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
+			printf("%016" PRIx64, (uint64_t)cpu->pc);
+		printf("  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: lr  = 0x", x);
+		printf("cpu%i: lr  = 0x", x);
 		if (bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t)cpu->cd.ppc.spr[SPR_LR]);
+			printf("%08" PRIx32, (uint32_t)cpu->cd.ppc.spr[SPR_LR]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t)cpu->cd.ppc.spr[SPR_LR]);
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  cr  = 0x%08" PRIx32, (uint32_t)cpu->cd.ppc.cr);
+			printf("%016" PRIx64, (uint64_t)cpu->cd.ppc.spr[SPR_LR]);
+		printf("  cr  = 0x%08" PRIx32, (uint32_t)cpu->cd.ppc.cr);
 
 		if (bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  ");
+			printf("  ");
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\ncpu%i: ", x);
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "ctr = 0x", x);
+			printf("\ncpu%i: ", x);
+		printf("ctr = 0x");
 		if (bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t)cpu->cd.ppc.spr[SPR_CTR]);
+			printf("%08" PRIx32, (uint32_t)cpu->cd.ppc.spr[SPR_CTR]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t)cpu->cd.ppc.spr[SPR_CTR]);
+			printf("%016" PRIx64, (uint64_t)cpu->cd.ppc.spr[SPR_CTR]);
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  xer = 0x", x);
+		printf("  xer = 0x");
 		if (bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t)cpu->cd.ppc.spr[SPR_XER]);
+			printf("%08" PRIx32, (uint32_t)cpu->cd.ppc.spr[SPR_XER]);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t)cpu->cd.ppc.spr[SPR_XER]);
+			printf("%016" PRIx64, (uint64_t)cpu->cd.ppc.spr[SPR_XER]);
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 
 		if (bits32) {
 			/*  32-bit:  */
 			for (i=0; i<PPC_NGPRS; i++) {
 				if ((i % 4) == 0)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:", x);
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " r%02i = 0x%08" PRIx32" ", i,
+					printf("cpu%i:", x);
+				printf(" r%02i = 0x%08" PRIx32" ", i,
 				    (uint32_t) cpu->cd.ppc.gpr[i]);
 				if ((i % 4) == 3)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+					printf("\n");
 			}
 		} else {
 			/*  64-bit:  */
 			for (i=0; i<PPC_NGPRS; i++) {
 				int r = (i >> 1) + ((i & 1) << 4);
 				if ((i % 2) == 0)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:", x);
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " r%02i = 0x%016" PRIx64" ", r,
+					printf("cpu%i:", x);
+				printf(" r%02i = 0x%016" PRIx64" ", r,
 				    (uint64_t) cpu->cd.ppc.gpr[r]);
 				if ((i % 2) == 1)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+					printf("\n");
 			}
 		}
 
 		/*  Other special registers:  */
 		if (bits32) {
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: srr0 = 0x%08" PRIx32
+			printf("cpu%i: srr0 = 0x%08" PRIx32
 			    " srr1 = 0x%08" PRIx32"\n", x,
 			    (uint32_t) cpu->cd.ppc.spr[SPR_SRR0],
 			    (uint32_t) cpu->cd.ppc.spr[SPR_SRR1]);
 		} else {
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: srr0 = 0x%016" PRIx64
+			printf("cpu%i: srr0 = 0x%016" PRIx64
 			    "  srr1 = 0x%016" PRIx64"\n", x,
 			    (uint64_t) cpu->cd.ppc.spr[SPR_SRR0],
 			    (uint64_t) cpu->cd.ppc.spr[SPR_SRR1]);
 		}
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: msr = ", x);
+		printf("cpu%i: msr = ", x);
 		reg_access_msr(cpu, &tmp, 0, 0);
 		if (bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%08" PRIx32, (uint32_t) tmp);
+			printf("0x%08" PRIx32, (uint32_t) tmp);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%016" PRIx64, (uint64_t) tmp);
+			printf("0x%016" PRIx64, (uint64_t) tmp);
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  tb  = 0x%08" PRIx32"%08" PRIx32"\n",
+		printf("  tb  = 0x%08" PRIx32"%08" PRIx32"\n",
 		    (uint32_t) cpu->cd.ppc.spr[SPR_TBU],
 		    (uint32_t) cpu->cd.ppc.spr[SPR_TBL]);
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: dec = 0x%08" PRIx32,
+		printf("cpu%i: dec = 0x%08" PRIx32,
 		    x, (uint32_t) cpu->cd.ppc.spr[SPR_DEC]);
 		if (!bits32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  hdec = 0x%08" PRIx32"\n",
+			printf("  hdec = 0x%08" PRIx32"\n",
 			    (uint32_t) cpu->cd.ppc.spr[SPR_HDEC]);
 
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 	}
 
 	if (coprocs & 1) {
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: fpscr = 0x%08" PRIx32"\n",
+		printf("cpu%i: fpscr = 0x%08" PRIx32"\n",
 		    x, (uint32_t) cpu->cd.ppc.fpscr);
 
 		/*  TODO: show floating-point values :-)  */
@@ -462,19 +462,19 @@ void ppc_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 
 		for (i=0; i<PPC_NFPRS; i++) {
 			if ((i % 2) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " f%02i = 0x%016" PRIx64" ", i,
+				printf("cpu%i:", x);
+			printf(" f%02i = 0x%016" PRIx64" ", i,
 			    (uint64_t) cpu->cd.ppc.fpr[i]);
 			if ((i % 2) == 1)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 
 	if (coprocs & 2) {
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:  sdr1 = 0x%" PRIx64"\n", x,
+		printf("cpu%i:  sdr1 = 0x%" PRIx64"\n", x,
 		    (uint64_t) cpu->cd.ppc.spr[SPR_SDR1]);
 		if (cpu->cd.ppc.cpu_type.flags & PPC_601)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:  PPC601-style, TODO!\n");
+			printf("cpu%i:  PPC601-style, TODO!\n", x);
 		else {
 			for (i=0; i<8; i++) {
 				int spr = SPR_IBAT0U + i*2;
@@ -482,35 +482,35 @@ void ppc_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 				uint32_t lower = cpu->cd.ppc.spr[spr+1];
 				uint32_t len = (((upper & BAT_BL) << 15)
 				    | 0x1ffff) + 1;
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:  %sbat%i: u=0x%08" PRIx32
+				printf("cpu%i:  %sbat%i: u=0x%08" PRIx32
 				    " l=0x%08" PRIx32" ",
 				    x, i<4? "i" : "d", i&3, upper, lower);
 				if (!(upper & BAT_V)) {
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " (not valid)\n");
+					printf(" (not valid)\n");
 					continue;
 				}
 				if (len < 1048576)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " (%i KB, ", len >> 10);
+					printf(" (%i KB, ", len >> 10);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " (%i MB, ", len >> 20);
+					printf(" (%i MB, ", len >> 20);
 				if (upper & BAT_Vu)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "user, ");
+					printf("user, ");
 				if (upper & BAT_Vs)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "supervisor, ");
+					printf("supervisor, ");
 				if (lower & (BAT_W | BAT_I | BAT_M | BAT_G))
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s%s%s, ",
+					printf("%s%s%s%s, ",
 					    lower & BAT_W? "W" : "",
 					    lower & BAT_I? "I" : "",
 					    lower & BAT_M? "M" : "",
 					    lower & BAT_G? "G" : "");
 				switch (lower & BAT_PP) {
-				case BAT_PP_NONE: debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "NO access"); break;
-				case BAT_PP_RO_S: debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "read-only, soft");
+				case BAT_PP_NONE: printf("NO access"); break;
+				case BAT_PP_RO_S: printf("read-only, soft");
 					          break;
-				case BAT_PP_RO:   debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "read-only"); break;
-				case BAT_PP_RW:   debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "read/write"); break;
+				case BAT_PP_RO:   printf("read-only"); break;
+				case BAT_PP_RW:   printf("read/write"); break;
 				}
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ")\n");
+				printf(")\n");
 			}
 		}
 	}
@@ -519,35 +519,35 @@ void ppc_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		for (i=0; i<16; i++) {
 			uint32_t s = cpu->cd.ppc.sr[i];
 
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  sr%-2i = 0x%08" PRIx32, i, s);
+			printf("cpu%i:", x);
+			printf("  sr%-2i = 0x%08" PRIx32, i, s);
 
 			s &= (SR_TYPE | SR_SUKEY | SR_PRKEY | SR_NOEXEC);
 			if (s != 0) {
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "  (");
+				printf("  (");
 				if (s & SR_TYPE) {
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "NON-memory type");
+					printf("NON-memory type");
 					s &= ~SR_TYPE;
 					if (s != 0)
-						debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ", ");
+						printf(", ");
 				}
 				if (s & SR_SUKEY) {
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "supervisor-key");
+					printf("supervisor-key");
 					s &= ~SR_SUKEY;
 					if (s != 0)
-						debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ", ");
+						printf(", ");
 				}
 				if (s & SR_PRKEY) {
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "user-key");
+					printf("user-key");
 					s &= ~SR_PRKEY;
 					if (s != 0)
-						debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ", ");
+						printf(", ");
 				}
 				if (s & SR_NOEXEC)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "NOEXEC");
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ")");
+					printf("NOEXEC");
+				printf(")");
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		}
 	}
 }
@@ -612,21 +612,21 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 	symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset==0)
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "<%s>\n", symbol);
+		printf("<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cpu%i: ", cpu->cpu_id);
+		printf("cpu%i: ", cpu->cpu_id);
 
 	if (cpu->cd.ppc.bits == 32)
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t) dumpaddr);
+		printf("%08" PRIx32, (uint32_t) dumpaddr);
 	else
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%016" PRIx64, (uint64_t) dumpaddr);
+		printf("%016" PRIx64, (uint64_t) dumpaddr);
 
 	/*  NOTE: Fixed to big-endian.  */
 	iword = (instr[0] << 24) + (instr[1] << 16) + (instr[2] << 8)
 	    + instr[3];
 
-	debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": %08" PRIx32, iword);
+	printf(": %08" PRIx32, iword);
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -639,7 +639,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 
 	switch (hi6) {
 	case 0x4:
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "ALTIVEC TODO");
+		printf("ALTIVEC TODO");
 		/*  vxor etc  */
 		break;
 	case PPC_HI6_MULLI:
@@ -655,7 +655,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			mnem = power? "sfi":"subfic";
 			break;
 		}
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i,%i", mnem, rt, ra, imm);
+		printf("%s\tr%i,r%i,%i", mnem, rt, ra, imm);
 		break;
 	case PPC_HI6_CMPLI:
 	case PPC_HI6_CMPI:
@@ -669,10 +669,10 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			imm = (int16_t)(iword & 0xffff);
 			mnem = "cmp";
 		}
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%si\t", mnem, l_bit? "d" : "w");
+		printf("%s%si\t", mnem, l_bit? "d" : "w");
 		if (bf != 0)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cr%i,", bf);
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "r%i,%i", ra, imm);
+			printf("cr%i,", bf);
+		printf("r%i,%i", ra, imm);
 		break;
 	case PPC_HI6_ADDIC:
 	case PPC_HI6_ADDIC_DOT:
@@ -685,21 +685,21 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			mnem = "subic";
 			imm = -imm;
 		}
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i,%i", mnem, rc?".":"", rt, ra, imm);
+		printf("%s%s\tr%i,r%i,%i", mnem, rc?".":"", rt, ra, imm);
 		break;
 	case PPC_HI6_ADDI:
 		rt = (iword >> 21) & 31;
 		ra = (iword >> 16) & 31;
 		imm = (int16_t)(iword & 0xffff);
 		if (ra == 0)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "li\tr%i,%i", rt, imm);
+			printf("li\tr%i,%i", rt, imm);
 		else {
 			mnem = power? "cal":"addi";
 			if (imm < 0 && !power) {
 				mnem = "subi";
 				imm = -imm;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i,%i", mnem, rt, ra, imm);
+			printf("%s\tr%i,r%i,%i", mnem, rt, ra, imm);
 		}
 		break;
 	case PPC_HI6_ADDIS:
@@ -707,9 +707,9 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		ra = (iword >> 16) & 31;
 		imm = (int16_t)(iword & 0xffff);
 		if (ra == 0)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "lis\tr%i,%i", rt, imm);
+			printf("lis\tr%i,%i", rt, imm);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i,%i",
+			printf("%s\tr%i,r%i,%i",
 			    power? "cau":"addis", rt, ra, imm);
 		break;
 	case PPC_HI6_BC:
@@ -719,32 +719,32 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		bi = (iword >> 16) & 31;
 		/*  Sign-extend addr:  */
 		addr = (int64_t)(int16_t)(iword & 0xfffc);
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "bc");
+		printf("bc");
 		if (lk_bit)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "l");
+			printf("l");
 		if (aa_bit)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "a");
+			printf("a");
 		else
 			addr += dumpaddr;
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t%i,%i,", bo, bi);
+		printf("\t%i,%i,", bo, bi);
 		if (cpu->cd.ppc.bits == 32)
 			addr &= 0xffffffff;
 		if (cpu->cd.ppc.bits == 32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%" PRIx32, (uint32_t) addr);
+			printf("0x%" PRIx32, (uint32_t) addr);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) addr);
+			printf("0x%" PRIx64, (uint64_t) addr);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t<%s>", symbol);
+			printf("\t<%s>", symbol);
 		break;
 	case PPC_HI6_SC:
 		lev = (iword >> 5) & 0x7f;
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "sc");
+		printf("sc");
 		if (lev != 0) {
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t%i", lev);
+			printf("\t%i", lev);
 			if (lev > 1)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " (WARNING! reserved value)");
+				printf(" (WARNING! reserved value)");
 		}
 		break;
 	case PPC_HI6_B:
@@ -753,23 +753,23 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		/*  Sign-extend addr:  */
 		addr = (int64_t)(int32_t)((iword & 0x03fffffc) << 6);
 		addr = (int64_t)addr >> 6;
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "b");
+		printf("b");
 		if (lk_bit)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "l");
+			printf("l");
 		if (aa_bit)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "a");
+			printf("a");
 		else
 			addr += dumpaddr;
 		if (cpu->cd.ppc.bits == 32)
 			addr &= 0xffffffff;
 		if (cpu->cd.ppc.bits == 32)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t0x%" PRIx32, (uint32_t) addr);
+			printf("\t0x%" PRIx32, (uint32_t) addr);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t0x%" PRIx64, (uint64_t) addr);
+			printf("\t0x%" PRIx64, (uint64_t) addr);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t<%s>", symbol);
+			printf("\t<%s>", symbol);
 		break;
 	case PPC_HI6_19:
 		xo = (iword >> 1) & 1023;
@@ -777,16 +777,16 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		case PPC_19_MCRF:
 			bf = (iword >> 23) & 7;
 			bfa = (iword >> 18) & 7;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mcrf\tcr%i,cr%i", bf, bfa);
+			printf("mcrf\tcr%i,cr%i", bf, bfa);
 			break;
 		case PPC_19_RFI:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "rfi");
+			printf("rfi");
 			break;
 		case PPC_19_RFID:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "rfid");
+			printf("rfid");
 			break;
 		case PPC_19_RFSVC:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "rfsvc%s", power?"":"\t(INVALID for PowerPC)");
+			printf("rfsvc%s", power?"":"\t(INVALID for PowerPC)");
 			break;
 		case PPC_19_BCLR:
 		case PPC_19_BCCTR:
@@ -800,12 +800,12 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_19_BCCTR:
 				mnem = power? "bcc" : "bcctr"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s%s\t%i,%i,%i", mnem, lk_bit? "l" : "",
+			printf("%s%s%s\t%i,%i,%i", mnem, lk_bit? "l" : "",
 			    bh? (bh==3? "+" : (bh==2? "-" : "?")) : "",
 			    bo, bi, bh);
 			break;
 		case PPC_19_ISYNC:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s", power? "ics" : "isync");
+			printf("%s", power? "ics" : "isync");
 			break;
 		case PPC_19_CRAND:
 		case PPC_19_CRXOR:
@@ -828,10 +828,10 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_19_CREQV:	mnem = "creqv"; break;
 			case PPC_19_CRORC:	mnem = "crorc"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\t%i,%i,%i", mnem, bt, ba, bb);
+			printf("%s\t%i,%i,%i", mnem, bt, ba, bb);
 			break;
 		default:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "unimplemented hi6_19, xo = 0x%x", xo);
+			printf("unimplemented hi6_19, xo = 0x%x", xo);
 		}
 		break;
 	case PPC_HI6_RLWNM:
@@ -851,7 +851,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		case PPC_HI6_RLWINM:
 			mnem = power? "rlinm" : "rlwinm"; break;
 		}
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i,%s%i,%i,%i",
+		printf("%s%s\tr%i,r%i,%s%i,%i,%i",
 		    mnem, rc?".":"", ra, rs,
 		    hi6 == PPC_HI6_RLWNM? "r" : "",
 		    sh, mb, me);
@@ -886,9 +886,9 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			break;
 		}
 		if (hi6 == PPC_HI6_ORI && rs == 0 && ra == 0 && imm == 0)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "nop");
+			printf("nop");
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i,0x%04x", mnem, ra, rs, imm);
+			printf("%s\tr%i,r%i,0x%04x", mnem, ra, rs, imm);
 		break;
 	case PPC_HI6_30:
 		xo = (iword >> 2) & 7;
@@ -907,11 +907,11 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			sh = ((iword >> 11) & 31) | ((iword & 2) << 4);
 			me = ((iword >> 6) & 31) | (iword & 0x20);
 			rc = iword & 1;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i,%i,%i",
+			printf("%s%s\tr%i,r%i,%i,%i",
 			    mnem, rc?".":"", ra, rs, sh, me);
 			break;
 		default:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "unimplemented hi6_30, xo = 0x%x", xo);
+			printf("unimplemented hi6_30, xo = 0x%x", xo);
 		}
 		break;
 	case PPC_HI6_31:
@@ -928,30 +928,30 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				mnem = "cmpl";
 			else
 				mnem = "cmp";
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\t", mnem, l_bit? "d" : "w");
+			printf("%s%s\t", mnem, l_bit? "d" : "w");
 			if (bf != 0)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "cr%i,", bf);
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "r%i,r%i", ra, rb);
+				printf("cr%i,", bf);
+			printf("r%i,r%i", ra, rb);
 			break;
 		case PPC_31_MFCR:
 			rt = (iword >> 21) & 31;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mfcr\tr%i", rt);
+			printf("mfcr\tr%i", rt);
 			break;
 		case PPC_31_MFMSR:
 			rt = (iword >> 21) & 31;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mfmsr\tr%i", rt);
+			printf("mfmsr\tr%i", rt);
 			break;
 		case PPC_31_MTCRF:
 			rs = (iword >> 21) & 31;
 			mb = (iword >> 12) & 255;  /*  actually fxm, not mb  */
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtcrf\t%i,r%i", mb, rs);
+			printf("mtcrf\t%i,r%i", mb, rs);
 			break;
 		case PPC_31_MTMSR:
 			rs = (iword >> 21) & 31;
 			l_bit = (iword >> 16) & 1;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtmsr\tr%i", rs);
+			printf("mtmsr\tr%i", rs);
 			if (l_bit)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ",%i", l_bit);
+				printf(",%i", l_bit);
 			break;
 		case PPC_31_TW:
 		case PPC_31_TD:
@@ -962,7 +962,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_TW: mnem = power? "t" : "tw"; break;
 			case PPC_31_TD: mnem = "td"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\t%i,r%i,r%i", mnem, to, ra, rb);
+			printf("%s\t%i,r%i,r%i", mnem, to, ra, rb);
 			break;
 		case PPC_31_LWARX:
 		case PPC_31_LDARX:
@@ -1041,7 +1041,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_STFSX: fpreg = 1; wlen = 4;
 				mnem = "stfsx"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\t%s%i,r%i,r%i", mnem,
+			printf("%s\t%s%i,r%i,r%i", mnem,
 			    fpreg? "f" : "r", rs, ra, rb);
 			if (!running)
 				break;
@@ -1052,13 +1052,13 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    addr, &offset);
 			if (symbol != NULL)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " \t<%s", symbol);
+				printf(" \t<%s", symbol);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " \t<0x%" PRIx64, (uint64_t) addr);
+				printf(" \t<0x%" PRIx64, (uint64_t) addr);
 			if (wlen > 0 && !fpreg /* && !reverse */) {
 				/*  TODO  */
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ">");
+			printf(">");
 			break;
 		case PPC_31_NEG:
 		case PPC_31_NEGO:
@@ -1070,18 +1070,18 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_NEG:  mnem = "neg"; break;
 			case PPC_31_NEGO: mnem = "nego"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i", mnem, rc? "." : "", rt, ra);
+			printf("%s%s\tr%i,r%i", mnem, rc? "." : "", rt, ra);
 			break;
 		case PPC_31_WRTEEI:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "wrteei\t%i", iword & 0x8000? 1 : 0);
+			printf("wrteei\t%i", iword & 0x8000? 1 : 0);
 			break;
 		case PPC_31_MTMSRD:
 			/*  TODO: Just a guess based on MTMSR  */
 			rs = (iword >> 21) & 31;
 			l_bit = (iword >> 16) & 1;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtmsrd\tr%i", rs);
+			printf("mtmsrd\tr%i", rs);
 			if (l_bit)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ",%i", l_bit);
+				printf(",%i", l_bit);
 			break;
 		case PPC_31_ADDZE:
 		case PPC_31_ADDZEO:
@@ -1097,7 +1097,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				mnem = power? "azeo" : "addzeo";
 				break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i", mnem, rc? "." : "", rt, ra);
+			printf("%s%s\tr%i,r%i", mnem, rc? "." : "", rt, ra);
 			break;
 		case PPC_31_MTSR:
 		case PPC_31_MFSR:
@@ -1108,7 +1108,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_MTSR:  mnem = "mtsr"; break;
 			case PPC_31_MFSR:  mnem = "mfsr"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,%i", mnem, rt, ra);
+			printf("%s\tr%i,%i", mnem, rt, ra);
 			break;
 		case PPC_31_MTSRIN:
 		case PPC_31_MFSRIN:
@@ -1119,7 +1119,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_MTSRIN:  mnem = "mtsrin"; break;
 			case PPC_31_MFSRIN:  mnem = "mfsrin"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i", mnem, rt, rb);
+			printf("%s\tr%i,r%i", mnem, rt, rb);
 			break;
 		case PPC_31_ADDC:
 		case PPC_31_ADDCO:
@@ -1206,66 +1206,66 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				no_rb = 1;
 				break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i", mnem, rc? "." : "", rt, ra);
+			printf("%s%s\tr%i,r%i", mnem, rc? "." : "", rt, ra);
 			if (!no_rb)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ",r%i", rb);
+				printf(",r%i", rb);
 			break;
 		case PPC_31_MFSPR:
 			rt = (iword >> 21) & 31;
 			spr = ((iword >> 6) & 0x3e0) + ((iword >> 16) & 31);
 			switch (spr) {
 			/*  Some very common ones:  */
-			case 8:	   debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mflr\tr%i", rt); break;
-			case 9:	   debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mfctr\tr%i", rt); break;
-			default:debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mfspr\tr%i,spr%i", rt, spr);
+			case 8:	   printf("mflr\tr%i", rt); break;
+			case 9:	   printf("mfctr\tr%i", rt); break;
+			default:printf("mfspr\tr%i,spr%i", rt, spr);
 			}
 			if (spr == 8 || spr == 9)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t");
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t<%s%s", running? "read from " : "",
+				printf("\t");
+			printf("\t<%s%s", running? "read from " : "",
 			    ppc_spr_names[spr]==NULL? "?" : ppc_spr_names[spr]);
 			if (running) {
 				if (cpu->cd.ppc.bits == 32)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": 0x%" PRIx32, (uint32_t)
+					printf(": 0x%" PRIx32, (uint32_t)
 					    cpu->cd.ppc.spr[spr]);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": 0x%" PRIx64, (uint64_t)
+					printf(": 0x%" PRIx64, (uint64_t)
 					    cpu->cd.ppc.spr[spr]);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ">");
+			printf(">");
 			break;
 		case PPC_31_TLBIA:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "tlbia");
+			printf("tlbia");
 			break;
 		case PPC_31_SLBIA:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "slbia");
+			printf("slbia");
 			break;
 		case PPC_31_TLBLD:
 		case PPC_31_TLBLI:
 			rb = (iword >> 11) & 31;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "tlbl%s\tr%i", xo == PPC_31_TLBLD? "d" : "i", rb);
+			printf("tlbl%s\tr%i", xo == PPC_31_TLBLD? "d" : "i", rb);
 			break;
 		case PPC_31_TLBIE:
 			/*  TODO: what is ra? The IBM online docs didn't say  */
 			ra = 0;
 			rb = (iword >> 11) & 31;
 			if (power)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "tlbi\tr%i,r%i", ra, rb);
+				printf("tlbi\tr%i,r%i", ra, rb);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "tlbie\tr%i", rb);
+				printf("tlbie\tr%i", rb);
 			break;
 		case PPC_31_TLBSX_DOT:
 			rs = (iword >> 21) & 31;
 			ra = (iword >> 16) & 31;
 			rb = (iword >> 11) & 31;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "tlbsx.\tr%i,r%i,r%i", rs, ra, rb);
+			printf("tlbsx.\tr%i,r%i,r%i", rs, ra, rb);
 			break;
 		case PPC_31_TLBSYNC:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "tlbsync");
+			printf("tlbsync");
 			break;
 		case PPC_31_MFTB:
 			rt = (iword >> 21) & 31;
 			spr = ((iword >> 6) & 0x3e0) + ((iword >> 16) & 31);
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mftb%s\tr%i", spr==268? "" :
+			printf("mftb%s\tr%i", spr==268? "" :
 			    (spr==269? "u" : "?"), rt);
 			break;
 		case PPC_31_CNTLZW:
@@ -1273,7 +1273,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			ra = (iword >> 16) & 31;
 			rc = iword & 1;
 			mnem = power? "cntlz" : "cntlzw";
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i", mnem, rc? "." : "", ra, rs);
+			printf("%s%s\tr%i,r%i", mnem, rc? "." : "", ra, rs);
 			break;
 		case PPC_31_CLF:	/*  POWER only  */
 		case PPC_31_CLI:	/*  POWER only  */
@@ -1300,7 +1300,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_DCBZ:  mnem = power ?
 					   "dclz" : "dcbz"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i", mnem, ra, rb);
+			printf("%s\tr%i,r%i", mnem, ra, rb);
 			break;
 		case PPC_31_SLW:
 		case PPC_31_SLD:
@@ -1319,7 +1319,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			rb = (iword >> 11) & 31;
 			rc = iword & 1;
 			if (rs == rb && xo == PPC_31_OR)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mr%s\tr%i,r%i", rc? "." : "", ra, rs);
+				printf("mr%s\tr%i,r%i", rc? "." : "", ra, rs);
 			else {
 				switch (xo) {
 				case PPC_31_SLW:  mnem =
@@ -1338,19 +1338,19 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				case PPC_31_ORC:  mnem = "orc"; break;
 				case PPC_31_XOR:  mnem = "xor"; break;
 				}
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i,r%i", mnem,
+				printf("%s%s\tr%i,r%i,r%i", mnem,
 				    rc? "." : "", ra, rs, rb);
 			}
 			break;
 		case PPC_31_DCCCI:
 			ra = (iword >> 16) & 31;
 			rb = (iword >> 11) & 31;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "dccci\tr%i,r%i", ra, rb);
+			printf("dccci\tr%i,r%i", ra, rb);
 			break;
 		case PPC_31_ICCCI:
 			ra = (iword >> 16) & 31;
 			rb = (iword >> 11) & 31;
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "iccci\tr%i,r%i", ra, rb);
+			printf("iccci\tr%i,r%i", ra, rb);
 			break;
 		case PPC_31_DIVW:
 		case PPC_31_DIVWO:
@@ -1367,7 +1367,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_DIVW:   mnem = "divw"; break;
 			case PPC_31_DIVWO:  mnem = "divwo"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i,r%i", mnem, rc? "." : "",
+			printf("%s%s\tr%i,r%i,r%i", mnem, rc? "." : "",
 			    rt, ra, rb);
 			break;
 		case PPC_31_MTSPR:
@@ -1375,26 +1375,26 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			spr = ((iword >> 6) & 0x3e0) + ((iword >> 16) & 31);
 			switch (spr) {
 			/*  Some very common ones:  */
-			case 8:	   debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtlr\tr%i", rs); break;
-			case 9:	   debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtctr\tr%i", rs); break;
-			default:debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtspr\tspr%i,r%i", spr, rs);
+			case 8:	   printf("mtlr\tr%i", rs); break;
+			case 9:	   printf("mtctr\tr%i", rs); break;
+			default:printf("mtspr\tspr%i,r%i", spr, rs);
 			}
 			if (spr == 8 || spr == 9)
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t");
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\t<%s%s", running? "write to " : "",
+				printf("\t");
+			printf("\t<%s%s", running? "write to " : "",
 			    ppc_spr_names[spr]==NULL? "?" : ppc_spr_names[spr]);
 			if (running) {
 				if (cpu->cd.ppc.bits == 32)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": 0x%" PRIx32, (uint32_t)
+					printf(": 0x%" PRIx32, (uint32_t)
 					    cpu->cd.ppc.gpr[rs]);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": 0x%" PRIx64, (uint64_t)
+					printf(": 0x%" PRIx64, (uint64_t)
 					    cpu->cd.ppc.gpr[rs]);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ">");
+			printf(">");
 			break;
 		case PPC_31_SYNC:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s", power? "dcs" : "sync");
+			printf("%s", power? "dcs" : "sync");
 			break;
 		case PPC_31_LSWI:
 		case PPC_31_STSWI:
@@ -1407,7 +1407,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_STSWI:
 				mnem = power? "stsi" : "stswi"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\tr%i,r%i,%i", mnem, rs, ra, nb);
+			printf("%s\tr%i,r%i,%i", mnem, rs, ra, nb);
 			break;
 		case PPC_31_SRAWI:
 			rs = (iword >> 21) & 31;
@@ -1415,14 +1415,14 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			sh = (iword >> 11) & 31;
 			rc = iword & 1;
 			mnem = power? "srai" : "srawi";
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i,%i", mnem,
+			printf("%s%s\tr%i,r%i,%i", mnem,
 			    rc? "." : "", ra, rs, sh);
 			break;
 		case PPC_31_DSSALL:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "dssall");
+			printf("dssall");
 			break;
 		case PPC_31_EIEIO:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s", power? "eieio?" : "eieio");
+			printf("%s", power? "eieio?" : "eieio");
 			break;
 		case PPC_31_EXTSB:
 		case PPC_31_EXTSH:
@@ -1441,7 +1441,7 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				mnem = "extsw";
 				break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tr%i,r%i", mnem, rc? "." : "", ra, rs);
+			printf("%s%s\tr%i,r%i", mnem, rc? "." : "", ra, rs);
 			break;
 		case PPC_31_LVX:
 		case PPC_31_LVXL:
@@ -1457,11 +1457,11 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_31_STVX:  mnem = "stvx";  break;
 			case PPC_31_STVXL: mnem = "stvxl"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\tv%i,r%i,r%i", mnem, rc? "." : "",
+			printf("%s%s\tv%i,r%i,r%i", mnem, rc? "." : "",
 			    rs, ra, rb);
 			break;
 		default:
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "unimplemented hi6_31, xo = 0x%x", xo);
+			printf("unimplemented hi6_31, xo = 0x%x", xo);
 		}
 		break;
 	case PPC_HI6_LD:
@@ -1525,12 +1525,12 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		case PPC_HI6_STFD: fpreg=1; wlen=8; mnem = "stfd"; break;
 		case PPC_HI6_STFS: fpreg=1; wlen=4; mnem = "stfs"; break;
 		}
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s\t", mnem);
+		printf("%s\t", mnem);
 		if (fpreg)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f");
+			printf("f");
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "r");
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%i,%i(r%i)", rs, imm, ra);
+			printf("r");
+		printf("%i,%i(r%i)", rs, imm, ra);
 		if (!running)
 			break;
 		addr = (ra==0? 0 : cpu->cd.ppc.gpr[ra]) + imm;
@@ -1539,9 +1539,9 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " \t<%s", symbol);
+			printf(" \t<%s", symbol);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, " \t<0x%" PRIx64, (uint64_t) addr);
+			printf(" \t<0x%" PRIx64, (uint64_t) addr);
 		if (wlen > 0 && load && wlen > 0) {
 			unsigned char tw[8];
 			uint64_t tdata = 0;
@@ -1558,22 +1558,22 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 						tdata <<= 8;
 						tdata |= tw[i];
 					}
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": ");
+				printf(": ");
 				if (wlen >= 4) {
 					symbol = get_symbol_name(&cpu->machine->
 					    symbol_context, tdata, &offset);
 					if (symbol != NULL)
-						debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s", symbol);
+						printf("%s", symbol);
 					else
-						debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%" PRIx64,
+						printf("0x%" PRIx64,
 						    (uint64_t) tdata);
 				} else {
 					/*  TODO: if load==2, then this is
 					    a _signed_ load.  */
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) tdata);
+					printf("0x%" PRIx64, (uint64_t) tdata);
 				}
 			} else
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": unreadable");
+				printf(": unreadable");
 		}
 		if (wlen > 0 && !load && wlen > 0) {
 			int64_t tdata = 0;
@@ -1581,22 +1581,22 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			for (i=0; i<wlen; i++)
 				tdata |= (cpu->cd.ppc.gpr[rs] &
 				    ((uint64_t)0xff << (i*8)));
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ": ");
+			printf(": ");
 			if (wlen >= 4) {
 				symbol = get_symbol_name(&cpu->machine->
 				    symbol_context, tdata, &offset);
 				if (symbol != NULL)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s", symbol);
+					printf("%s", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) tdata);
+					printf("0x%" PRIx64, (uint64_t) tdata);
 			} else {
 				if (tdata > -256 && tdata < 256)
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%i", (int)tdata);
+					printf("%i", (int)tdata);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "0x%" PRIx64, (uint64_t) tdata);
+					printf("0x%" PRIx64, (uint64_t) tdata);
 			}
 		}
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, ">");
+		printf(">");
 		break;
 	case PPC_HI6_59:
 		xo = (iword >> 1) & 1023;
@@ -1620,19 +1620,19 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_59_FMULS:	mnem = "fmuls"; break;
 			case PPC_59_FMADDS:	mnem = "fmadds"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\t", mnem, rc? "." : "");
+			printf("%s%s\t", mnem, rc? "." : "");
 			switch (xo & 31) {
 			case PPC_59_FMULS:
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i", rt, ra, rs);
+				printf("f%i,f%i,f%i", rt, ra, rs);
 				break;
 			case PPC_59_FMADDS:
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i,f%i", rt, ra, rs, rb);
+				printf("f%i,f%i,f%i,f%i", rt, ra, rs, rb);
 				break;
-			default:debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i", rt, ra, rb);
+			default:printf("f%i,f%i,f%i", rt, ra, rb);
 			}
 			break;
 		default:/*  TODO: similar to hi6_63  */
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "unimplemented hi6_59, xo = 0x%x", xo);
+			printf("unimplemented hi6_59, xo = 0x%x", xo);
 		}
 		break;
 	case PPC_HI6_63:
@@ -1665,15 +1665,15 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 			case PPC_63_FMADD:
 				mnem = power? "fma" : "fmadd"; break;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\t", mnem, rc? "." : "");
+			printf("%s%s\t", mnem, rc? "." : "");
 			switch (xo & 31) {
 			case PPC_63_FMUL:
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i", rt, ra, rs);
+				printf("f%i,f%i,f%i", rt, ra, rs);
 				break;
 			case PPC_63_FMADD:
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i,f%i", rt, ra, rs, rb);
+				printf("f%i,f%i,f%i,f%i", rt, ra, rs, rb);
 				break;
-			default:debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i", rt, ra, rb);
+			default:printf("f%i,f%i,f%i", rt, ra, rb);
 			}
 			break;
 		default:rt = (iword >> 21) & 31;
@@ -1698,10 +1698,10 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				case PPC_63_FNABS:	mnem = "fnabs"; break;
 				case PPC_63_FABS:	mnem = "fabs"; break;
 				}
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%s%s\t", mnem, rc? "." : "");
+				printf("%s%s\t", mnem, rc? "." : "");
 				switch (xo) {
 				case PPC_63_FCMPU:
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "%i,f%i,f%i", rt >> 2, ra, rb);
+					printf("%i,f%i,f%i", rt >> 2, ra, rb);
 					break;
 				case PPC_63_FCTIWZ:
 				case PPC_63_FRSP:
@@ -1709,28 +1709,28 @@ int ppc_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				case PPC_63_FMR:
 				case PPC_63_FNABS:
 				case PPC_63_FABS:
-					debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i", rt, rb);
+					printf("f%i,f%i", rt, rb);
 					break;
-				default:debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "f%i,f%i,f%i", rt, ra, rb);
+				default:printf("f%i,f%i,f%i", rt, ra, rb);
 				}
 				break;
 			case PPC_63_MFFS:
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mffs%s\tf%i", rc?".":"", rt);
+				printf("mffs%s\tf%i", rc?".":"", rt);
 				break;
 			case PPC_63_MTFSF:
 				ra = (iword >> 17) & 255;	/*  flm  */
-				debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "mtfsf%s\t0x%02x,f%i", rc?".":"", ra, rb);
+				printf("mtfsf%s\t0x%02x,f%i", rc?".":"", ra, rb);
 				break;
-			default:debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "unimplemented hi6_63, xo = 0x%x", xo);
+			default:printf("unimplemented hi6_63, xo = 0x%x", xo);
 			}
 		}
 		break;
 	default:
 		/*  TODO  */
-		debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "unimplemented hi6 = 0x%02x", hi6);
+		printf("unimplemented hi6 = 0x%02x", hi6);
 	}
 
-	debugmsg(SUBSYS_CPU, "cpu_ppc", VERBOSITY_DEBUG, "\n");
+	printf("\n");
 	return sizeof(iword);
 }
 

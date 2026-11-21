@@ -586,23 +586,6 @@ int get_cmd_args(int argc, char *argv[], struct emul *emul,
 	}
 
 
-	/*  -i and -r are pretty verbose:  */
-
-	if (m->instruction_trace && !verbose) {
-		fatal_error(SUBSYS_STARTUP, "main", "Implicitly %sturning on -v, because"
-		    " of -i", quiet_mode? "turning off -q and " : "");
-		verbose = 1;
-		quiet_mode = 0;
-	}
-
-	if (m->register_dump && !verbose) {
-		fatal_error(SUBSYS_STARTUP, "main", "Implicitly %sturning on -v, because"
-		    " of -r", quiet_mode? "turning off -q and " : "");
-		verbose = 1;
-		quiet_mode = 0;
-	}
-
-
 	/*
 	 *  Usually, an executable filename must be supplied.
 	 *

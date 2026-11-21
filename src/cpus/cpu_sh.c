@@ -359,12 +359,12 @@ void sh_cpu_list_available_types(void)
 	struct sh_cpu_type_def tdefs[] = SH_CPU_TYPE_DEFS;
 
 	while (tdefs[i].name != NULL) {
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "%s", tdefs[i].name);
+		printf("%s", tdefs[i].name);
 		for (j=10 - strlen(tdefs[i].name); j>0; j--)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " ");
+			printf(" ");
 		i ++;
 		if ((i % 6) == 0 || tdefs[i].name == NULL)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 	}
 }
 
@@ -456,10 +456,10 @@ void sh_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    cpu->pc, &offset);
 
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: pc  = 0x%08" PRIx32, x, (uint32_t)cpu->pc);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
+		printf("cpu%i: pc  = 0x%08" PRIx32, x, (uint32_t)cpu->pc);
+		printf("  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: sr  = 0x%08" PRIx32"  (%s, %s, %s, %s, %s, %s,"
+		printf("cpu%i: sr  = 0x%08" PRIx32"  (%s, %s, %s, %s, %s, %s,"
 		    " imask=0x%x, %s, %s)\n", x, (int32_t)cpu->cd.sh.sr,
 		    (cpu->cd.sh.sr & SH_SR_MD)? "MD" : "!md",
 		    (cpu->cd.sh.sr & SH_SR_RB)? "RB" : "!rb",
@@ -473,25 +473,25 @@ void sh_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    cpu->cd.sh.pr, &offset);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: pr  = 0x%08" PRIx32, x, (uint32_t)cpu->cd.sh.pr);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "  <%s>\n", symbol != NULL? symbol : " no symbol ");
+		printf("cpu%i: pr  = 0x%08" PRIx32, x, (uint32_t)cpu->cd.sh.pr);
+		printf("  <%s>\n", symbol != NULL? symbol : " no symbol ");
 
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: mach = 0x%08" PRIx32"  macl = 0x%08" PRIx32
+		printf("cpu%i: mach = 0x%08" PRIx32"  macl = 0x%08" PRIx32
 		    "  gbr = 0x%08" PRIx32"\n", x, (uint32_t)cpu->cd.sh.mach,
 		    (uint32_t)cpu->cd.sh.macl, (uint32_t)cpu->cd.sh.gbr);
 
 		for (i=0; i<SH_N_GPRS; i++) {
 			if ((i % 4) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " r%-2i = 0x%08x ", i, (int)cpu->cd.sh.r[i]);
+				printf("cpu%i:", x);
+			printf(" r%-2i = 0x%08x ", i, (int)cpu->cd.sh.r[i]);
 			if ((i % 4) == 3)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 
 	if (coprocs & 1) {
 		/*  Floating point:  */
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: fpscr = 0x%08" PRIx32" (%s,%s,%s)  fpul = 0x%08"
+		printf("cpu%i: fpscr = 0x%08" PRIx32" (%s,%s,%s)  fpul = 0x%08"
 		    PRIx32"\n", x, cpu->cd.sh.fpscr,
 		    cpu->cd.sh.fpscr & SH_FPSCR_PR? "PR" : "!pr",
 		    cpu->cd.sh.fpscr & SH_FPSCR_SZ? "SZ" : "!sz",
@@ -500,39 +500,39 @@ void sh_cpu_register_dump(struct cpu *cpu, int gprs, int coprocs)
 
 		for (i=0; i<SH_N_FPRS; i++) {
 			if ((i % 4) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " fr%-2i=0x%08x ", i, (int)cpu->cd.sh.fr[i]);
+				printf("cpu%i:", x);
+			printf(" fr%-2i=0x%08x ", i, (int)cpu->cd.sh.fr[i]);
 			if ((i % 4) == 3)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 
 		for (i=0; i<SH_N_FPRS; i++) {
 			if ((i % 4) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " xf%-2i=0x%08x ", i, (int)cpu->cd.sh.xf[i]);
+				printf("cpu%i:", x);
+			printf(" xf%-2i=0x%08x ", i, (int)cpu->cd.sh.xf[i]);
 			if ((i % 4) == 3)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 
 	if (coprocs & 2) {
 		/*  System registers, etc:  */
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: vbr = 0x%08" PRIx32"  sgr = 0x%08" PRIx32
+		printf("cpu%i: vbr = 0x%08" PRIx32"  sgr = 0x%08" PRIx32
 		    "  dbr = 0x%08" PRIx32"\n", x, cpu->cd.sh.vbr, cpu->cd.sh.sgr,
 		    cpu->cd.sh.dbr);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: spc = 0x%08" PRIx32"  ssr = 0x%08" PRIx32"\n",
+		printf("cpu%i: spc = 0x%08" PRIx32"  ssr = 0x%08" PRIx32"\n",
 		    x, cpu->cd.sh.spc, cpu->cd.sh.ssr);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: expevt = 0x%" PRIx32"  intevt = 0x%" PRIx32
+		printf("cpu%i: expevt = 0x%" PRIx32"  intevt = 0x%" PRIx32
 		    "  tra = 0x%" PRIx32"\n", x, cpu->cd.sh.expevt,
 		    cpu->cd.sh.intevt, cpu->cd.sh.tra);
 
 		for (i=0; i<SH_N_GPRS_BANKED; i++) {
 			if ((i % 2) == 0)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i:", x);
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, " r%i_bank = 0x%08x ", i,
+				printf("cpu%i:", x);
+			printf(" r%i_bank = 0x%08x ", i,
 			    (int)cpu->cd.sh.r_bank[i]);
 			if ((i % 2) == 1)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+				printf("\n");
 		}
 	}
 }
@@ -775,19 +775,19 @@ int sh_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 	symbol = get_symbol_name(&cpu->machine->symbol_context,
 	    dumpaddr, &offset);
 	if (symbol != NULL && offset==0)
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "<%s>\n", symbol);
+		printf("<%s>\n", symbol);
 
 	if (cpu->machine->ncpus > 1 && running)
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cpu%i: ", cpu->cpu_id);
+		printf("cpu%i: ", cpu->cpu_id);
 
-	debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "%08" PRIx32, (uint32_t) dumpaddr);
+	printf("%08" PRIx32, (uint32_t) dumpaddr);
 
 	if (cpu->byte_order == EMUL_BIG_ENDIAN)
 		iword = (instr[0] << 8) + instr[1];
 	else
 		iword = (instr[1] << 8) + instr[0];
 
-	debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, ":  %04x %s", iword, cpu->delay_slot? "(d)" : "   ");
+	printf(":  %04x %s", iword, cpu->delay_slot? "(d)" : "   ");
 
 	cpu_print_pc_indicator_in_disassembly(cpu, running, dumpaddr);
 
@@ -802,501 +802,501 @@ int sh_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 	switch (hi4) {
 	case 0x0:
 		if (lo8 == 0x02)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tsr,r%i\n", r8);
+			printf("stc\tsr,r%i\n", r8);
 		else if (lo8 == 0x03)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "bsrf\tr%i\n", r8);
+			printf("bsrf\tr%i\n", r8);
 		else if (lo4 >= 4 && lo4 <= 6) {
 			if (lo4 == 0x4)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\tr%i,@(r0,r%i)", r4, r8);
+				printf("mov.b\tr%i,@(r0,r%i)", r4, r8);
 			else if (lo4 == 0x5)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\tr%i,@(r0,r%i)", r4, r8);
+				printf("mov.w\tr%i,@(r0,r%i)", r4, r8);
 			else if (lo4 == 0x6)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\tr%i,@(r0,r%i)", r4, r8);
+				printf("mov.l\tr%i,@(r0,r%i)", r4, r8);
 			if (running) {
 				addr = cpu->cd.sh.r[0] + cpu->cd.sh.r[r8];
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r0+r%i = ", r8);
+				printf("\t; r0+r%i = ", r8);
 				symbol = get_symbol_name(
 				    &cpu->machine->symbol_context,
 				    addr, &offset);
 				if (symbol != NULL)
-					debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "<%s>", symbol);
+					printf("<%s>", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "0x%08" PRIx32, addr);
+					printf("0x%08" PRIx32, (uint32_t) addr);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if (lo4 == 0x7)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mul.l\tr%i,r%i\n", r4, r8);
+			printf("mul.l\tr%i,r%i\n", r4, r8);
 		else if (iword == 0x0008)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "clrt\n");
+			printf("clrt\n");
 		else if (iword == 0x0009)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "nop\n");
+			printf("nop\n");
 		else if (lo8 == 0x0a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts\tmach,r%i\n", r8);
+			printf("sts\tmach,r%i\n", r8);
 		else if (iword == 0x000b)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "rts\n");
+			printf("rts\n");
 		else if (lo4 >= 0xc && lo4 <= 0xe) {
 			if (lo4 == 0xc)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\t@(r0,r%i),r%i", r4, r8);
+				printf("mov.b\t@(r0,r%i),r%i", r4, r8);
 			else if (lo4 == 0xd)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\t@(r0,r%i),r%i", r4, r8);
+				printf("mov.w\t@(r0,r%i),r%i", r4, r8);
 			else if (lo4 == 0xe)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\t@(r0,r%i),r%i", r4, r8);
+				printf("mov.l\t@(r0,r%i),r%i", r4, r8);
 			if (running) {
 				addr = cpu->cd.sh.r[0] + cpu->cd.sh.r[r4];
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r0+r%i = ", r4);
+				printf("\t; r0+r%i = ", r4);
 				symbol = get_symbol_name(
 				    &cpu->machine->symbol_context,
 				    addr, &offset);
 				if (symbol != NULL)
-					debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "<%s>", symbol);
+					printf("<%s>", symbol);
 				else
-					debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "0x%08" PRIx32, addr);
+					printf("0x%08" PRIx32, (uint32_t) addr);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if (lo8 == 0x12)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tgbr,r%i\n", r8);
+			printf("stc\tgbr,r%i\n", r8);
 		else if (iword == 0x0018)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sett\n");
+			printf("sett\n");
 		else if (iword == 0x0019)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "div0u\n");
+			printf("div0u\n");
 		else if (lo8 == 0x1a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts\tmacl,r%i\n", r8);
+			printf("sts\tmacl,r%i\n", r8);
 		else if (iword == 0x001b)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sleep\n");
+			printf("sleep\n");
 		else if (lo8 == 0x22)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tvbr,r%i\n", r8);
+			printf("stc\tvbr,r%i\n", r8);
 		else if (lo8 == 0x23)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "braf\tr%i\n", r8);
+			printf("braf\tr%i\n", r8);
 		else if (iword == 0x0028)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "clrmac\n");
+			printf("clrmac\n");
 		else if (lo8 == 0x29)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "movt\tr%i\n", r8);
+			printf("movt\tr%i\n", r8);
 		else if (lo8 == 0x2a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts\tpr,r%i\n", r8);
+			printf("sts\tpr,r%i\n", r8);
 		else if (iword == 0x002b)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "rte\n");
+			printf("rte\n");
 		else if (lo8 == 0x32)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tssr,r%i\n", r8);
+			printf("stc\tssr,r%i\n", r8);
 		else if (iword == 0x0038)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldtlb\n");
+			printf("ldtlb\n");
 		else if (iword == 0x003b)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "brk\n");
+			printf("brk\n");
 		else if (lo8 == 0x42)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tspc,r%i\n", r8);
+			printf("stc\tspc,r%i\n", r8);
 		else if (iword == 0x0048)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "clrs\n");
+			printf("clrs\n");
 		else if (iword == 0x0058)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sets\n");
+			printf("sets\n");
 		else if (lo8 == 0x5a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts\tfpul,r%i\n", r8);
+			printf("sts\tfpul,r%i\n", r8);
 		else if (lo8 == 0x6a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts\tfpscr,r%i\n", r8);
+			printf("sts\tfpscr,r%i\n", r8);
 		else if ((lo8 & 0x8f) == 0x82)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tr%i_bank,r%i\n", (lo8 >> 4) & 7, r8);
+			printf("stc\tr%i_bank,r%i\n", (lo8 >> 4) & 7, r8);
 		else if (lo8 == 0x83)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "pref\t@r%i\n", r8);
+			printf("pref\t@r%i\n", r8);
 		else if (lo8 == 0x93)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ocbi\t@r%i\n", r8);
+			printf("ocbi\t@r%i\n", r8);
 		else if (lo8 == 0xa3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ocbp\t@r%i\n", r8);
+			printf("ocbp\t@r%i\n", r8);
 		else if (lo8 == 0xb3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ocbwb\t@r%i\n", r8);
+			printf("ocbwb\t@r%i\n", r8);
 		else if (lo8 == 0xc3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "movca.l\tr0,@r%i\n", r8);
+			printf("movca.l\tr0,@r%i\n", r8);
 		else if (lo8 == 0xfa)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc\tdbr,r%i\n", r8);
+			printf("stc\tdbr,r%i\n", r8);
 		else if (iword == SH_INVALID_INSTR)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "gxemul_dreamcast_prom_emul\n");
+			printf("gxemul_dreamcast_prom_emul\n");
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x, lo8=0x%02x\n", hi4, lo8);
+			printf("UNIMPLEMENTED hi4=0x%x, lo8=0x%02x\n", hi4, lo8);
 		break;
 	case 0x1:
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\tr%i,@(%i,r%i)", r4, lo4 * 4, r8);
+		printf("mov.l\tr%i,@(%i,r%i)", r4, lo4 * 4, r8);
 		if (running) {
 			addr = cpu->cd.sh.r[r8] + lo4 * 4;
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i+%i = ", r8, lo4 * 4);
+			printf("\t; r%i+%i = ", r8, lo4 * 4);
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    addr, &offset);
 			if (symbol != NULL)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "<%s>", symbol);
+				printf("<%s>", symbol);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "0x%08" PRIx32, addr);
+				printf("0x%08" PRIx32, (uint32_t) addr);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x2:
 		if (lo4 == 0x0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\tr%i,@r%i", r4, r8);
+			printf("mov.b\tr%i,@r%i", r4, r8);
 		else if (lo4 == 0x1)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\tr%i,@r%i", r4, r8);
+			printf("mov.w\tr%i,@r%i", r4, r8);
 		else if (lo4 == 0x2)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\tr%i,@r%i", r4, r8);
+			printf("mov.l\tr%i,@r%i", r4, r8);
 		else if (lo4 == 0x4)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\tr%i,@-r%i", r4, r8);
+			printf("mov.b\tr%i,@-r%i", r4, r8);
 		else if (lo4 == 0x5)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\tr%i,@-r%i", r4, r8);
+			printf("mov.w\tr%i,@-r%i", r4, r8);
 		else if (lo4 == 0x6)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\tr%i,@-r%i", r4, r8);
+			printf("mov.l\tr%i,@-r%i", r4, r8);
 		else if (lo4 == 0x7)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "div0s\tr%i,r%i", r4, r8);
+			printf("div0s\tr%i,r%i", r4, r8);
 		else if (lo4 == 0x8)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "tst\tr%i,r%i", r4, r8);
+			printf("tst\tr%i,r%i", r4, r8);
 		else if (lo4 == 0x9)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "and\tr%i,r%i", r4, r8);
+			printf("and\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xa)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "xor\tr%i,r%i", r4, r8);
+			printf("xor\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xb)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "or\tr%i,r%i", r4, r8);
+			printf("or\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xc)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/str\tr%i,r%i", r4, r8);
+			printf("cmp/str\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "xtrct\tr%i,r%i", r4, r8);
+			printf("xtrct\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xe)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mulu.w\tr%i,r%i", r4, r8);
+			printf("mulu.w\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xf)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "muls.w\tr%i,r%i", r4, r8);
+			printf("muls.w\tr%i,r%i", r4, r8);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x, lo8=0x%02x", hi4, lo8);
+			printf("UNIMPLEMENTED hi4=0x%x, lo8=0x%02x", hi4, lo8);
 		if (running && lo4 <= 6) {
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i = 0x%08" PRIx32, r8, cpu->cd.sh.r[r8]);
+			printf("\t; r%i = 0x%08" PRIx32, r8, cpu->cd.sh.r[r8]);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x3:
 		if (lo4 == 0x0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/eq\tr%i,r%i\n", r4, r8);
+			printf("cmp/eq\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x2)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/hs\tr%i,r%i\n", r4, r8);
+			printf("cmp/hs\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/ge\tr%i,r%i\n", r4, r8);
+			printf("cmp/ge\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x4)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "div1\tr%i,r%i\n", r4, r8);
+			printf("div1\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x5)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "dmulu.l\tr%i,r%i\n", r4, r8);
+			printf("dmulu.l\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x6)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/hi\tr%i,r%i\n", r4, r8);
+			printf("cmp/hi\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x7)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/gt\tr%i,r%i\n", r4, r8);
+			printf("cmp/gt\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0x8)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sub\tr%i,r%i\n", r4, r8);
+			printf("sub\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xa)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "subc\tr%i,r%i\n", r4, r8);
+			printf("subc\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xb)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "subv\tr%i,r%i\n", r4, r8);
+			printf("subv\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xc)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "add\tr%i,r%i\n", r4, r8);
+			printf("add\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "dmuls.l\tr%i,r%i\n", r4, r8);
+			printf("dmuls.l\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xe)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "addc\tr%i,r%i\n", r4, r8);
+			printf("addc\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xf)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "addv\tr%i,r%i\n", r4, r8);
+			printf("addv\tr%i,r%i\n", r4, r8);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x, lo8=0x%02x\n", hi4, lo8);
+			printf("UNIMPLEMENTED hi4=0x%x, lo8=0x%02x\n", hi4, lo8);
 		break;
 	case 0x4:
 		if (lo8 == 0x00)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shll\tr%i\n", r8);
+			printf("shll\tr%i\n", r8);
 		else if (lo8 == 0x01)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shlr\tr%i\n", r8);
+			printf("shlr\tr%i\n", r8);
 		else if (lo8 == 0x02)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts.l\tmach,@-r%i\n", r8);
+			printf("sts.l\tmach,@-r%i\n", r8);
 		else if (lo8 == 0x03)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc.l\tsr,@-r%i\n", r8);
+			printf("stc.l\tsr,@-r%i\n", r8);
 		else if (lo8 == 0x04)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "rotl\tr%i\n", r8);
+			printf("rotl\tr%i\n", r8);
 		else if (lo8 == 0x05)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "rotr\tr%i\n", r8);
+			printf("rotr\tr%i\n", r8);
 		else if (lo8 == 0x06)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds.l\t@r%i+,mach\n", r8);
+			printf("lds.l\t@r%i+,mach\n", r8);
 		else if (lo8 == 0x07)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc.l\t@r%i+,sr\n", r8);
+			printf("ldc.l\t@r%i+,sr\n", r8);
 		else if (lo8 == 0x08)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shll2\tr%i\n", r8);
+			printf("shll2\tr%i\n", r8);
 		else if (lo8 == 0x09)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shlr2\tr%i\n", r8);
+			printf("shlr2\tr%i\n", r8);
 		else if (lo8 == 0x0a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds\tr%i,mach\n", r8);
+			printf("lds\tr%i,mach\n", r8);
 		else if (lo8 == 0x0b)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "jsr\t@r%i\n", r8);
+			printf("jsr\t@r%i\n", r8);
 		else if (lo4 == 0xc)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shad\tr%i,r%i\n", r4, r8);
+			printf("shad\tr%i,r%i\n", r4, r8);
 		else if (lo4 == 0xd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shld\tr%i,r%i\n", r4, r8);
+			printf("shld\tr%i,r%i\n", r4, r8);
 		else if (lo8 == 0x0e)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,sr\n", r8);
+			printf("ldc\tr%i,sr\n", r8);
 		else if (lo8 == 0x10)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "dt\tr%i\n", r8);
+			printf("dt\tr%i\n", r8);
 		else if (lo8 == 0x11)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/pz\tr%i\n", r8);
+			printf("cmp/pz\tr%i\n", r8);
 		else if (lo8 == 0x12)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts.l\tmacl,@-r%i\n", r8);
+			printf("sts.l\tmacl,@-r%i\n", r8);
 		else if (lo8 == 0x13)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc.l\tgbr,@-r%i\n", r8);
+			printf("stc.l\tgbr,@-r%i\n", r8);
 		else if (lo8 == 0x15)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/pl\tr%i\n", r8);
+			printf("cmp/pl\tr%i\n", r8);
 		else if (lo8 == 0x16)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds.l\t@r%i+,macl\n", r8);
+			printf("lds.l\t@r%i+,macl\n", r8);
 		else if (lo8 == 0x17)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc.l\t@r%i+,gbr\n", r8);
+			printf("ldc.l\t@r%i+,gbr\n", r8);
 		else if (lo8 == 0x18)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shll8\tr%i\n", r8);
+			printf("shll8\tr%i\n", r8);
 		else if (lo8 == 0x19)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shlr8\tr%i\n", r8);
+			printf("shlr8\tr%i\n", r8);
 		else if (lo8 == 0x1a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds\tr%i,macl\n", r8);
+			printf("lds\tr%i,macl\n", r8);
 		else if (lo8 == 0x1b)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "tas.b\t@r%i\n", r8);
+			printf("tas.b\t@r%i\n", r8);
 		else if (lo8 == 0x1e)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,gbr\n", r8);
+			printf("ldc\tr%i,gbr\n", r8);
 		else if (lo8 == 0x20)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shal\tr%i\n", r8);
+			printf("shal\tr%i\n", r8);
 		else if (lo8 == 0x21)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shar\tr%i\n", r8);
+			printf("shar\tr%i\n", r8);
 		else if (lo8 == 0x22)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts.l\tpr,@-r%i\n", r8);
+			printf("sts.l\tpr,@-r%i\n", r8);
 		else if (lo8 == 0x23)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc.l\tvbr,@-r%i\n", r8);
+			printf("stc.l\tvbr,@-r%i\n", r8);
 		else if (lo8 == 0x24)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "rotcl\tr%i\n", r8);
+			printf("rotcl\tr%i\n", r8);
 		else if (lo8 == 0x25)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "rotcr\tr%i\n", r8);
+			printf("rotcr\tr%i\n", r8);
 		else if (lo8 == 0x26)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds.l\t@r%i+,pr\n", r8);
+			printf("lds.l\t@r%i+,pr\n", r8);
 		else if (lo8 == 0x27)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc.l\t@r%i+,vbr\n", r8);
+			printf("ldc.l\t@r%i+,vbr\n", r8);
 		else if (lo8 == 0x28)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shll16\tr%i\n", r8);
+			printf("shll16\tr%i\n", r8);
 		else if (lo8 == 0x29)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "shlr16\tr%i\n", r8);
+			printf("shlr16\tr%i\n", r8);
 		else if (lo8 == 0x2a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds\tr%i,pr\n", r8);
+			printf("lds\tr%i,pr\n", r8);
 		else if (lo8 == 0x2b) {
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "jmp\t@r%i", r8);
+			printf("jmp\t@r%i", r8);
 			if (running) {
 				symbol = get_symbol_name(
 				    &cpu->machine->symbol_context,
 				    cpu->cd.sh.r[r8], &offset);
 				if (symbol != NULL)
-					debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t\t; <%s>", symbol);
+					printf("\t\t; <%s>", symbol);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if (lo8 == 0x2e)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,vbr\n", r8);
+			printf("ldc\tr%i,vbr\n", r8);
 		else if (lo8 == 0x33)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc.l\tssr,@-r%i\n", r8);
+			printf("stc.l\tssr,@-r%i\n", r8);
 		else if (lo8 == 0x37)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc.l\t@r%i+,ssr\n", r8);
+			printf("ldc.l\t@r%i+,ssr\n", r8);
 		else if (lo8 == 0x3e)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,ssr\n", r8);
+			printf("ldc\tr%i,ssr\n", r8);
 		else if (lo8 == 0x43)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc.l\tspc,@-r%i\n", r8);
+			printf("stc.l\tspc,@-r%i\n", r8);
 		else if (lo8 == 0x47)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc.l\t@r%i+,spc\n", r8);
+			printf("ldc.l\t@r%i+,spc\n", r8);
 		else if (lo8 == 0x4e)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,spc\n", r8);
+			printf("ldc\tr%i,spc\n", r8);
 		else if (lo8 == 0x52)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts.l\tfpul,@-r%i\n", r8);
+			printf("sts.l\tfpul,@-r%i\n", r8);
 		else if (lo8 == 0x56)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds.l\t@r%i+,fpul\n", r8);
+			printf("lds.l\t@r%i+,fpul\n", r8);
 		else if (lo8 == 0x5a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds\tr%i,fpul\n", r8);
+			printf("lds\tr%i,fpul\n", r8);
 		else if (lo8 == 0x62)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "sts.l\tfpscr,@-r%i\n", r8);
+			printf("sts.l\tfpscr,@-r%i\n", r8);
 		else if (lo8 == 0x66)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds.l\t@r%i+,fpscr\n", r8);
+			printf("lds.l\t@r%i+,fpscr\n", r8);
 		else if (lo8 == 0x6a)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "lds\tr%i,fpscr\n", r8);
+			printf("lds\tr%i,fpscr\n", r8);
 		else if ((lo8 & 0x8f) == 0x83)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "stc.l\tr%i_bank,@-r%i\n", (lo8 >> 4) & 7, r8);
+			printf("stc.l\tr%i_bank,@-r%i\n", (lo8 >> 4) & 7, r8);
 		else if ((lo8 & 0x8f) == 0x87)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc.l\t@r%i,r%i_bank\n", r8, (lo8 >> 4) & 7, r8);
+			printf("ldc.l\t@r%i,r%i_bank\n", r8, (lo8 >> 4) & 7);
 		else if ((lo8 & 0x8f) == 0x8e)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,r%i_bank\n", r8, (lo8 >> 4) & 7);
+			printf("ldc\tr%i,r%i_bank\n", r8, (lo8 >> 4) & 7);
 		else if (lo8 == 0xfa)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ldc\tr%i,dbr\n", r8);
+			printf("ldc\tr%i,dbr\n", r8);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x, lo8=0x%02x\n", hi4, lo8);
+			printf("UNIMPLEMENTED hi4=0x%x, lo8=0x%02x\n", hi4, lo8);
 		break;
 	case 0x5:
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\t@(%i,r%i),r%i", lo4 * 4, r4, r8);
+		printf("mov.l\t@(%i,r%i),r%i", lo4 * 4, r4, r8);
 		if (running) {
 			addr = cpu->cd.sh.r[r4] + lo4 * 4;
 			symbol = get_symbol_name(&cpu->machine->symbol_context, addr, &offset);
 			if (symbol != NULL)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i+%i <%s>", r4, lo4 * 4, symbol);
+				printf("\t; r%i+%i <%s>", r4, lo4 * 4, symbol);
 			else
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i+%i = 0x%08" PRIx32, r4, lo4 * 4, (int)addr);
+				printf("\t; r%i+%i = 0x%08" PRIx32, r4, lo4 * 4, (int)addr);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x6:
 		if (lo4 == 0x0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\t@r%i,r%i", r4, r8);
+			printf("mov.b\t@r%i,r%i", r4, r8);
 		else if (lo4 == 0x1)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\t@r%i,r%i", r4, r8);
+			printf("mov.w\t@r%i,r%i", r4, r8);
 		else if (lo4 == 0x2)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\t@r%i,r%i", r4, r8);
+			printf("mov.l\t@r%i,r%i", r4, r8);
 		else if (lo4 == 0x3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov\tr%i,r%i", r4, r8);
+			printf("mov\tr%i,r%i", r4, r8);
 		else if (lo4 == 0x4)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\t@r%i+,r%i", r4, r8);
+			printf("mov.b\t@r%i+,r%i", r4, r8);
 		else if (lo4 == 0x5)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\t@r%i+,r%i", r4, r8);
+			printf("mov.w\t@r%i+,r%i", r4, r8);
 		else if (lo4 == 0x6)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\t@r%i+,r%i", r4, r8);
+			printf("mov.l\t@r%i+,r%i", r4, r8);
 		else if (lo4 == 0x7)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "not\tr%i,r%i", r4, r8);
+			printf("not\tr%i,r%i", r4, r8);
 		else if (lo4 == 0x8)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "swap.b\tr%i,r%i", r4, r8);
+			printf("swap.b\tr%i,r%i", r4, r8);
 		else if (lo4 == 0x9)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "swap.w\tr%i,r%i", r4, r8);
+			printf("swap.w\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xa)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "negc\tr%i,r%i", r4, r8);
+			printf("negc\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xb)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "neg\tr%i,r%i", r4, r8);
+			printf("neg\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xc)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "extu.b\tr%i,r%i", r4, r8);
+			printf("extu.b\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "extu.w\tr%i,r%i", r4, r8);
+			printf("extu.w\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xe)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "exts.b\tr%i,r%i", r4, r8);
+			printf("exts.b\tr%i,r%i", r4, r8);
 		else if (lo4 == 0xf)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "exts.w\tr%i,r%i", r4, r8);
+			printf("exts.w\tr%i,r%i", r4, r8);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x, lo8=0x%02x", hi4, lo8);
+			printf("UNIMPLEMENTED hi4=0x%x, lo8=0x%02x", hi4, lo8);
 		if (running && lo4 < 8 && (lo4 & 3) < 3) {
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i = 0x%08" PRIx32, r4, cpu->cd.sh.r[r4]);
+			printf("\t; r%i = 0x%08" PRIx32, r4, cpu->cd.sh.r[r4]);
 		}
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+		printf("\n");
 		break;
 	case 0x7:
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "add\t#%i,r%i\n", (int8_t)lo8, r8);
+		printf("add\t#%i,r%i\n", (int8_t)lo8, r8);
 		break;
 	case 0x8:
 		if (r8 == 0 || r8 == 4) {
 			if (r8 == 0x0)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\tr0,@(%i,r%i)", lo4, r4);
+				printf("mov.b\tr0,@(%i,r%i)", lo4, r4);
 			else if (r8 == 0x4)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\t@(%i,r%i),r0", lo4, r4);
+				printf("mov.b\t@(%i,r%i),r0", lo4, r4);
 			if (running) {
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i+%i = 0x%08" PRIx32, r4, lo4,
+				printf("\t; r%i+%i = 0x%08" PRIx32, r4, lo4,
 				    cpu->cd.sh.r[r4] + lo4);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if (r8 == 1 || r8 == 5) {
 			if (r8 == 0x1)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\tr0,@(%i,r%i)", lo4 * 2, r4);
+				printf("mov.w\tr0,@(%i,r%i)", lo4 * 2, r4);
 			else if (r8 == 0x5)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\t@(%i,r%i),r0", lo4 * 2, r4);
+				printf("mov.w\t@(%i,r%i),r0", lo4 * 2, r4);
 			if (running) {
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; r%i+%i = 0x%08" PRIx32, r4, lo4 * 2,
+				printf("\t; r%i+%i = 0x%08" PRIx32, r4, lo4 * 2,
 				    cpu->cd.sh.r[r4] + lo4 * 2);
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\n");
 		} else if (r8 == 0x8) {
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "cmp/eq\t#%i,r0\n", (int8_t)lo8);
+			printf("cmp/eq\t#%i,r0\n", (int8_t)lo8);
 		} else if (r8 == 0x9 || r8 == 0xb || r8 == 0xd || r8 == 0xf) {
 			addr = (int8_t)lo8;
 			addr = dumpaddr + 4 + (addr << 1);
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "b%s%s\t0x%x",
+			printf("b%s%s\t0x%x",
 			    (r8 == 0x9 || r8 == 0xd)? "t" : "f",
 			    (r8 == 0x9 || r8 == 0xb)? "" : "/s", (int)addr);
 			symbol = get_symbol_name(&cpu->machine->symbol_context,
 			    addr, &offset);
 			if (symbol != NULL)
-				debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; <%s>", symbol);
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+				printf("\t; <%s>", symbol);
+			printf("\n");
 		} else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x,0x%x\n", hi4, r8);
+			printf("UNIMPLEMENTED hi4=0x%x,0x%x\n", hi4, r8);
 		break;
 	case 0x9:
 	case 0xd:
 		addr = lo8 * (hi4==9? 2 : 4);
 		addr += (dumpaddr & ~(hi4==9? 1 : 3)) + 4;
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.%s\t0x%x,r%i", hi4==9? "w":"l", (int)addr, r8);
+		printf("mov.%s\t0x%x,r%i", hi4==9? "w":"l", (int)addr, r8);
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; <%s>", symbol);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\t; <%s>", symbol);
+		printf("\n");
 		break;
 	case 0xa:
 	case 0xb:
 		addr = (int32_t)(int16_t)((iword & 0xfff) << 4);
 		addr = ((int32_t)addr >> 3);
 		addr += dumpaddr + 4;
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "%s\t0x%x", hi4==0xa? "bra":"bsr", (int)addr);
+		printf("%s\t0x%x", hi4==0xa? "bra":"bsr", (int)addr);
 
 		symbol = get_symbol_name(&cpu->machine->symbol_context,
 		    addr, &offset);
 		if (symbol != NULL)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\t; <%s>", symbol);
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "\n");
+			printf("\t; <%s>", symbol);
+		printf("\n");
 		break;
 	case 0xc:
 		if (r8 == 0x0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\tr0,@(%i,gbr)\n", lo8);
+			printf("mov.b\tr0,@(%i,gbr)\n", lo8);
 		else if (r8 == 0x1)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\tr0,@(%i,gbr)\n", lo8 * 2);
+			printf("mov.w\tr0,@(%i,gbr)\n", lo8 * 2);
 		else if (r8 == 0x2)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\tr0,@(%i,gbr)\n", lo8 * 4);
+			printf("mov.l\tr0,@(%i,gbr)\n", lo8 * 4);
 		else if (r8 == 0x3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "trapa\t#%i\n", (uint8_t)lo8);
+			printf("trapa\t#%i\n", (uint8_t)lo8);
 		else if (r8 == 0x4)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.b\t(%i,gbr),r0\n", lo8);
+			printf("mov.b\t(%i,gbr),r0\n", lo8);
 		else if (r8 == 0x5)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.w\t(%i,gbr),r0\n", lo8 * 2);
+			printf("mov.w\t(%i,gbr),r0\n", lo8 * 2);
 		else if (r8 == 0x6)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov.l\t(%i,gbr),r0\n", lo8 * 4);
+			printf("mov.l\t(%i,gbr),r0\n", lo8 * 4);
 		else if (r8 == 0x7) {
 			addr = lo8 * 4 + (dumpaddr & ~3) + 4;
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mova\t0x%x,r0\n", (int)addr);
+			printf("mova\t0x%x,r0\n", (int)addr);
 		} else if (r8 == 0x8)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "tst\t#%i,r0\n", (uint8_t)lo8);
+			printf("tst\t#%i,r0\n", (uint8_t)lo8);
 		else if (r8 == 0x9)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "and\t#%i,r0\n", (uint8_t)lo8);
+			printf("and\t#%i,r0\n", (uint8_t)lo8);
 		else if (r8 == 0xa)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "xor\t#%i,r0\n", (uint8_t)lo8);
+			printf("xor\t#%i,r0\n", (uint8_t)lo8);
 		else if (r8 == 0xb)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "or\t#%i,r0\n", (uint8_t)lo8);
+			printf("or\t#%i,r0\n", (uint8_t)lo8);
 		else if (r8 == 0xc)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "tst.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
+			printf("tst.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
 		else if (r8 == 0xd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "and.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
+			printf("and.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
 		else if (r8 == 0xe)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "xor.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
+			printf("xor.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
 		else if (r8 == 0xf)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "or.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
+			printf("or.b\t#%i,@(r0,gbr)\n", (uint8_t)lo8);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x,0x%x\n", hi4, r8);
+			printf("UNIMPLEMENTED hi4=0x%x,0x%x\n", hi4, r8);
 		break;
 	case 0xe:
-		debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "mov\t#%i,r%i\n", (int8_t)lo8, r8);
+		printf("mov\t#%i,r%i\n", (int8_t)lo8, r8);
 		break;
 	case 0xf:
 		if (lo4 == 0x0)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fadd\t%sr%i,%sr%i\n",
+			printf("fadd\t%sr%i,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r4,
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo4 == 0x1)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fsub\t%sr%i,%sr%i\n",
+			printf("fsub\t%sr%i,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r4,
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo4 == 0x2)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmul\t%sr%i,%sr%i\n",
+			printf("fmul\t%sr%i,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r4,
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo4 == 0x3)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fdiv\t%sr%i,%sr%i\n",
+			printf("fdiv\t%sr%i,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r4,
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo4 == 0x4)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fcmp/eq\t%sr%i,%sr%i\n",
+			printf("fcmp/eq\t%sr%i,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r4,
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo4 == 0x5)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fcmp/gt\t%sr%i,%sr%i\n",
+			printf("fcmp/gt\t%sr%i,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r4,
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo4 == 0x6) {
@@ -1305,42 +1305,42 @@ int sh_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				n = (r8 & 1)? "xd" : "dr";
 				r8 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t@(r0,r%i),%s%i\n", r4, n, r8);
+			printf("fmov\t@(r0,r%i),%s%i\n", r4, n, r8);
 		} else if (lo4 == 0x7) {
 			const char *n = "fr";
 			if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
 				n = (r4 & 1)? "xd" : "dr";
 				r4 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t%s%i,@(r0,r%i)\n", n, r4, r8);
+			printf("fmov\t%s%i,@(r0,r%i)\n", n, r4, r8);
 		} else if (lo4 == 0x8) {
 			const char *n = "fr";
 			if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
 				n = (r8 & 1)? "xd" : "dr";
 				r8 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t@r%i,%s%i\n", r4, n, r8);
+			printf("fmov\t@r%i,%s%i\n", r4, n, r8);
 		} else if (lo4 == 0x9) {
 			const char *n = "fr";
 			if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
 				n = (r8 & 1)? "xd" : "dr";
 				r8 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t@r%i+,%s%i\n", r4, n, r8);
+			printf("fmov\t@r%i+,%s%i\n", r4, n, r8);
 		} else if (lo4 == 0xa) {
 			const char *n = "fr";
 			if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
 				n = (r4 & 1)? "xd" : "dr";
 				r4 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t%s%i,@r%i\n", n, r4, r8);
+			printf("fmov\t%s%i,@r%i\n", n, r4, r8);
 		} else if (lo4 == 0xb) {
 			const char *n = "fr";
 			if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
 				n = (r4 & 1)? "xd" : "dr";
 				r4 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t%s%i,@-r%i\n", n, r4, r8);
+			printf("fmov\t%s%i,@-r%i\n", n, r4, r8);
 		} else if (lo4 == 0xc) {
 			const char *n1 = "fr", *n2 = "fr";
 			if (cpu->cd.sh.fpscr & SH_FPSCR_SZ) {
@@ -1348,52 +1348,52 @@ int sh_cpu_disassemble_instr(struct cpu *cpu, unsigned char *instr,
 				n2 = (r8 & 1)? "xd" : "dr";
 				r4 &= ~1; r8 &= ~1;
 			}
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmov\t%s%i,%s%i\n", n1, r4, n2, r8);
+			printf("fmov\t%s%i,%s%i\n", n1, r4, n2, r8);
 		} else if (lo8 == 0x0d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fsts\tfpul,fr%i\n", r8);
+			printf("fsts\tfpul,fr%i\n", r8);
 		else if (lo8 == 0x1d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "flds\tfr%i,fpul\n", r8);
+			printf("flds\tfr%i,fpul\n", r8);
 		else if (lo8 == 0x2d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "float\tfpul,%sr%i\n",
+			printf("float\tfpul,%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo8 == 0x3d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ftrc\t%sr%i,fpul\n",
+			printf("ftrc\t%sr%i,fpul\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo8 == 0x4d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fneg\t%sr%i\n",
+			printf("fneg\t%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo8 == 0x5d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fabs\t%sr%i\n",
+			printf("fabs\t%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo8 == 0x6d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fsqrt\t%sr%i\n",
+			printf("fsqrt\t%sr%i\n",
 			    cpu->cd.sh.fpscr & SH_FPSCR_PR? "d" : "f", r8);
 		else if (lo8 == 0x7d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fsrra\tfr%i\n", r8);
+			printf("fsrra\tfr%i\n", r8);
 		else if (lo8 == 0x8d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fldi0\tfr%i\n", r8);
+			printf("fldi0\tfr%i\n", r8);
 		else if (lo8 == 0x9d)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fldi1\tfr%i\n", r8);
+			printf("fldi1\tfr%i\n", r8);
 		else if (lo8 == 0xad)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fcnvsd\tfpul,dr%i\n", r8);
+			printf("fcnvsd\tfpul,dr%i\n", r8);
 		else if (lo8 == 0xbd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fcnvds\tdr%i,fpul\n", r8);
+			printf("fcnvds\tdr%i,fpul\n", r8);
 		else if (lo8 == 0xed)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fipr\tfv%i,fv%i\n", (r8 & 3) << 2, r8 & 0xc);
+			printf("fipr\tfv%i,fv%i\n", (r8 & 3) << 2, r8 & 0xc);
 		else if ((iword & 0x01ff) == 0x00fd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fsca\tfpul,dr%i\n", r8);
+			printf("fsca\tfpul,dr%i\n", r8);
 		else if (iword == 0xf3fd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fschg\n");
+			printf("fschg\n");
 		else if (iword == 0xfbfd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "frchg\n");
+			printf("frchg\n");
 		else if ((iword & 0xf3ff) == 0xf1fd)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "ftrv\txmtrx,fv%i\n", r8 & 0xc);
+			printf("ftrv\txmtrx,fv%i\n", r8 & 0xc);
 		else if (lo4 == 0xe)
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "fmac\tfr0,fr%i,fr%i\n", r4, r8);
+			printf("fmac\tfr0,fr%i,fr%i\n", r4, r8);
 		else
-			debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x,0x%x\n", hi4, lo8);
+			printf("UNIMPLEMENTED hi4=0x%x,0x%x\n", hi4, lo8);
 		break;
-	default:debugmsg(SUBSYS_CPU, "cpu_sh", VERBOSITY_DEBUG, "UNIMPLEMENTED hi4=0x%x\n", hi4);
+	default:printf("UNIMPLEMENTED hi4=0x%x\n", hi4);
 	}
 
 	return sizeof(iword);
