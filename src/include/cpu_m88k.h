@@ -49,7 +49,9 @@ struct m88k_cpu_type_def {
 #define M88K_PID(arn,vn) ((arn << M88K_ARN_SHIFT) | (vn << M88K_VN_SHIFT))
 
 #define	M88K_CPU_TYPE_DEFS				{	\
-	{ "88100", 88100, M88K_PID(M88K_ARN_88100,3) },		\
+	/*  SYSTEM V/88 R32 panics on 88100 versions below 7 ("requires	\
+	    CPU upgrade to Mask E.2").  */				\
+	{ "88100", 88100, M88K_PID(M88K_ARN_88100,7) },		\
 	{ "88110", 88110, M88K_PID(M88K_ARN_88110,0) },		\
 	{ NULL,        0, 0			     }		\
 	}
