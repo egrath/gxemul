@@ -530,10 +530,15 @@ int DYNTRANS_RUN_INSTR_DEF(struct cpu *cpu)
  *
  *  Without this function, the main trace tree function prints something
  *  like    <f()>  or  <0x1234()>   on a function call. It is up to this
- *  function to print the arguments passed.
+ *  function to append the arguments passed to line (of size linesize).
  */
-void DYNTRANS_FUNCTION_TRACE_DEF(struct cpu *cpu, int n_args)
+void DYNTRANS_FUNCTION_TRACE_DEF(struct cpu *cpu, int n_args, char *line,
+	size_t linesize)
 {
+#define	TRACE_APPEND(...)	do {				\
+		size_t used_ = strlen(line);				\
+		snprintf(line + used_, linesize - used_, __VA_ARGS__);	\
+	} while (0)
 	int show_symbolic_function_name = 1;
         char strbuf[55];
 	char *symbol;
@@ -605,34 +610,35 @@ void DYNTRANS_FUNCTION_TRACE_DEF(struct cpu *cpu, int n_args)
 		symbol = get_symbol_name(&cpu->machine->symbol_context, d, &ot);
 
 		if (d > -256 && d < 256)
-			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "%i", (int)d);
+			TRACE_APPEND("%i", (int)d);
 		else if (memory_points_to_string(cpu, cpu->mem, d, 1)) {
 			memset(strbuf, 0, sizeof(strbuf));
 			memory_conv_to_string(cpu,
 			    cpu->mem, d, strbuf, sizeof(strbuf));
-			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "\"%s\"", strbuf);
+			TRACE_APPEND("\"%s\"", strbuf);
 			// TODO: This shows "..." when the string is longer
 			// _or exactly the max length_. An improvement would
 			// be to detect the case where the string is exactly
 			// the max length and not show "..." then.
 			if (strlen(strbuf) >= sizeof(strbuf)-1)
-				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "...");
+				TRACE_APPEND("...");
 		} else if (symbol != NULL && ot == 0 &&
 		    show_symbolic_function_name)
-			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "&%s", symbol);
+			TRACE_APPEND("&%s", symbol);
 		else {
 			if (cpu->is_32bit)
-				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%" PRIx32, (uint32_t)d);
+				TRACE_APPEND("0x%" PRIx32, (uint32_t)d);
 			else
-				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%" PRIx64, (uint64_t)d);
+				TRACE_APPEND("0x%" PRIx64, (uint64_t)d);
 		}
 
 		if (x < n_args_to_print - 1)
-			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", ",");
+			TRACE_APPEND(",");
 	}
 
 	if (print_dots)
-		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", ",..");
+		TRACE_APPEND(",..");
+#undef	TRACE_APPEND
 }
 #endif	/*  DYNTRANS_FUNCTION_TRACE_DEF  */
 
@@ -1845,17 +1851,17 @@ void DYNTRANS_UPDATE_TRANSLATION_TABLE(struct cpu *cpu, uint64_t vaddr_page,
 				if (!cpu->machine->instruction_trace)
 					DISASSEMBLE(cpu, ib, 1, 0);
 #ifdef MODE32
-				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "BREAKPOINT: pc = 0x%" PRIx32"\n(The "
+				debugmsg_cpu(cpu, SUBSYS_CPU, "cpu", VERBOSITY_ERROR, "BREAKPOINT: pc = 0x%" PRIx32"\n(The "
 				    "instruction has not yet executed.)",
 				    (uint32_t)cpu->pc);
 #else
-				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "BREAKPOINT: pc = 0x%" PRIx64"\n(The "
+				debugmsg_cpu(cpu, SUBSYS_CPU, "cpu", VERBOSITY_ERROR, "BREAKPOINT: pc = 0x%" PRIx64"\n(The "
 				    "instruction has not yet executed.)",
 				    (uint64_t)curpc);
 #endif
 #ifdef DYNTRANS_DELAYSLOT
 				if (cpu->delay_slot != NOT_DELAYED)
-					fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ERROR! Breakpoint in a delay"
+					debugmsg_cpu(cpu, SUBSYS_CPU, "cpu", VERBOSITY_ERROR, "ERROR! Breakpoint in a delay"
 					    " slot! Not yet supported.\n");
 #endif
 				single_step_breakpoint = 1;

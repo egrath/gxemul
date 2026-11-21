@@ -305,10 +305,10 @@ struct cpu_family {
 	/*  Dump TLB data for a CPU.  */
 	void			(*tlbdump)(struct cpu *cpu, int rawflag);
 
-	/*  Print architecture-specific function call arguments.
+	/*  Append architecture-specific function call arguments to line.
 	    (This is called for each function call, if running with -t.)  */
 	void			(*functioncall_trace)(struct cpu *,
-				    int n_args);
+				    int n_args, char *line, size_t linesize);
 };
 
 

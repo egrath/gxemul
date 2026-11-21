@@ -238,39 +238,45 @@ void cpu_functioncall_trace(struct cpu *cpu, uint64_t f)
 	int i, n_args = -1;
 	char *symbol;
 	uint64_t offset;
+	char line[1024];
+	size_t len;
 
 	/*  Special hack for M88K userspace:  */
 	if (cpu->cpu_family->arch == ARCH_M88K &&
 	    !(cpu->cd.m88k.cr[M88K_CR_PSR] & M88K_PSR_MODE))
 		show_symbolic_function_name = 0;
 
-	if (cpu->machine->ncpus > 1)
-		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "cpu%i:\t", cpu->cpu_id);
-
 	if (cpu->trace_tree_depth > 100)
 		cpu->trace_tree_depth = 100;
+
+	/*  The whole call goes out as one line:  */
+	line[0] = '\0';
 	for (i=0; i<cpu->trace_tree_depth; i++)
-		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "  ");
+		strlcat(line, "  ", sizeof(line));
 
 	cpu->trace_tree_depth ++;
 
-	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "<");
+	strlcat(line, "<", sizeof(line));
+	len = strlen(line);
 	symbol = get_symbol_name_and_n_args(&cpu->machine->symbol_context,
 	    f, &offset, &n_args);
 	if (symbol != NULL && show_symbolic_function_name && offset == 0)
-		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "%s", symbol);
-	else {
-		if (cpu->is_32bit)
-			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%" PRIx32, (uint32_t) f);
-		else
-			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "0x%" PRIx64, (uint64_t) f);
-	}
-	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "(");
+		snprintf(line + len, sizeof(line) - len, "%s(", symbol);
+	else if (cpu->is_32bit)
+		snprintf(line + len, sizeof(line) - len, "0x%" PRIx32 "(",
+		    (uint32_t) f);
+	else
+		snprintf(line + len, sizeof(line) - len, "0x%" PRIx64 "(",
+		    (uint64_t) f);
 
 	if (cpu->cpu_family->functioncall_trace != NULL)
-		cpu->cpu_family->functioncall_trace(cpu, n_args);
+		cpu->cpu_family->functioncall_trace(cpu, n_args,
+		    line, sizeof(line));
 
-	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", ")>\n");
+	strlcat(line, ")>", sizeof(line));
+
+	/*  -t asked for this, so it is shown at the default level:  */
+	debugmsg_cpu(cpu, SUBSYS_CPU, "trace", VERBOSITY_WARNING, "%s", line);
 }
 
 

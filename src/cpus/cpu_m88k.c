@@ -64,7 +64,8 @@
 
 
 void m88k_pc_to_pointers(struct cpu *);
-void m88k_cpu_functioncall_trace(struct cpu *cpu, int n_args);
+void m88k_cpu_functioncall_trace(struct cpu *cpu, int n_args, char *line,
+	size_t linesize);
 
 static const char *memop[4] = { ".d", "", ".h", ".b" };
 

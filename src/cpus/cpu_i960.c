@@ -189,7 +189,8 @@ static const char *regname_or_literal(int reg, int m, int s)
 
 
 void i960_pc_to_pointers(struct cpu *);
-void i960_cpu_functioncall_trace(struct cpu *cpu, int n_args);
+void i960_cpu_functioncall_trace(struct cpu *cpu, int n_args, char *line,
+	size_t linesize);
 
 void i960_irq_interrupt_assert(struct interrupt *interrupt);
 void i960_irq_interrupt_deassert(struct interrupt *interrupt);

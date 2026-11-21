@@ -50,7 +50,8 @@
 
 void riscv_pc_to_pointers(struct cpu *);
 void riscv32_pc_to_pointers(struct cpu *);
-void riscv_cpu_functioncall_trace(struct cpu *cpu, int n_args);
+void riscv_cpu_functioncall_trace(struct cpu *cpu, int n_args, char *line,
+	size_t linesize);
 
 void riscv_irq_interrupt_assert(struct interrupt *interrupt);
 void riscv_irq_interrupt_deassert(struct interrupt *interrupt);
