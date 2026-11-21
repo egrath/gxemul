@@ -84,20 +84,27 @@ static void m8820x_command(struct cpu *cpu, struct m8820x_data *d)
 		return;
 	}
 
-	/*  Probe user (0x20-0x23) or supervisor (0x24-0x27) address:  */
-	if (cmd >= 0x20 && cmd <= 0x27) {
+	/*
+	 *  Probe and PATC invalidate commands are 10xSxx and 11xSgg: bit 3
+	 *  is not decoded, S (bit 2) selects the supervisor area, and gg is
+	 *  the line, page, segment or all. OpenBSD uses 0x20-0x37, but
+	 *  SYSTEM V/88 flushes with 0x3b and 0x3f.
+	 */
+
+	/*  Probe user or supervisor address:  */
+	if ((cmd & 0x30) == 0x20) {
 		uint32_t paddr;
-		regs[CMMU_SSR] = m8820x_probe(cpu, cmmu, sar, cmd >= 0x24,
+		regs[CMMU_SSR] = m8820x_probe(cpu, cmmu, sar, cmd & 4,
 		    &paddr);
 		if (regs[CMMU_SSR] & CMMU_SSR_V)
 			regs[CMMU_SAR] = paddr;
 		return;
 	}
 
-	/*  Invalidate user (0x30-0x33) or supervisor (0x34-0x37) PATC
-	    entries: line (= page), page, segment, all.  */
-	if (cmd >= 0x30 && cmd <= 0x37) {
-		super = cmd >= 0x34 ? M8820X_PATC_SUPERVISOR_BIT : 0;
+	/*  Invalidate user or supervisor PATC entries: line (= page),
+	    page, segment, all.  */
+	if ((cmd & 0x30) == 0x30) {
+		super = cmd & 4 ? M8820X_PATC_SUPERVISOR_BIT : 0;
 		switch (cmd & 3) {
 		case 0: case 1:	mask = 0xfffff000; break;
 		case 2:		mask = 0xffc00000; break;
