@@ -336,6 +336,9 @@ void machine_destroy(struct machine *machine)
 	if (machine->path != NULL)
 		free(machine->path);
 
+	for (i = 0; i < machine->actions.n; i++)
+		free(machine->actions.label[i]);
+
 	/*  Remove any remaining level-1 settings:  */
 	settings_remove_all(machine->settings);
 	settings_destroy(machine->settings);
@@ -846,6 +849,29 @@ void machine_default_cputype(struct machine *m)
 	}
 }
 
+
+
+/*
+ *  machine_add_action():
+ *
+ *  Adds something the machine's board can do when asked (a switch on its
+ *  front panel, for example), which the window's Machine menu offers.
+ */
+void machine_add_action(struct machine *machine, const char *label,
+	void (*func)(struct machine *, void *), void *extra)
+{
+	struct machine_actions *a = &machine->actions;
+
+	if (a->n >= MAX_MACHINE_ACTIONS) {
+		debugmsg(SUBSYS_MACHINE, "machine", VERBOSITY_WARNING,
+		    "too many actions; \"%s\" left out", label);
+		return;
+	}
+	CHECK_ALLOCATION(a->label[a->n] = strdup(label));
+	a->f[a->n] = func;
+	a->extra[a->n] = extra;
+	a->n ++;
+}
 
 /*
  *  machine_add_event():

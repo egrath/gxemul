@@ -198,6 +198,20 @@ DEVICE_ACCESS(mk48txx)
 }
 
 
+/*  The Machine menu's NVRAM item, on an MVME187: 187Bug's memory settings
+    for the configured memory, then a reset for 187Bug to read them.  */
+static void mk48txx_env_memory(struct machine *machine, void *extra)
+{
+	struct mk48txx_data *d = (struct mk48txx_data *) extra;
+
+	dev_mvme187_env_memory(machine, d->ram);
+	mk48txx_save(d);
+	debugmsg(SUBSYS_DEVICE, "mk48txx", VERBOSITY_INFO, "NVRAM memory "
+	    "settings for %i MB; resetting", (int) machine->physical_ram_in_mb);
+	dev_mvme187_reset(machine->md.mvme187);
+}
+
+
 DEVINIT(mk48txx)
 {
 	struct mk48txx_data *d;
@@ -217,8 +231,14 @@ DEVINIT(mk48txx)
 
 	/*  The MVME187's board configuration, if blank:  */
 	if (devinit->machine->machine_type == MACHINE_MVME88K &&
-	    devinit->machine->machine_subtype == MACHINE_MVME88K_187)
+	    devinit->machine->machine_subtype == MACHINE_MVME88K_187) {
+		char label[80];
 		dev_mvme187_brdid_defaults(devinit->machine, d->ram);
+		snprintf(label, sizeof(label), "Initialize NVRAM for %i MB "
+		    "and Reset", (int) devinit->machine->physical_ram_in_mb);
+		machine_add_action(devinit->machine, label,
+		    mk48txx_env_memory, d);
+	}
 
 	d->ram[CLK] = 0;
 	mk48txx_update_regs(d);

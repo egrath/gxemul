@@ -229,6 +229,8 @@ void dev_mvme187_at_ns(struct mvme187_data *d, uint64_t ns,
 	void (*f)(struct cpu *, void *), void *extra);
 void dev_mvme187_bbram_access(struct mvme187_data *d);
 void dev_mvme187_brdid_defaults(struct machine *machine, uint8_t *nvram);
+void dev_mvme187_env_memory(struct machine *machine, uint8_t *nvram);
+void dev_mvme187_reset(struct mvme187_data *d);
 void dev_mvme187_set_scc(struct mvme187_data *d, int (*f)(void *, int),
 	void (*reset)(void *), void *extra);
 void dev_mvme187_set_vme_a16(struct mvme187_data *d,

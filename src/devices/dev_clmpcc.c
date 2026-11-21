@@ -45,6 +45,10 @@
  *  that 187Bug's loopback and baud rate self-tests see real line timing.
  *  Received characters are checked for the special characters, and a
  *  receive timeout ends a partly filled buffer.
+ *
+ *  A BREAK on the console's line (console_send_break()) is received as a
+ *  NUL character with a receive exception (RISR BREAK, interrupt type 0),
+ *  as a plain NUL, or not at all, as COR6 says.
  */
 
 #include <stdio.h>
@@ -104,6 +108,7 @@ static const int txbreg[2][4] = { { 0x50, 0x52, 0x5a, 0x5f },
 struct channel {
 	uint8_t		reg[0x100];	/*  per-channel registers  */
 	uint8_t		rxfifo[FIFO_LEN];
+	uint8_t		rxstat[FIFO_LEN];	/*  exception (RISRl), or 0  */
 	int		rx_n;
 	int		console_handle;
 
@@ -134,6 +139,8 @@ struct clmpcc_data {
 	/*  Interrupt contexts (channel, or -1), and the saved CAR:  */
 	int		ctx[4];
 	int		saved_car[4];
+	bool		rx_exc;		/*  receive context: an exception, whose
+					    character is not read yet  */
 
 	struct interrupt irq_m;
 	struct interrupt irq_tx;
@@ -400,9 +407,32 @@ static bool rx_put(struct clmpcc_data *d, int i, uint8_t ch, uint64_t now)
 	return true;
 }
 
+static void rx_push(struct clmpcc_data *d, struct channel *c, uint8_t ch,
+	uint8_t stat)
+{
+	if (c->rx_n >= FIFO_LEN || !(c->reg[CLMPCC_REG_CSR] &
+	    CLMPCC_CSR_RX_ENABLED))
+		return;
+	c->rxstat[c->rx_n] = stat;
+	c->rxfifo[c->rx_n++] = ch;
+	c->rx_last = now_ns(d);
+}
+
 static void rx_pop(struct channel *c)
 {
-	memmove(c->rxfifo, c->rxfifo + 1, --c->rx_n);
+	--c->rx_n;
+	memmove(c->rxfifo, c->rxfifo + 1, c->rx_n);
+	memmove(c->rxstat, c->rxstat + 1, c->rx_n);
+}
+
+/*  Characters before the first exception (good data):  */
+static int rx_good(struct channel *c)
+{
+	int n = 0;
+
+	while (n < c->rx_n && c->rxstat[n] == 0)
+		n ++;
+	return n;
 }
 
 /*  Receive DMA: move characters from the FIFO to the buffers.  */
@@ -417,6 +447,11 @@ static void dma_rx(struct clmpcc_data *d, int i, uint64_t now)
 		return;
 
 	while (c->rx_ev < 0 && c->rx_n > 0) {
+		if (c->rxstat[0] != 0) {
+			c->rx_ev = rx_bufbit(c) | c->rxstat[0];
+			c->rx_ev_char = true;
+			return;
+		}
 		sc = special_char(c, c->rxfifo[0]);
 		if (sc != 0) {
 			/*  An exception; the host says what to do with it.  */
@@ -483,6 +518,20 @@ static void rx_poll(struct clmpcc_data *d)
 			int ch = console_readchar(c->console_handle);
 			if (ch < 0)
 				break;
+			if (ch == CONSOLE_BREAK) {
+				switch (c->reg[CLMPCC_REG_COR6] & (3 << 3)) {
+				case CLMPCC_COR6_BRK_EXCEPT:
+					rx_push(d, c, 0, CLMPCC_RISR_BREAK);
+					break;
+				case CLMPCC_COR6_BRK_2_NULL:
+					rx_push(d, c, 0, 0);
+					break;
+				}
+				debugmsg(d->subsys, "rx", VERBOSITY_DEBUG,
+				    "BREAK ch%i cor6=%02x", i,
+				    c->reg[CLMPCC_REG_COR6]);
+				continue;
+			}
 			debugmsg(d->subsys, "rx", VERBOSITY_DEBUG,
 			    "'%c' ch%i csr=%02x ier=%02x cor4=%02x ctx=%i/%i/%i"
 			    " stk=%02x car=%02x irq=%i/%i/%i cmr=%02x dmabsts="
@@ -497,10 +546,7 @@ static void rx_poll(struct clmpcc_data *d)
 			    c->rx_n, c->rx_ev, c->tx_ev, c->reg[rxbreg[0][3]],
 			    c->reg[rxbreg[1][3]], c->reg[txbreg[0][3]],
 			    c->reg[txbreg[1][3]]);
-			if (!(c->reg[CLMPCC_REG_CSR] & CLMPCC_CSR_RX_ENABLED))
-				continue;
-			c->rxfifo[c->rx_n++] = ch;
-			c->rx_last = now_ns(d);
+			rx_push(d, c, ch, 0);
 		}
 	}
 }
@@ -522,9 +568,13 @@ static bool chan_wants(struct clmpcc_data *d, int i, int type)
 			return true;
 		if (ier & CLMPCC_IER_RX_FIFO) {
 			int thr = c->reg[CLMPCC_REG_COR4] & CLMPCC_COR4_FIFO_MASK;
-			/*  Below the threshold, the data is passed on after
-			    the receive timeout:  */
-			return c->rx_n >= (thr == 0 ? 1 : thr) ||
+			int good = rx_good(c);
+			/*  An exception is next, or the good data before it
+			    is passed on (below the threshold, after the
+			    receive timeout):  */
+			if (good == 0 || good < c->rx_n)
+				return true;
+			return good >= (thr == 0 ? 1 : thr) ||
 			    d->board == NULL ||
 			    now_ns(d) >= c->rx_last + rx_timeout_ns(d, c);
 		}
@@ -645,7 +695,7 @@ static uint8_t stk_pop(uint8_t stk)
 static int clmpcc_iack(void *extra, int type)
 {
 	struct clmpcc_data *d = (struct clmpcc_data *) extra;
-	int ch, ctxreg;
+	int ch, ctxreg, vtype;
 	uint8_t en;
 
 	update_irqs(d);
@@ -665,10 +715,21 @@ static int clmpcc_iack(void *extra, int type)
 	en = 0x80 | 0x40;	/*  enabled, active  */
 	d->greg[ctxreg] = en | ch;
 
+	vtype = type;
 	if (type == T_RX) {
-		int ev = d->ch[ch].rx_ev;
-		if (!(d->ch[ch].reg[CLMPCC_REG_CMR] & CLMPCC_CMR_RX_DMA) ||
-		    ev < 0)
+		struct channel *c = &d->ch[ch];
+		int ev = c->rx_ev;
+		d->rx_exc = false;
+		if (!(c->reg[CLMPCC_REG_CMR] & CLMPCC_CMR_RX_DMA)) {
+			/*  An exception character comes on its own, with
+			    an exception vector:  */
+			ev = 0;
+			if (c->rx_n > 0 && c->rxstat[0] != 0) {
+				ev = c->rxstat[0];
+				d->rx_exc = true;
+				vtype = CLMPCC_LIVR_EXCEPTION;
+			}
+		} else if (ev < 0)
 			ev = 0;
 		d->greg[CLMPCC_REG_RISRl] = ev;
 		d->greg[CLMPCC_REG_RISRh] = ev >> 8;
@@ -687,7 +748,7 @@ static int clmpcc_iack(void *extra, int type)
 	    (unsigned long long) now_ns(d));
 
 	update_irqs(d);
-	return (d->ch[ch].reg[CLMPCC_REG_LIVR] & 0xfc) | type;
+	return (d->ch[ch].reg[CLMPCC_REG_LIVR] & 0xfc) | vtype;
 }
 
 static void end_of_interrupt(struct clmpcc_data *d, int type)
@@ -710,11 +771,7 @@ static void transmit(struct clmpcc_data *d, int ch, uint8_t c)
 
 	/*  Local loopback: the receiver gets what is sent.  */
 	if (chan->reg[CLMPCC_REG_TCOR] & CLMPCC_TCOR_LOCAL_LOOP) {
-		if (chan->rx_n < FIFO_LEN &&
-		    (chan->reg[CLMPCC_REG_CSR] & CLMPCC_CSR_RX_ENABLED)) {
-			chan->rxfifo[chan->rx_n++] = c;
-			chan->rx_last = now_ns(d);
-		}
+		rx_push(d, chan, c, 0);
 		return;
 	}
 
@@ -734,6 +791,7 @@ static void reset_all(struct clmpcc_data *d)
 	}
 	for (i = 0; i < 4; i++)
 		d->ctx[i] = -1;
+	d->rx_exc = false;
 	memset(d->greg, 0, sizeof(d->greg));
 	d->greg[CLMPCC_REG_GFRCR] = GFRCR_VALUE;
 }
@@ -793,10 +851,17 @@ static uint8_t reg_read(struct clmpcc_data *d, int r)
 		if (c->rx_n == 0)
 			return 0;
 		v = c->rxfifo[0];
-		memmove(c->rxfifo, c->rxfifo + 1, --c->rx_n);
+		rx_pop(c);
+		d->rx_exc = false;
 		return v;
 	case CLMPCC_REG_RFOC:
-		return d->ch[cur_channel(d, T_RX)].rx_n;
+		/*  In an exception context, just the exception character;
+		    otherwise the good data before it.  */
+		c = &d->ch[cur_channel(d, T_RX)];
+		if (d->ctx[T_RX] >= 0 && !(c->reg[CLMPCC_REG_CMR] &
+		    CLMPCC_CMR_RX_DMA))
+			return d->rx_exc ? 1 : rx_good(c);
+		return c->rx_n;
 	case CLMPCC_REG_TFTC:
 		return FIFO_LEN;
 	case CLMPCC_REG_CCR:
@@ -854,6 +919,12 @@ static void reg_write(struct clmpcc_data *d, int r, uint8_t v)
 		if (d->ctx[T_RX] >= 0 && (d->ch[d->ctx[T_RX]].reg[CLMPCC_REG_CMR]
 		    & CLMPCC_CMR_RX_DMA))
 			dma_reoir(d, d->ctx[T_RX], v);
+		else if (d->ctx[T_RX] >= 0 && d->rx_exc) {
+			/*  An exception character that wasn't read is
+			    done with too.  */
+			rx_pop(&d->ch[d->ctx[T_RX]]);
+		}
+		d->rx_exc = false;
 		end_of_interrupt(d, T_RX);
 		return;
 	case CLMPCC_REG_TEOIR:
@@ -941,6 +1012,7 @@ DEVINIT(clmpcc)
 	d->ch[0].console_handle =
 	    console_start_slave(devinit->machine, devinit->name2 != NULL?
 	    devinit->name2 : devinit->name, devinit->in_use);
+	console_set_takes_breaks(d->ch[0].console_handle);
 	for (i = 1; i < N_CHANNELS; i++) {
 		snprintf(tmpstr, sizeof(tmpstr), "cl%i", i);
 		d->ch[i].console_handle = console_start_slave(devinit->machine,

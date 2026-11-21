@@ -30,6 +30,37 @@
 
 
 /*
+ *  debugger_cmd_action():
+ *
+ *  Lists the board's actions (machine_add_action(), the window's Machine
+ *  menu has them too), or does one.
+ */
+static void debugger_cmd_action(struct machine *m, char *args)
+{
+	int i;
+
+	while (*args == ' ')
+		args ++;
+	if (*args == '\0') {
+		for (i = 0; i < m->actions.n; i++)
+			printf("%i\t%s\n", i, m->actions.label[i]);
+		if (m->actions.n == 0)
+			printf("this machine has no actions\n");
+		return;
+	}
+
+	i = atoi(args);
+	if (args[strspn(args, "0123456789 ")] != '\0' || i < 0 ||
+	    i >= m->actions.n) {
+		printf("syntax: action [nr]   (see 'action' for the numbers)\n");
+		return;
+	}
+	printf("%s\n", m->actions.label[i]);
+	m->actions.f[i](m, m->actions.extra[i]);
+}
+
+
+/*
  *  debugger_cmd_allsettings():
  */
 static void debugger_cmd_allsettings(struct machine *m, char *args)
@@ -1463,6 +1494,9 @@ struct cmd {
 };
 
 static struct cmd cmds[] = {
+	{ "action", "[nr]", 0, debugger_cmd_action,
+		"list the board's actions (ABORT switch, ...), or do one" },
+
 	{ "allsettings", "", 0, debugger_cmd_allsettings,
 		"show all settings" },
 

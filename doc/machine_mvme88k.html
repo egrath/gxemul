@@ -89,6 +89,20 @@ Set up its environment once (it is kept in <tt>nvram.bin</tt>):
 187-Bug&gt; <b>env</b>                   (answer b for "Bug or System", then
                                  . to end, y to update, y to reset)
 </pre>
+<p><tt>env;d</tt> matters: it fills in the memory that 187Bug found
+(Memory Search and Memory Size from 00000000 to the end of the RAM, and
+the Size of Local Memory Board #0). An environment saved with
+<tt>env</tt> alone, starting from an empty NVRAM, keeps 187Bug's fallback
+values instead, which cover only the 128 KB SRAM at FFE00000. 187Bug
+then warns about the "Local Memory Configuration Status" at every start,
+and the self-test's MMU and cache tests fail with "Insufficient Amount of
+Memory" or hang (in CCHCODE). Run <tt>env;d</tt> to correct it, or
+choose <i>Initialize NVRAM for <i>n</i> MB and Reset</i> in the window's
+Machine menu (or the debugger's <tt>action</tt> command): it sets these
+for the configured memory as <tt>env;d</tt> does, keeps the other
+settings (or, in an NVRAM without them, sets them as <tt>env;d</tt> does),
+and resets the board.
+
 <p>"System" mode (answer s instead) runs the power-up self-test, which
 takes about half a minute. Twelve CMMU cache tests check what is in the
 88200's caches, which are not emulated, and fail; with
@@ -104,6 +118,14 @@ debugger. In "Bug" mode, boot from the disk with
 <p>The first boot on an emulated board relinks the kernel for the devices
 it found and reboots. The board's reset (by 187Bug or by the kernel)
 restarts 187Bug as on real hardware.
+
+<p>A BREAK on the console stops 187Bug's self-test (to its field service
+menu), its autoboot, or a command: <i>Send Break</i> in the window's
+Machine menu, or the telnet client's (in <tt>telnet</tt>, ^] and then
+<tt>send brk</tt>). <i>Press ABORT</i> in the Machine menu (or
+<tt>action 0</tt> at the GXemul&gt; prompt, which ^C brings up on the
+host's terminal) is the board's ABORT switch, which enters the debugger
+from anywhere (an "Interrupt Level 7 (ABORT Switch)" exception).
 
 <p>The network is GXemul's simulated one (10.0.0.0/8, with a gateway and
 nameserver at 10.0.0.254, which forwards TCP and UDP to the outside

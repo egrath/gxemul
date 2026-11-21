@@ -145,6 +145,10 @@ struct console_handle {
 	    (console_set_keys_with_modifiers()):  */
 	int		keys_with_modifiers;
 
+	/*  The serial controller reading the input takes a BREAK
+	    (console_set_takes_breaks()):  */
+	int		takes_breaks;
+
 	struct machine	*machine;
 	char		*machine_name;
 	char		*name;
@@ -173,6 +177,7 @@ struct console_handle {
 
 /*  Telnet protocol (RFC 854):  */
 #define	TELNET_SE		240
+#define	TELNET_BRK		243
 #define	TELNET_IP		244
 #define	TELNET_SB		250
 #define	TELNET_WILL		251
@@ -529,6 +534,9 @@ static void telnet_input(int handle, const unsigned char *buf, int len)
 			case TELNET_IP:
 				console_makeavail(handle, 3);
 				break;
+			case TELNET_BRK:
+				console_send_break(handle);
+				break;
 			case TELNET_SB:
 				chp->telnet_state = TELNET_IN_SB;
 				break;
@@ -819,8 +827,10 @@ static void console_strip_key_events(int handle)
 {
 	while (console_handles[handle].fifo_tail !=
 	    console_handles[handle].fifo_head &&
-	    console_handles[handle].fifo[console_handles[handle].fifo_tail] >=
-	    CONSOLE_KEY_UP) {
+	    (console_handles[handle].fifo[console_handles[handle].fifo_tail] ==
+	    CONSOLE_KEY_UP ||
+	    console_handles[handle].fifo[console_handles[handle].fifo_tail] ==
+	    CONSOLE_KEY_HOLD)) {
 		console_handles[handle].fifo_tail =
 		    (console_handles[handle].fifo_tail + 1) % CONSOLE_FIFO_LEN;
 	}
@@ -974,7 +984,8 @@ int console_readkey(int handle)
 /*
  *  console_readchar():
  *
- *  Returns 0..255 if a char was available, -1 otherwise.
+ *  Returns 0..255 if a char was available, CONSOLE_BREAK for a BREAK (see
+ *  console_send_break()), -1 otherwise.
  */
 int console_readchar(int handle)
 {
@@ -1454,6 +1465,56 @@ int console_keys_with_modifiers(int handle)
 {
 	return handle >= 0 && handle < n_console_handles &&
 	    console_handles[handle].keys_with_modifiers;
+}
+
+
+/*
+ *  console_set_takes_breaks():
+ *
+ *  Says that the serial controller reading a console handle takes a BREAK:
+ *  console_send_break() then puts a CONSOLE_BREAK in its input, which
+ *  console_readchar() returns in turn with the characters.
+ */
+void console_set_takes_breaks(int handle)
+{
+	if (handle >= 0 && handle < n_console_handles)
+		console_handles[handle].takes_breaks = 1;
+}
+
+
+/*
+ *  console_takes_breaks():
+ *
+ *  Returns 1 if a console handle takes a BREAK, 0 otherwise.
+ */
+int console_takes_breaks(int handle)
+{
+	return handle >= 0 && handle < n_console_handles &&
+	    console_handles[handle].takes_breaks;
+}
+
+
+/*
+ *  console_send_break():
+ *
+ *  A BREAK on a console handle's line (a telnet client's BRK, or the
+ *  window's menu). Handles that don't take breaks ignore it.
+ */
+void console_send_break(int handle)
+{
+	struct console_handle *chp;
+
+	if (!console_takes_breaks(handle))
+		return;
+	chp = &console_handles[handle];
+	if (console_room_left_in_fifo(handle) <= 1) {
+		debugmsg(SUBSYS_EMUL, "console", VERBOSITY_WARNING,
+		    "[ WARNING: console fifo full, BREAK dropped, handle %i ]",
+		    handle);
+		return;
+	}
+	chp->fifo[chp->fifo_head] = CONSOLE_BREAK;
+	chp->fifo_head = (chp->fifo_head + 1) % CONSOLE_FIFO_LEN;
 }
 
 

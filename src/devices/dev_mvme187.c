@@ -121,6 +121,7 @@ struct mvme187_data {
 	struct prescaler vpre;
 	uint64_t	wd_elapsed_us;	/*  watchdog count, while enabled  */
 	uint64_t	wd_last_us;
+	bool		abort_held;	/*  the ABORT switch is pressed  */
 
 	/*  PCCchip2:  */
 	uint8_t		pcc[0x40];
@@ -171,6 +172,11 @@ struct mvme187_data {
  *  devices add wait states (the BBRAM, whose speed 187Bug tests).
  */
 #define	BCLK_HZ		33000000
+
+/*  The ABORT switch: VMEchip2 I/O Control Register 1's ABRTL shows it
+    pressed, for about as long as a finger holds it.  */
+#define	VME2_IOCTL1_ABRTL	(1 << 20)
+#define	ABORT_PRESS_NS		100000000
 
 /*  MEMC040 RAM control and status bits, VMEchip2 MPU status:  */
 #define	MEMC_EXTPEN		0x10	/*  status: parity checking possible  */
@@ -244,6 +250,136 @@ void dev_mvme187_brdid_defaults(struct machine *machine, uint8_t *nvram)
 			sum = (sum + 1) & 0xff;
 	}
 	p[0xff] = sum;
+}
+
+
+/*
+ *  187Bug's environment in the BBRAM (shown and set by its ENV command): a
+ *  directory at $FFFC16F8 of 16-byte entries (name, address, 0, size and
+ *  checksum) for the blocks PRVT, SPCF (the local memory and the address
+ *  ranges that ENV;D finds), GNRL (the ENV settings), FREE and BRDI (the
+ *  board configuration). A block's checksum is the 8-bit sum with
+ *  end-around carry of its bytes, in the entry's low checksum byte. With
+ *  a blank (or plain ENV) SPCF, the local memory is taken to be 0 bytes,
+ *  and the Memory Search and Memory Size ranges cover only the SRAM.
+ *
+ *  dev_mvme187_env_memory() sets these as ENV;D does for the configured
+ *  memory, keeping the other settings. A BBRAM without an environment gets
+ *  what ENV;D gives on this board (for 64 MB, then changed to the size).
+ */
+#define	ENV_DIR		0x16f8
+#define	ENV_SPCF	0x1770
+#define	ENV_SPCF_SIZE	0x74
+#define	ENV_GNRL	0x17e8
+#define	ENV_GNRL_SIZE	0x118
+static const struct {
+	uint16_t	offset;
+	uint8_t		len;
+	const char	*bytes;
+} env_defaults[] = {
+	{ 0x16f8, 8, "PRVT\xff\xfc\x17\x58" },
+	{ 0x1705, 11, "\x14\x00\x00SPCF\xff\xfc\x17\x70" },
+	{ 0x1715, 11, "\x74\x00\x55GNRL\xff\xfc\x17\xe8" },
+	{ 0x1724, 11, "\x01\x18\x07\xa4" "FREE\xff\xfc\x19" },
+	{ 0x1734, 12, "\x05\xf8\x00\x00" "BRDI\xff\xfc\x1e\xf8" },
+	{ 0x1744, 8, "\x01\x00\x02\x00NCNF" },
+	{ 0x1774, 1, "\x04" },
+	{ 0x1780, 12, "\x03\xff\xff\xff\xff\xe0\x00\x00\xff\xe1\xff\xff" },
+	{ 0x179c, 8, "\x04\x00\x00\x00\xef\xff\xff\xff" },
+	{ 0x17c4, 29, "\x01\xff\x01\xef\x0d\x00\x00\x00YNNNYYY\x01Y\x02\x04"
+	    "\x04\x00\x05\x06\x07\xce\x00\x01\x00\x02" },
+	{ 0x17e8, 4, "\xff\xff\xff\xff" },
+	{ 0x183c, 4, "\xff\xff\xff\xff" },
+	{ 0x1894, 8, "\xff\x80\x00\x00\xff\xbf\xff\xfc" },
+	{ 0x18a4, 1, "\x04" },
+	{ 0x18ac, 1, "\x04" },
+	{ 0x18b1, 25, "\x01\x00\x00\xff\xff\xce\x0fNYNYNNY\x00SYBY\x00\x00"
+	    "\x0fNNA" },
+	{ 0x18dc, 3, "NY\x05" },
+	{ 0x18ff, 1, "Y" },
+};
+
+static uint32_t get_be32(const uint8_t *p)
+{
+	return ((uint32_t) p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+}
+
+static void put_be32(uint8_t *p, uint32_t v)
+{
+	p[0] = v >> 24; p[1] = v >> 16; p[2] = v >> 8; p[3] = v;
+}
+
+/*  Is a block in the directory, where ENV;D puts it?  */
+static bool env_block_ok(const uint8_t *nvram, const char *name,
+	uint32_t offset, int size)
+{
+	int e;
+
+	for (e = ENV_DIR; e < ENV_SPCF - 16; e += 16)
+		if (memcmp(nvram + e, name, 4) == 0)
+			return get_be32(nvram + e + 4) == 0xfffc0000 + offset &&
+			    ((nvram[e + 12] << 8) | nvram[e + 13]) == size;
+	return false;
+}
+
+/*  Sets a block's checksum in its directory entry:  */
+static void env_checksum(uint8_t *nvram, uint32_t offset, int size)
+{
+	int e, i, sum = 0;
+
+	for (i = 0; i < size; i++) {
+		sum += nvram[offset + i];
+		if (sum > 0xff)
+			sum = (sum + 1) & 0xff;
+	}
+	for (e = ENV_DIR; e < ENV_SPCF - 16; e += 16)
+		if (get_be32(nvram + e + 4) == 0xfffc0000 + offset)
+			nvram[e + 15] = sum;
+}
+
+void dev_mvme187_env_memory(struct machine *machine, uint8_t *nvram)
+{
+	uint8_t spcf[ENV_SPCF_SIZE];
+	uint32_t size = (uint32_t) machine->physical_ram_in_mb << 20;
+	size_t i;
+
+	if (!env_block_ok(nvram, "SPCF", ENV_SPCF, ENV_SPCF_SIZE) ||
+	    !env_block_ok(nvram, "GNRL", ENV_GNRL, ENV_GNRL_SIZE)) {
+		memset(nvram + ENV_DIR - 8, 0, ENV_GNRL + ENV_GNRL_SIZE -
+		    (ENV_DIR - 8));
+		for (i = 0; i < sizeof(env_defaults) / sizeof(env_defaults[0]);
+		    i++)
+			memcpy(nvram + env_defaults[i].offset,
+			    env_defaults[i].bytes, env_defaults[i].len);
+	}
+
+	/*  SPCF, all of it as ENV;D finds it:  */
+	memset(spcf, 0, sizeof(spcf));
+	for (i = 0; i < sizeof(env_defaults) / sizeof(env_defaults[0]); i++)
+		if (env_defaults[i].offset >= ENV_SPCF &&
+		    env_defaults[i].offset < ENV_SPCF + ENV_SPCF_SIZE)
+			memcpy(spcf + env_defaults[i].offset - ENV_SPCF,
+			    env_defaults[i].bytes, env_defaults[i].len);
+	put_be32(spcf + 0x04, size);		/*  board #0 size  */
+	put_be32(spcf + 0x10, size - 1);	/*  local memory end  */
+	put_be32(spcf + 0x2c, size);		/*  VMEbus from here  */
+	memcpy(nvram + ENV_SPCF, spcf, sizeof(spcf));
+
+	/*  GNRL: the Memory Search and Memory Size ranges.  */
+	put_be32(nvram + 0x18a0, 0);
+	put_be32(nvram + 0x18a4, size);
+	put_be32(nvram + 0x18a8, 0);
+	put_be32(nvram + 0x18ac, size);
+
+	env_checksum(nvram, ENV_SPCF, ENV_SPCF_SIZE);
+	env_checksum(nvram, ENV_GNRL, ENV_GNRL_SIZE);
+}
+
+
+/*  A reset of the board, as with its RESET switch:  */
+void dev_mvme187_reset(struct mvme187_data *d)
+{
+	d->reset_pending = true;
 }
 
 
@@ -959,6 +1095,10 @@ DEVICE_ACCESS(mvme187_lcsr)
 	case VME2_IRQSTAT:
 		odata = d->vme_irqstat;
 		break;
+	case VME2_VBR:
+		odata = d->lcsr[reg / 4] | (d->abort_held ?
+		    VME2_IOCTL1_ABRTL : 0);
+		break;
 	case VME2_SETSOFTIRQ:
 	case VME2_IRQCLR:
 		odata = 0;
@@ -1015,6 +1155,9 @@ DEVICE_ACCESS(mvme187_lcsr)
 		break;
 	case VME2_IRQSTAT:
 		d->lcsr[reg / 4] = old;		/*  read-only  */
+		break;
+	case VME2_VBR:
+		d->lcsr[reg / 4] &= ~VME2_IOCTL1_ABRTL;	/*  read-only  */
 		break;
 	case VME2_DMASTAT:
 		/*  The MPU status bits are read-only; MCLR clears them.  */
@@ -1554,6 +1697,35 @@ void dev_mvme187_set_rom(struct mvme187_data *d, const unsigned char *image,
 }
 
 
+/*
+ *  The ABORT switch on the front panel (the Machine menu's "Press ABORT"):
+ *  the VMEchip2's ABORT interrupt (an edge, cleared with ICLR), if it is
+ *  enabled, and ABRTL while the switch is held.
+ */
+static void abort_release(struct cpu *cpu, void *extra)
+{
+	struct mvme187_data *d = (struct mvme187_data *) extra;
+
+	(void) cpu;
+	d->abort_held = false;
+}
+
+static void mvme187_press_abort(struct machine *machine, void *extra)
+{
+	struct mvme187_data *d = (struct mvme187_data *) extra;
+
+	(void) machine;
+	debugmsg(d->subsys, "abort", VERBOSITY_INFO, "ABORT switch pressed");
+	if (!d->abort_held)
+		dev_mvme187_at_ns(d, dev_mvme187_time_ns(d) + ABORT_PRESS_NS,
+		    abort_release, d);
+	d->abort_held = true;
+	if (d->lcsr[VME2_IRQEN / 4] & VME2_IRQ_AB)
+		d->vme_irqstat |= VME2_IRQ_AB;
+	update_irq(d);
+}
+
+
 void dev_mvme187_set_scc(struct mvme187_data *d, int (*f)(void *, int),
 	void (*reset)(void *), void *extra)
 {
@@ -1694,6 +1866,8 @@ struct mvme187_data *dev_mvme187_init(struct machine *machine)
 
 	machine_add_tickfunction(machine, dev_mvme187_tick, d,
 	    DEV_MVME187_TICK_SHIFT);
+
+	machine_add_action(machine, "Press ABORT", mvme187_press_abort, d);
 
 	return d;
 }

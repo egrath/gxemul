@@ -29,8 +29,10 @@
  *  display.h).  The backend draws them; what the items do is here:
  *
  *	Machine:  Save Screenshot, Record Video, Enter Debugger, Send
- *		  Ctrl+Alt+Del (for a keyboard that takes modifiers), Reset,
- *		  Edit Configuration (for a machine set up from a
+ *		  Ctrl+Alt+Del (for a keyboard that takes modifiers), Send
+ *		  Break (for a serial console that takes one), the board's
+ *		  own actions (machine_add_action(), e.g. its ABORT switch),
+ *		  Reset, Edit Configuration (for a machine set up from a
  *		  machine.json), Quit
  *	Media:    for each CD-ROM and tape drive, Load... and Eject
  *
@@ -261,6 +263,23 @@ static void menu_ctrl_alt_del(struct machine *m, struct menu_item *item)
 }
 
 
+/*  A BREAK on the serial console's line:  */
+static void menu_break(struct machine *m, struct menu_item *item)
+{
+	(void) item;
+	console_send_break(m->main_console_handle);
+}
+
+
+/*  One of the board's actions (machine_add_action()):  */
+static void menu_action(struct machine *m, struct menu_item *item)
+{
+	int i = (int) (intptr_t) item->data;
+
+	m->actions.f[i](m, m->actions.extra[i]);
+}
+
+
 static void menu_quit(struct machine *m, struct menu_item *item)
 {
 	printf("[ Quit was chosen in the menu; shutting down ]\n");
@@ -424,6 +443,12 @@ struct display_menus *display_menus(struct machine *m)
 	if (console_keys_with_modifiers(m->main_console_handle))
 		menu_append(machine, MENU_ITEM_ACTION, "Send Ctrl+Alt+Del",
 		    menu_ctrl_alt_del, NULL);
+	if (console_takes_breaks(m->main_console_handle))
+		menu_append(machine, MENU_ITEM_ACTION, "Send Break",
+		    menu_break, NULL);
+	for (int i = 0; i < m->actions.n; i++)
+		menu_append(machine, MENU_ITEM_ACTION, m->actions.label[i],
+		    menu_action, (void *) (intptr_t) i);
 	menu_append(machine, MENU_ITEM_ACTION, "Reset", menu_reset, NULL);
 	if (m->config_path != NULL)
 		menu_append(machine, MENU_ITEM_ACTION,

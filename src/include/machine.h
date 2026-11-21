@@ -104,6 +104,17 @@ struct machine_events {
 	void		*extra[MAX_MACHINE_EVENTS];
 };
 
+/*  Things a machine's board can do when asked, such as a switch on its
+    front panel (see machine_add_action); the window's Machine menu has
+    them:  */
+#define	MAX_MACHINE_ACTIONS	4
+struct machine_actions {
+	int		n;
+	char		*label[MAX_MACHINE_ACTIONS];
+	void		(*f[MAX_MACHINE_ACTIONS])(struct machine *, void *);
+	void		*extra[MAX_MACHINE_ACTIONS];
+};
+
 struct display_md {
 	/*  Framebuffer windows (see display.c):  */
 	int	in_use;
@@ -166,6 +177,7 @@ struct machine {
 	/*  Tick functions (e.g. hardware devices):  */
 	struct tick_functions tick_functions;
 	struct machine_events events;
+	struct machine_actions actions;
 
 	/*  Instructions per second of real time, to keep emulated time
 	    from running ahead of the host's clock while idle (0 = no), and
@@ -459,6 +471,8 @@ void machine_add_tickfunction(struct machine *machine,
 void machine_add_event(struct machine *machine, uint64_t when,
 	void (*func)(struct cpu *, void *), void *extra);
 void machine_shift_events(struct machine *machine, uint64_t n);
+void machine_add_action(struct machine *machine, const char *label,
+	void (*func)(struct machine *, void *), void *extra);
 void machine_statistics_init(struct machine *, char *fname);
 void machine_register(char *name, MACHINE_SETUP_TYPE(setup));
 void machine_setup(struct machine *);

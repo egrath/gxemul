@@ -38,9 +38,11 @@
 
 #define	CONSOLE_OUTPUT_ONLY	-1
 
-/*  Special events in the console FIFO for held/released keys:  */
+/*  Special events in the console FIFO for held/released keys, and a
+    BREAK (only for handles that take breaks, see console_send_break()):  */
 #define	CONSOLE_KEY_UP		0x100
 #define	CONSOLE_KEY_HOLD	0x101
+#define	CONSOLE_BREAK		0x102
 
 struct emul;
 
@@ -68,6 +70,9 @@ int console_start_slave_inputonly(struct machine *, const char *consolename,
 int console_change_inputability(int handle, int inputability);
 void console_set_keys_with_modifiers(int handle);
 int console_keys_with_modifiers(int handle);
+void console_set_takes_breaks(int handle);
+int console_takes_breaks(int handle);
+void console_send_break(int handle);
 void console_init_main(struct emul *);
 void console_debug_dump(struct machine *);
 void console_allow_slaves(int);
