@@ -147,6 +147,11 @@ uint32_t m8820x_probe(struct cpu *cpu, struct m8820x_cmmu *cmmu,
  *
  *  Returns 0 for translation failure (access denied), 1 for read access
  *  (success), or 2 for read/write access (success).
+ *
+ *  A page that is writable but not yet Modified gives 1 too: 2 lets
+ *  dyntrans write to the page directly, and the first write must come
+ *  back here to set the Modified bit in the page descriptor. Otherwise
+ *  the guest's VM sees a written page as clean and drops it.
  */
 int m88k_translate_v2p(struct cpu *cpu, uint64_t vaddr64,
 	uint64_t *return_paddr, int flags)
@@ -276,7 +281,9 @@ int m88k_translate_v2p(struct cpu *cpu, uint64_t vaddr64,
 
 		/*  ... and finally return the physical address:  */
 		*return_paddr = (paddr_and_sbit & 0xfffff000) | (vaddr & 0xfff);
-		return vaddr_and_control & PG_PROT? 1 : 2;
+		if (vaddr_and_control & PG_PROT)
+			return 1;
+		return (cmmu->patc_v_and_control[i] & PG_M)? 2 : 1;
 	}
 
 	/*
@@ -381,7 +388,9 @@ int m88k_translate_v2p(struct cpu *cpu, uint64_t vaddr64,
 
 	/*  Now finally return with the translated page address:  */
 	*return_paddr = (page_descriptor & 0xfffff000) | (vaddr & 0xfff);
-	return (accumulated_flags & PG_RO)? 1 : 2;
+	if (accumulated_flags & PG_RO)
+		return 1;
+	return (writeflag || (page_descriptor & PG_M))? 2 : 1;
 
 
 exception:
