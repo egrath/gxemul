@@ -518,6 +518,7 @@ bool net_tap_init(struct net *net, const char *tapdev)
 			close(fd);
 			return false;
 		}
+		socket_set_cloexec(fd);
 		net->tapdev = strdup(tapdev);
 		net->tap_fd = fd;
 		return true;

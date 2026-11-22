@@ -866,6 +866,7 @@ struct net *net_init(struct emul *emul, int init_flags,
 
 		/*  Set the socket to non-blocking:  */
 		socket_set_nonblocking(net->local_port_socket);
+		socket_set_cloexec(net->local_port_socket);
 	}
 	if (n_remote != 0) {
 		struct remote_net *rnp;

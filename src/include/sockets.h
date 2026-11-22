@@ -58,6 +58,13 @@ static inline int socket_set_nonblocking(int s)
 	return ioctlsocket(s, FIONBIO, &one);
 }
 
+/*  (A reset spawns a new process, which doesn't inherit sockets.)  */
+static inline int socket_set_cloexec(int s)
+{
+	(void) s;
+	return 0;
+}
+
 #else
 
 #include <errno.h>
@@ -83,6 +90,13 @@ static inline int socket_set_nonblocking(int s)
 static inline int socket_set_nonblocking(int s)
 {
 	return fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
+}
+
+/*  Closed on exec, so that a reset (which execs gxemul again) can bind
+    the same ports and open the same devices again:  */
+static inline int socket_set_cloexec(int s)
+{
+	return fcntl(s, F_SETFD, fcntl(s, F_GETFD) | FD_CLOEXEC);
 }
 
 #endif

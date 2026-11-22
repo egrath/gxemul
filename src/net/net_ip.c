@@ -598,6 +598,7 @@ static void net_ip_tcp(struct net *net, struct nic_data *nic,
 
 		/*  Set the socket to non-blocking:  */
 		socket_set_nonblocking(net->tcp_connections[con_id].socket);
+		socket_set_cloexec(net->tcp_connections[con_id].socket);
 
 		remote_ip.sin_family = AF_INET;
 		memcpy((unsigned char *)&remote_ip.sin_addr,
@@ -1154,6 +1155,7 @@ static void net_ip_udp(struct net *net, struct nic_data *nic,
 
 		/*  Set the socket to non-blocking:  */
 		socket_set_nonblocking(net->udp_connections[con_id].socket);
+		socket_set_cloexec(net->udp_connections[con_id].socket);
 	}
 
 	debugmsg(SUBSYS_NET, "net_ip", VERBOSITY_DEBUG, ", connection id %i\n", con_id);
