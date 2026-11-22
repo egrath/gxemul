@@ -204,6 +204,7 @@ struct net {
 	bool		l2tp_counter;
 	uint32_t	l2tp_seq;
 	bool		l2tp_warned;
+	int		send_errno;	/*  of the last failed send to a remote  */
 };
 
 /*  net_l2tp.c:  */

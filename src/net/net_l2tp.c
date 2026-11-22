@@ -50,6 +50,7 @@
 
 #include <sys/types.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -167,9 +168,16 @@ void net_distributed_send(struct net *net, struct remote_net *rnp,
 	si.sin_addr = rnp->ipv4_addr;
 	si.sin_port = htons(rnp->portnr);
 	if (sendto(net->local_port_socket, (const char *) buf, hlen + len, 0,
-	    (struct sockaddr *)&si, sizeof(si)) < 0)
-		debugmsg(SUBSYS_NET, "distributed", VERBOSITY_DEBUG,
-		    "send to %s failed", rnp->name);
+	    (struct sockaddr *)&si, sizeof(si)) < 0) {
+		/*  Said once, until a send works again or fails otherwise:
+		    a guest that is ignored by the network should say why.  */
+		if (errno != net->send_errno)
+			debugmsg(SUBSYS_NET, "distributed", VERBOSITY_WARNING,
+			    "sending to %s failed: %s", rnp->name,
+			    strerror(errno));
+		net->send_errno = errno;
+	} else
+		net->send_errno = 0;
 }
 
 

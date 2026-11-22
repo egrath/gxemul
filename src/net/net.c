@@ -852,7 +852,8 @@ struct net *net_init(struct emul *emul, int init_flags,
 		si_self.sin_addr.s_addr = htonl(INADDR_ANY);
 		if (bind(net->local_port_socket, (struct sockaddr *)&si_self,
 		    sizeof(si_self)) < 0) {
-			fatal_error(SUBSYS_NET, "net", "%s: %s", "bind", strerror(errno));
+			fatal_error(SUBSYS_NET, "net", "UDP port %i: %s",
+			    local_port, strerror(errno));
 			free(net);
 			return NULL;
 		}
