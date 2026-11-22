@@ -49,9 +49,11 @@ struct m88k_cpu_type_def {
 #define M88K_PID(arn,vn) ((arn << M88K_ARN_SHIFT) | (vn << M88K_VN_SHIFT))
 
 #define	M88K_CPU_TYPE_DEFS				{	\
-	/*  SYSTEM V/88 R32 panics on 88100 versions below 7 ("requires	\
-	    CPU upgrade to Mask E.2").  */				\
-	{ "88100", 88100, M88K_PID(M88K_ARN_88100,7) },		\
+	/*  Version 11 is the last 88100 mask, D24B (8 = C64D/E.2,	\
+	    9 = C89B/D.5, 10 = C82N/G.3). SYSTEM V/88 R32 panics below	\
+	    7 ("requires CPU upgrade to Mask E.2"), and the R4		\
+	    installer shows a "CPU Mask Alert" below 11.  */		\
+	{ "88100", 88100, M88K_PID(M88K_ARN_88100,11) },		\
 	{ "88110", 88110, M88K_PID(M88K_ARN_88110,0) },		\
 	{ NULL,        0, 0			     }		\
 	}

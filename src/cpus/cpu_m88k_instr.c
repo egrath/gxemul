@@ -1418,7 +1418,7 @@ X(ld_d_r0)
 X(xmem_slow)
 {
 	uint32_t iword = ic->arg[0];
-	uint32_t tmp;
+	uint32_t tmp, loaded, s1val, s2val;
 	int d      = (iword >> 21) & 0x1f;
 	int s1     = (iword >> 16) & 0x1f;
 	int s2     =  iword        & 0x1f;
@@ -1453,16 +1453,21 @@ X(xmem_slow)
 	    + (regofs? M88K_LOADSTORE_REGISTEROFFSET : 0)
 	    + M88K_LOADSTORE_NO_PC_SYNC ];
 
+	/*
+	 *  The address is that of the instruction, also for the store: d may
+	 *  be s1 or s2 (SYSTEM V/88 R40V4.1's mutex code does "xmem r5,r5,r0"),
+	 *  so the load goes to a temporary, and d is written last.
+	 */
+	s1val = cpu->cd.m88k.r[s1];
+	s2val = cpu->cd.m88k.r[s2];
+
 	call.f = xmem_load;
-	call.arg[0] = (size_t) &cpu->cd.m88k.r[d];
-	call.arg[1] = (size_t) &cpu->cd.m88k.r[s1];
+	call.arg[0] = (size_t) &loaded;
+	call.arg[1] = (size_t) &s1val;
 	if (regofs)
-		call.arg[2] = (size_t) &cpu->cd.m88k.r[s2];
+		call.arg[2] = (size_t) &s2val;
 	else
 		call.arg[2] = imm16;
-
-	if (d == M88K_ZERO_REG)
-		call.arg[0] = (size_t)&cpu->cd.m88k.zero_scratch;
 
 	xmem_load(cpu, &call);
 
@@ -1497,8 +1502,8 @@ X(xmem_slow)
 
 	xmem_store(cpu, &call);
 
-	// If there was an exception in xmem_store(), then return the d register
-	// to what it was before the xmem_load().
+	// If there was an exception in xmem_store(), the d register is still
+	// what it was before the xmem.
 	if ((uint32_t)cpu->pc != pc_before_memory_access) {
 		//printf("xmem_store exception, pc_before_memory_access = %08x\n", pc_before_memory_access);
 		// cpu->cd.m88k.r[d] = tmp;
@@ -1508,6 +1513,9 @@ X(xmem_slow)
 		cpu->cd.m88k.dmt[0] |= d << DMT_DREGSHIFT;
 		return;
 	}
+
+	if (d != M88K_ZERO_REG)
+		cpu->cd.m88k.r[d] = loaded;
 }
 
 
