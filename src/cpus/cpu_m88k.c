@@ -452,21 +452,13 @@ void m88k_ldcr(struct cpu *cpu, uint32_t *r32ptr, int cr)
 	case M88K_CR_DMT1:
 	case M88K_CR_DMT2:
 		/*
-		 *  Catch some possible internal errors in the emulator:
+		 *  Catch a possible internal error in the emulator: the Byte
+		 *  Order bit should be the same as the CPU's.
 		 *
-		 *  For valid memory Load transactions, the Destination Register
-		 *  should not be zero.
-		 *
-		 *  The Byte Order bit should be the same as the CPU's.
+		 *  (A load's Destination Register can be r0: a load into r0
+		 *  is valid, e.g. to probe an address, and a fault on it is
+		 *  recorded with DREG zero, which the kernel then ignores.)
 		 */
-		if (retval & DMT_VALID && !(retval & DMT_WRITE)) {
-			if (DMT_DREGBITS(retval) == M88K_ZERO_REG) {
-				debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
-				    "ldcr: DMT DREG = zero? Internal error.");
-				cpu->running = false;
-				return;
-			}
-		}
 		if (!!(cpu->cd.m88k.cr[M88K_CR_PSR] & M88K_PSR_BO)
 		    != !!(retval & DMT_BO) && retval & DMT_VALID) {
 			debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
