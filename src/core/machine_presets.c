@@ -256,11 +256,15 @@ static const struct mc_drive_model dec_drives[] = {
  *  Drives that SYSTEM V/88's installer knows (its /etc/scsifmt.info, which
  *  gives each SCSI vendor and product a disk definition); it doesn't use
  *  other disks.  The sizes are those of its descriptions of them ("1.0GB
- *  SCSI (SEAGATE)"), except the ST31200N's, which is the real one.
+ *  SCSI (SEAGATE)"), except the ST31200N's and ST11200N's, which are the
+ *  ST31200N's real one.  R40V4.1 knows only the ST11200N, ST12400N and
+ *  M2624F of these; later releases know them all.
  */
 static const struct mc_drive_model motorola_drives[] = {
 	{ MC_DRIVE_DISK, "Seagate ST5660N",  "SEAGATE", "ST5660N",  "", 1064453 },
+	{ MC_DRIVE_DISK, "Seagate ST11200N", "SEAGATE", "ST11200N", "", 2061108 },
 	{ MC_DRIVE_DISK, "Seagate ST31200N", "SEAGATE", "ST31200N", "", 2061108 },
+	{ MC_DRIVE_DISK, "Seagate ST12400N", "SEAGATE", "ST12400N", "", 3906250 },
 	{ MC_DRIVE_DISK, "Seagate ST32430N", "SEAGATE", "ST32430N", "", 3906250 },
 	{ MC_DRIVE_DISK, "Seagate ST15230N", "SEAGATE", "ST15230N", "", 7812500 },
 	{ MC_DRIVE_DISK, "Fujitsu M2624F",   "FUJITSU", "M2624F-512", "", 1025390 },

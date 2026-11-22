@@ -169,6 +169,39 @@ offers with the others):
 <p>The disk can be empty (an ST31200N's image is 1055287296 bytes); it
 needs no label.
 
+<p>Which disks the installer knows depends on the release. These are the
+ones of 500 MB and more in the tapes' <tt>/etc/scsifmt.info</tt> (the
+inquiry's vendor and product only need to start with what is given here,
+so e.g. <tt>"ST12400N"</tt> matches <tt>ST12400</tt>; smaller CDC, Fujitsu
+and Micropolis disks are in the list too):
+
+<p><center><table border="1" cellpadding="3">
+<tr><th>Release</th><th>Tape</th><th>Vendor</th><th>Product</th><th>Size</th></tr>
+<tr><td rowspan="8">R40V4.1, R40V4.2</td><td rowspan="8">FH40.41, FH40.42</td>
+    <td><tt>SEAGATE</tt></td><td><tt>ST11200N</tt> *</td><td>1 GB</td></tr>
+<tr><td><tt>SEAGATE</tt></td><td><tt>ST12400N</tt> *</td><td>2 GB</td></tr>
+<tr><td><tt>SEAGATE</tt></td><td><tt>94601</tt> (Wren VII)</td><td>1.2 GB</td></tr>
+<tr><td><tt>FUJITSU</tt></td><td><tt>M2624F</tt> *</td><td>525 MB</td></tr>
+<tr><td><tt>FUJITSU</tt></td><td><tt>M2694</tt></td><td>1 GB</td></tr>
+<tr><td><tt>FUJITSU</tt></td><td><tt>M2652</tt></td><td>1.75 GB</td></tr>
+<tr><td><tt>MICROP</tt></td><td><tt>1588</tt></td><td>600 MB</td></tr>
+<tr><td><tt>MICROP</tt></td><td><tt>1598</tt></td><td>1 GB</td></tr>
+<tr><td rowspan="6">R40V4.4</td><td rowspan="6">FH40.44</td>
+    <td colspan="3">all of the above, and:</td></tr>
+<tr><td><tt>SEAGATE</tt></td><td><tt>ST5660N</tt> *</td><td>545 MB</td></tr>
+<tr><td><tt>SEAGATE</tt></td><td><tt>ST31200N</tt> *, <tt>ST31230N</tt></td><td>1 GB</td></tr>
+<tr><td><tt>SEAGATE</tt></td><td><tt>ST32430N</tt> *</td><td>2 GB</td></tr>
+<tr><td><tt>SEAGATE</tt></td><td><tt>ST15230N</tt> *</td><td>4 GB</td></tr>
+<tr><td><tt>IBM</tt></td><td><tt>0632</tt></td><td>650 MB</td></tr>
+</table></center>
+
+<p>The Drives page of the configuration window offers the ones marked
+*, with an image of the right size; for the others, give the vendor and
+product under "Other..." and an image of about that size. Release 3.2
+(R32) has no such list: its <tt>scsifmt</tt> takes the disk type by name,
+and it has definitions for the Fujitsu M2613 to M2694 (the M2624F is the
+usual one) and CDC Wren disks.
+
 <p>A SYSTEM V/88 disk installed on another board (e.g. an MVME197) names
 its disk devices after that board in <tt>/etc/vfstab</tt>
 (<tt>m197_c0d0s3</tt> instead of <tt>m187_c0d0s3</tt>), and comes up in
