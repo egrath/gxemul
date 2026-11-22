@@ -270,8 +270,8 @@ machine:
 }
 </pre></td><td width="20">&nbsp;</td></tr></table>
 
-<p>(The serial numbers make the machines' Ethernet addresses, and
-10.0.0.1 and 10.0.0.2, different.)
+<p>(Each machine gets a random Ethernet address of its own, which is
+saved in its file.)
 
 <p>This example creates a network using the default settings (10.0.0.0/8), 
 but it also uses the direct-access networking mode to allow the network 
@@ -332,6 +332,13 @@ machine. Keepalives received are dropped.
 on a UDP or L2TPv3 network too if the network also has <tt>"nat"</tt> (NAT
 in the configuration window), and then answers DHCP requests. Without it,
 as in the example above, the network has only what is at the other end.
+
+<p>The gateway's DHCP (and RARP) gives a machine's first NIC the network's
+first address (10.0.0.1 by default), the next NIC the next one, skipping
+the gateway's own, with the network's netmask and itself as router and
+name server. It only answers the NICs of its own emulator, so two
+emulators connected by UDP or L2TPv3 would both get the first address:
+give the machines addresses of their own, or NAT to only one of them.
 
 
 

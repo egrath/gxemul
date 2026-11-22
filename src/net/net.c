@@ -88,6 +88,50 @@ struct ethernet_packet_link *net_allocate_ethernet_packet_link(
 
 
 /*
+ *  net_client_ipv4():
+ *
+ *  The IPv4 address that the simulated gateway gives a NIC (by DHCP or
+ *  RARP): the network's first address for the first NIC, the next one for
+ *  the next, and so on, skipping the gateway's own.  The subnet mask is
+ *  written to mask, if it isn't NULL.
+ */
+void net_client_ipv4(struct net *net, struct nic_data *nic,
+	unsigned char *addr, unsigned char *mask)
+{
+	const unsigned char *p = (const unsigned char *) &net->netmask_ipv4;
+	uint32_t netaddr, netmask, gw, host_max, a;
+	int i, index = 0;
+
+	netmask = net->netmask_ipv4_len <= 0 ? 0 :
+	    0xffffffffU << (32 - net->netmask_ipv4_len);
+	netaddr = ((uint32_t) p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+	netaddr &= netmask;
+	gw = ((uint32_t) net->gateway_ipv4_addr[0] << 24) |
+	    (net->gateway_ipv4_addr[1] << 16) |
+	    (net->gateway_ipv4_addr[2] << 8) | net->gateway_ipv4_addr[3];
+	host_max = ~netmask - 1;	/*  (not the broadcast address)  */
+
+	for (i = 0; i < net->n_nics; i++)
+		if (net->nic_data[i] == nic) {
+			index = i;
+			break;
+		}
+
+	a = netaddr + 1 + index;
+	if (a >= gw && gw > netaddr && gw <= netaddr + host_max)
+		a++;
+	if (a - netaddr > host_max)
+		a = netaddr + (gw == netaddr + 1 ? 2 : 1);
+
+	addr[0] = a >> 24; addr[1] = a >> 16; addr[2] = a >> 8; addr[3] = a;
+	if (mask != NULL) {
+		mask[0] = netmask >> 24; mask[1] = netmask >> 16;
+		mask[2] = netmask >> 8; mask[3] = netmask;
+	}
+}
+
+
+/*
  *  net_arp():
  *
  *  Handle an ARP (or RARP) packet, coming from the emulated NIC.
@@ -111,7 +155,6 @@ struct ethernet_packet_link *net_allocate_ethernet_packet_link(
 static void net_arp(struct net *net, struct nic_data *nic,
 	unsigned char *packet, int len, int reverse)
 {
-	int q;
 	int i;
 
 	/*  TODO: This debug dump assumes ethernet->IPv4 translation:  */
@@ -200,23 +243,8 @@ static void net_arp(struct net *net, struct nic_data *nic,
 			/*  MAC address of emulated machine:  */
 			memcpy(lp->data + 18 + 14, packet + 8, 6);
 
-			/*
-			 *  IP address of the emulated machine:  Automagically
-			 *  generated from the MAC address. :-)
-			 *
-			 *  packet+8 points to the client's mac address,
-			 *  for example 10:20:30:00:00:z0, where z is 0..15.
-			 *  10:20:30:00:00:10 results in 10.0.0.1.
-			 */
-			/*  q = (packet[8 + 3]) >> 4;  */
-			/*  q = q*15 + ((packet[8 + 4]) >> 4);  */
-			q = (packet[8 + 5]) >> 4;
-			if (q == 0)
-				q = 1;
-			lp->data[24 + 14] = 10;
-			lp->data[25 + 14] =  0;
-			lp->data[26 + 14] =  0;
-			lp->data[27 + 14] =  q;
+			/*  IP address of the emulated machine:  */
+			net_client_ipv4(net, nic, lp->data + 24 + 14, NULL);
 			break;
 		case 2:		/*  Reply  */
 		case 4:		/*  Reverse Reply  */

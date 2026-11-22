@@ -261,6 +261,8 @@ void net_ethernet_tx(struct net *net, struct nic_data *nic,
 	unsigned char *packet, int len);
 void net_dumpinfo(struct net *net);
 void net_add_nic(struct net *net, struct nic_data *nic);
+void net_client_ipv4(struct net *net, struct nic_data *nic,
+	unsigned char *addr, unsigned char *mask);
 struct net *net_init(struct emul *emul, int init_flags,
 	const char *tapdev,
 	const char *ipv4addr, int netipv4len, const char *gateway_ipv4,

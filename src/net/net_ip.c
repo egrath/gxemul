@@ -1364,11 +1364,9 @@ static void net_ip_broadcast_dhcp(struct net *net, struct nic_data *nic,
 	lp->data[38] = (reply_len - 34) >> 8;
 	lp->data[39] = (reply_len - 34) & 0xff;
 
-	/*  Client's (yiaddr) IPv4 address:  */
-	lp->data[58] = 10;
-	lp->data[59] = 0;
-	lp->data[60] = 0;
-	lp->data[61] = 1;	/*  TODO  */
+	/*  Client's (yiaddr) IPv4 address, and its subnet mask (option 1,
+	    below):  */
+	net_client_ipv4(net, nic, lp->data + 58, lp->data + 284);
 
 	/*  Server's IPv4 address:  (giaddr)  */
 	memcpy(lp->data + 66, &net->gateway_ipv4_addr[0], 4);
@@ -1387,10 +1385,7 @@ static void net_ip_broadcast_dhcp(struct net *net, struct nic_data *nic,
 	/*  DHCP options, http://tools.ietf.org/html/rfc1533  */
 	lp->data[282] = 1; /* subnet mask */
 	lp->data[283] = 4;
-	lp->data[284] = 255;
-	lp->data[285] = 0;
-	lp->data[286] = 0;
-	lp->data[287] = 0;
+	/*  (284..287: the subnet mask, set above)  */
 	lp->data[288] = 3; /* router */
 	lp->data[289] = 4;
 	memcpy(lp->data + 290, &net->gateway_ipv4_addr[0], 4);
