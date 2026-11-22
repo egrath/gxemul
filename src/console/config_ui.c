@@ -2435,18 +2435,18 @@ static void gateway_fields(void)
 	mu_Context *ctx = ui.ctx;
 	struct machine_config *c = ui.cfg;
 
-	mu_label(ctx, "Network address");
-	text_field(&c->net_ipv4);
-	mu_label(ctx, "Prefix length");
-	int_field(&c->net_ipv4len);
+	mu_label(ctx, "Network");
+	text_field(&c->net_nat_net);
+	mu_label(ctx, "Gateway");
+	text_field(&c->net_nat_gateway);
 	mu_label(ctx, "");
-	mu_label(ctx, "(the gateway is the last address, with DHCP, DNS, "
-	    "and NAT to the host's network)");
+	mu_label(ctx, "(e.g. 10.0.0.0/8 and 10.0.0.254; an empty gateway is "
+	    "the last address)");
 }
 
 
 /*  A UDP or L2TPv3 link to other emulators, or e.g. a bridge:  */
-static void udp_fields(bool l2tp)
+static void link_fields(struct mc_net_link *l, bool l2tp)
 {
 	mu_Context *ctx = ui.ctx;
 	struct machine_config *c = ui.cfg;
@@ -2455,22 +2455,33 @@ static void udp_fields(bool l2tp)
 	int aw[1] = { CH(14) };
 	int i;
 
+	row(1, full);
+	if (l2tp)
+		mu_text(ctx, "Frames in static L2TPv3 over UDP (RFC 3931, "
+		    "without the control connection), as for Linux's ip l2tp, "
+		    "QEMU (-netdev l2tpv3), or bootbridge -l2tp.");
+	else
+		mu_text(ctx, "Each UDP datagram carries one Ethernet frame, as "
+		    "for other gxemuls, simh, QEMU (-netdev dgram), or the "
+		    "HECnet bridge.  There is no security checking of any "
+		    "kind; use L2TPv3 with a cookie on untrusted networks.");
+
 	row(2, lw);
 	mu_label(ctx, "Local UDP port");
-	int_field(&c->net_local_port);
+	int_field(&l->local_port);
 	mu_label(ctx, "");
 	mu_label(ctx, l2tp ? "(0 = any; usually 1701)" : "(0 = any)");
 
 	row(1, full);
 	mu_label(ctx, "Remote hosts (host:port):");
-	for (i = 0; i < c->n_net_remotes; i++) {
+	for (i = 0; i < l->n_remotes; i++) {
 		int w[2] = { -CH(10), -1 };
 		mu_push_id(ctx, &i, sizeof(i));
 		row(2, w);
-		text_field(&c->net_remotes[i]);
+		text_field(&l->remotes[i]);
 		if (mu_button(ctx, "Remove")) {
-			machine_config_remove_string(&c->n_net_remotes,
-			    &c->net_remotes, i);
+			machine_config_remove_string(&l->n_remotes,
+			    &l->remotes, i);
 			edits_clear();
 			mu_pop_id(ctx);
 			break;
@@ -2479,7 +2490,7 @@ static void udp_fields(bool l2tp)
 	}
 	row(1, aw);
 	if (mu_button(ctx, "Add remote")) {
-		machine_config_add_string(&c->n_net_remotes, &c->net_remotes,
+		machine_config_add_string(&l->n_remotes, &l->remotes,
 		    l2tp ? "localhost:1701" : "localhost:15001");
 		edits_clear();
 	}
@@ -2499,15 +2510,40 @@ static void udp_fields(bool l2tp)
 		check("L2-specific sublayer (sequence numbers)",
 		    &c->net_l2tp_counter);
 	}
+}
+
+
+/*
+ *  One part of the network, which is used if it is checked.  Returns true
+ *  if it was just turned on (and then turns off what can't be used with
+ *  it).
+ */
+static bool net_part(const char *label, bool *field)
+{
+	struct machine_config *c = ui.cfg;
+	int full[1] = { -1 };
+	bool was = *field;
 
 	row(1, full);
-	mu_label(ctx, "");
-	check("Simulated gateway on this network too (DHCP, DNS, NAT)",
-	    &c->net_gateway);
-	if (c->net_gateway) {
-		row(2, lw);
-		gateway_fields();
-	}
+	mu_label(ui.ctx, "");
+	row(1, full);
+	check(label, field);
+	if (*field == was)
+		return false;
+	edits_clear();
+	if (!*field)
+		return false;
+
+	/*  A tap is the only one; UDP and L2TPv3 share a port:  */
+	if (field == &c->net_tap)
+		c->net_nat = c->net_udp.enabled = c->net_l2tp.enabled = false;
+	else
+		c->net_tap = false;
+	if (field == &c->net_udp.enabled)
+		c->net_l2tp.enabled = false;
+	if (field == &c->net_l2tp.enabled)
+		c->net_udp.enabled = false;
+	return true;
 }
 
 
@@ -2518,12 +2554,6 @@ static void page_network(void)
 	int full[1] = { -1 };
 	int lw[2] = { CH(24), -1 };
 	int bw[1] = { CH(16) };
-	static const char *types[MC_N_NET_TYPES] = {
-	    "Simulated (gateway with DHCP and NAT)",
-	    "Bridged to a host interface (BPF) or tap",
-	    "UDP (raw Ethernet frames)",
-	    "L2TPv3 (static, over UDP)" };
-	int sel;
 
 	if (!c->net) {
 		row(1, full);
@@ -2538,15 +2568,6 @@ static void page_network(void)
 		return;
 	}
 
-	row(2, lw);
-	mu_label(ctx, "Network");
-	sel = c->net_type;
-	if (dropdown("nettype", types, MC_N_NET_TYPES, &sel)) {
-		c->net_type = sel;
-		ui.custom_tap = false;
-		edits_clear();
-	}
-
 	int mw[3] = { CH(24), -CH(12), -1 };
 	row(3, mw);
 	mu_label(ctx, "Ethernet address");
@@ -2557,32 +2578,45 @@ static void page_network(void)
 	}
 	row(2, lw);
 	mu_label(ctx, "");
-	mu_label(ctx, "(empty = generate 08:00:2b:xx:xx:xx when saved)");
+	mu_label(ctx, "(empty = a random one from the machine's maker, "
+	    "when saved)");
 
-	switch (c->net_type) {
-	case MC_NET_SIMULATED:
+	net_part("NAT: the simulated gateway (DHCP, DNS, and NAT to the "
+	    "host's network)", &c->net_nat);
+	if (c->net_nat) {
+		row(2, lw);
 		gateway_fields();
-		break;
-	case MC_NET_BRIDGED:
+	}
+
+	if (net_part("UDP: raw Ethernet frames to other emulators",
+	    &c->net_udp.enabled) && c->net_udp.local_port == 0 &&
+	    c->net_udp.n_remotes == 0)
+		machine_config_add_string(&c->net_udp.n_remotes,
+		    &c->net_udp.remotes, "localhost:15001");
+	if (c->net_udp.enabled)
+		link_fields(&c->net_udp, false);
+
+	if (net_part("L2TPv3: static, over UDP", &c->net_l2tp.enabled) &&
+	    c->net_l2tp.local_port == 0 && c->net_l2tp.n_remotes == 0)
+		machine_config_add_string(&c->net_l2tp.n_remotes,
+		    &c->net_l2tp.remotes, "localhost:1701");
+	if (c->net_l2tp.enabled)
+		link_fields(&c->net_l2tp, true);
+
+	if (net_part("Tap: bridged to a host interface (BPF) or tap device, "
+	    "alone", &c->net_tap))
+		ui.custom_tap = false;
+	if (c->net_tap) {
+		row(2, lw);
 		bridge_field();
-		break;
-	case MC_NET_UDP:
+	}
+
+	if (!c->net_nat && !c->net_udp.enabled && !c->net_l2tp.enabled &&
+	    !c->net_tap) {
 		row(1, full);
 		mu_label(ctx, "");
-		mu_text(ctx, "Each UDP datagram carries one Ethernet frame, as "
-		    "for other gxemuls, simh, QEMU (-netdev dgram), or the "
-		    "HECnet bridge.  There is no security checking of any "
-		    "kind; use L2TPv3 with a cookie on untrusted networks.");
-		udp_fields(false);
-		break;
-	case MC_NET_L2TP:
-		row(1, full);
-		mu_label(ctx, "");
-		mu_text(ctx, "Frames in static L2TPv3 over UDP (RFC 3931, "
-		    "without the control connection), as for Linux's ip l2tp, "
-		    "QEMU (-netdev l2tpv3), or bootbridge -l2tp.");
-		udp_fields(true);
-		break;
+		mu_label(ctx, "(With none of these, the machine's network "
+		    "cards only reach each other.)");
 	}
 
 	row(1, full);

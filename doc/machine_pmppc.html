@@ -129,7 +129,7 @@ cd /; umount /mnt; halt</b>
   "name": "client machine",
   "machine": { "serial_nr": 1, "type": "pmppc" },
   "boot": { "load": [ "netbsd-PMPPC.gz" ] },
-  "network": { "remotes": [ "localhost:12444" ], "local_port": 12445 }
+  "network": { "nat": true, "udp": { "local_port": 12445, "remote": "localhost:12444" } }
 }
 </pre></td></tr></table>
 	... and another configuration file for the server,
@@ -140,7 +140,7 @@ cd /; umount /mnt; halt</b>
   "name": "nfs server",
   "machine": { "serial_nr": 2, "type": "decstation", "model": "3max" },
   "drives": [ { "file": "nbsd_pmax.img" } ],
-  "network": { "local_port": 12444, "remotes": [ "localhost:12445" ] }
+  "network": { "nat": true, "udp": { "local_port": 12444, "remote": "localhost:12445" } }
 }
 </pre></td></tr></table>
 </ol>

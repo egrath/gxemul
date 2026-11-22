@@ -73,11 +73,58 @@ void net_debugaddr(void *addr, int type)
 
 
 /*
+ *  net_random_mac():
+ *
+ *  A random Ethernet address in the block of the company that made the
+ *  machine: DEC's 08:00:2b, Motorola's 08:00:3e:2x for MVME boards, and so
+ *  on.  Machines without a known maker get DEC's.
+ */
+void net_random_mac(int machine_type, unsigned char *macbuf)
+{
+	unsigned char oui[3] = { 0x08, 0x00, 0x2b };	/*  DEC  */
+	int fixed_nibble = -1;
+
+	switch (machine_type) {
+	case MACHINE_SGI:
+		oui[2] = 0x69;			/*  Silicon Graphics  */
+		break;
+	case MACHINE_MVME88K:
+	case MACHINE_MVMEPPC:
+		oui[2] = 0x3e;			/*  Motorola, 08:00:3e:2x  */
+		fixed_nibble = 0x20;
+		break;
+	case MACHINE_LUNA88K:
+		oui[0] = 0x00; oui[1] = 0x00; oui[2] = 0x0a;	/*  Omron  */
+		break;
+	case MACHINE_HP700RX:
+		oui[2] = 0x09;			/*  Hewlett-Packard  */
+		break;
+	case MACHINE_PREP:
+		oui[2] = 0x5a;			/*  IBM  */
+		break;
+	case MACHINE_MACPPC:
+		oui[0] = 0x00; oui[1] = 0x05; oui[2] = 0x02;	/*  Apple  */
+		break;
+	case MACHINE_COBALT:
+		oui[0] = 0x00; oui[1] = 0x10; oui[2] = 0xe0;	/*  Cobalt  */
+		break;
+	}
+
+	memcpy(macbuf, oui, 3);
+	macbuf[3] = random() & 0xff;
+	if (fixed_nibble >= 0)
+		macbuf[3] = fixed_nibble | (macbuf[3] & 0x0f);
+	macbuf[4] = random() & 0xff;
+	macbuf[5] = random() & 0xff;
+}
+
+
+/*
  *  net_generate_unique_mac():
  *
- *  Generate a MAC address for a machine, starting with DEC's 08:00:2b OUI
- *  followed by 3 random bytes.  (The first NIC's address can be given in a
- *  machine.json, "mac" under "network".)
+ *  Generate a MAC address for a machine's NIC (see net_random_mac()).  The
+ *  first NIC's address can be given in a machine.json, "mac" under
+ *  "network".
  *
  *  The return value (6 bytes) are written to macbuf.
  */
@@ -95,13 +142,7 @@ void net_generate_unique_mac(struct machine *machine, unsigned char *macbuf)
 		return;
 	}
 
-	macbuf[0] = 0x08;
-	macbuf[1] = 0x00;
-	macbuf[2] = 0x2b;
-	macbuf[3] = random() & 0xff;
-	macbuf[4] = random() & 0xff;
-	macbuf[5] = random() & 0xff;
-
+	net_random_mac(machine->machine_type, macbuf);
 	machine->nr_of_nics ++;
 }
 

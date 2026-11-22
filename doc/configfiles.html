@@ -311,20 +311,34 @@ shown here, except for the machine type:
   },
   "serial": { "telnet": false, "vt100": false },  <font color="#2020cf">serial ports on telnet ports (as -x); 7-bit VT100 translation (as -7 or --vt100)</font>
   "slots": { "0": "PMAG-BA.bin" },  <font color="#2020cf">option ROM images, by TURBOchannel slot (see <a href="machine_decstation.html#PROM200">the 5000/200's slots 5 and 6</a>)</font>
-  "network": {
-    "enabled": true,
-    "type": "simulated",        <font color="#2020cf">"simulated" (the gateway), "bridged" (to tapdev), "udp", or "l2tpv3";</font>
-                                <font color="#2020cf">  without it, bridged with a tapdev, udp/l2tpv3 with remotes or a</font>
-                                <font color="#2020cf">  local_port, else simulated</font>
-    "ipv4": "10.0.0.0",
-    "ipv4len": 8,
-    "local_port": 0,            <font color="#2020cf">udp and l2tpv3: the local UDP port, 0 = any</font>
-    "remotes": [],              <font color="#2020cf">udp and l2tpv3: e.g. "localhost:12345"</font>
-    "tapdev": "",               <font color="#2020cf">bridged, as -L: a host interface to bridge to (e.g. "en0"), or a tap device</font>
-    "mac": "",                  <font color="#2020cf">the first NIC's Ethernet address, "" = a random 08:00:2b:xx:xx:xx,</font>
-                                <font color="#2020cf">  saved in the file</font>
-    "gateway": true,            <font color="#2020cf">udp and l2tpv3: the simulated gateway (DHCP, DNS, NAT) too</font>
-    "l2tp": { "enabled": false, "session": 1, "cookie": "", "counter": true }  <font color="#2020cf">l2tpv3's settings</font>
+  "network": {                  <font color="#2020cf">leave out the parts that aren't used; without any of nat, udp,</font>
+                                <font color="#2020cf">  l2tpv3 and tap, the network has NAT</font>
+    "enabled": true,            <font color="#2020cf">false = no network</font>
+    "mac": "",                  <font color="#2020cf">the first NIC's Ethernet address, "" = a random one in the block</font>
+                                <font color="#2020cf">  of the machine's maker (08:00:2b:xx:xx:xx for DEC,</font>
+                                <font color="#2020cf">  08:00:3e:2x:xx:xx for Motorola's MVME boards), saved in the file</font>
+    "nat": {                    <font color="#2020cf">the simulated gateway: DHCP, DNS, and NAT to the host's network</font>
+      "enabled": true,          <font color="#2020cf">(each part is used unless it says false; "nat": true is enough)</font>
+      "net": "10.0.0.0/8",
+      "gateway": "10.0.0.254"   <font color="#2020cf">"" = the last address of "net"</font>
+    },
+    "udp": {                    <font color="#2020cf">raw Ethernet frames over UDP, to other emulators or a bridge</font>
+      "enabled": true,
+      "local_port": 0,          <font color="#2020cf">0 = any</font>
+      "remote": "localhost:15001"  <font color="#2020cf">"host:port", or a list of them</font>
+    },
+    "l2tpv3": {                 <font color="#2020cf">the same in static L2TPv3 (not with udp)</font>
+      "enabled": true,
+      "session": 1,
+      "cookie": "",             <font color="#2020cf">8 or 16 hex digits, or ""</font>
+      "counter": true,          <font color="#2020cf">the L2-specific sublayer (sequence numbers)</font>
+      "local_port": 0,
+      "remote": "localhost:1701"
+    },
+    "tap": {                    <font color="#2020cf">a host interface (e.g. "en0") or tap device, as -L; only alone</font>
+      "enabled": true,
+      "tapdev": "/dev/tap0"
+    }
   },
   "devices": []                 <font color="#2020cf">extra devices, as for the debugger's device add</font>
 }

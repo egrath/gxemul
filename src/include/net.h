@@ -232,6 +232,7 @@ uint32_t net_ether_crc32_le(const uint8_t *buf, size_t len);
 
 /*  net_misc.c:  */
 void net_debugaddr(void *addr, int type);
+void net_random_mac(int machine_type, unsigned char *macbuf);
 void net_generate_unique_mac(struct machine *, unsigned char *macbuf);
 void send_udp(struct in_addr *addrp, int portnr, unsigned char *packet,
 	size_t len);
@@ -262,7 +263,8 @@ void net_dumpinfo(struct net *net);
 void net_add_nic(struct net *net, struct nic_data *nic);
 struct net *net_init(struct emul *emul, int init_flags,
 	const char *tapdev,
-	const char *ipv4addr, int netipv4len, char **remote, int n_remote,
+	const char *ipv4addr, int netipv4len, const char *gateway_ipv4,
+	char **remote, int n_remote,
 	int local_port, const char *settings_prefix);
 
 /*  Flag used to signify that this net should have a gateway:  */

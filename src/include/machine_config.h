@@ -55,12 +55,13 @@ struct machine;
 
 #define	MC_MAX_SLOTS		8	/*  = MACHINE_MAX_TC_SLOTS  */
 
-/*  What the network is (net_type):  */
-#define	MC_NET_SIMULATED	0	/*  the simulated gateway (DHCP, NAT)  */
-#define	MC_NET_BRIDGED		1	/*  a host interface, or a tap device  */
-#define	MC_NET_UDP		2	/*  raw frames over UDP  */
-#define	MC_NET_L2TP		3	/*  static L2TPv3 over UDP  */
-#define	MC_N_NET_TYPES		4
+/*  A UDP or L2TPv3 link to other emulators (or e.g. a bridge):  */
+struct mc_net_link {
+	bool		enabled;
+	int		local_port;	/*  0 = any  */
+	int		n_remotes;
+	char		**remotes;	/*  "host:port"  */
+};
 
 struct mc_drive {
 	char		*file;		/*  "" for a drive without a medium  */
@@ -122,20 +123,21 @@ struct machine_config {
 	/*  TURBOchannel option ROM images (with a system ROM only):  */
 	char		*slot_rom[MC_MAX_SLOTS];	/*  NULL = built-in  */
 
-	/*  Network:  */
+	/*  Network.  The machine's NICs are on one network, which has any
+	    of the simulated gateway (NAT), a UDP or an L2TPv3 link, or
+	    else only a host interface or tap device:  */
 	bool		net;
-	int		net_type;	/*  MC_NET_*  */
-	char		*net_ipv4;
-	int		net_ipv4len;
-	int		net_local_port;	/*  0 = no UDP tunnel  */
-	int		n_net_remotes;
-	char		**net_remotes;
-	char		*net_tapdev;	/*  MC_NET_BRIDGED's  */
 	char		*net_mac;	/*  the first NIC's, "" = automatic  */
-	bool		net_gateway;	/*  the simulated gateway, also with UDP  */
+	bool		net_nat;	/*  the simulated gateway  */
+	char		*net_nat_net;	/*  e.g. "10.0.0.0/8"  */
+	char		*net_nat_gateway;	/*  "" = the last address  */
+	struct mc_net_link net_udp;
+	struct mc_net_link net_l2tp;
 	uint32_t	net_l2tp_session;
 	char		*net_l2tp_cookie;
 	bool		net_l2tp_counter;
+	bool		net_tap;
+	char		*net_tapdev;	/*  a host interface or tap device  */
 
 	/*  Extra devices, as for the debugger's device add:  */
 	int		n_devices;
@@ -157,6 +159,8 @@ char *machine_config_resolve(const struct machine_config *, const char *);
 char *machine_config_absolute(const char *path);
 bool machine_config_parse_mac(const char *s, unsigned char *mac);
 void machine_config_generate_mac(struct machine_config *);
+bool machine_config_parse_ipv4(const char *s, uint32_t *ap);
+char *machine_config_parse_ipv4_net(const char *s, uint32_t *netp, int *lenp);
 char *machine_config_clean_path(const char *path);
 char *machine_config_resolve_rom(const struct machine_config *, const char *);
 char *machine_config_find_rom(const struct machine_config *, const char *,

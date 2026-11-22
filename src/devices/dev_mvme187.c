@@ -62,6 +62,7 @@
 #include "machine.h"
 #include "memory.h"
 #include "misc.h"
+#include "net.h"
 
 #include "thirdparty/mvme187.h"
 #include "thirdparty/mvme88k_vme.h"
@@ -224,12 +225,8 @@ void dev_mvme187_brdid_defaults(struct machine *machine, uint8_t *nvram)
 
 	if (machine->nic_mac_set) {
 		memcpy(mac, machine->nic_mac, 6);
-	} else {
-		/*  Motorola's, 08003E2xxxxx:  */
-		mac[0] = 0x08; mac[1] = 0x00; mac[2] = 0x3e;
-		mac[3] = 0x20 | (random() & 0x0f);
-		mac[4] = random(); mac[5] = random();
-	}
+	} else
+		net_random_mac(MACHINE_MVME88K, mac);	/*  08:00:3e:2x  */
 
 	memset(p, ' ', 0x66);
 	memcpy(p + 0x00, "0100", 4);			/*  version  */

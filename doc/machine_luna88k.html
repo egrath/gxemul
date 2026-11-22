@@ -281,7 +281,7 @@ halt</b>
   "name": "client machine",
   "machine": { "serial_nr": 1, "type": "luna88k", "model": "luna-88k" },
   "boot": { "load": [ "bsd" ] },
-  "network": { "remotes": [ "localhost:12444" ], "local_port": 12445 }
+  "network": { "nat": true, "udp": { "local_port": 12445, "remote": "localhost:12444" } }
 }
 </pre></td></tr></table>
 	... and another configuration file for the server,
@@ -292,7 +292,7 @@ halt</b>
   "name": "nfs server",
   "machine": { "serial_nr": 2, "type": "decstation", "model": "3max" },
   "drives": [ { "file": "nbsd_pmax.img" } ],
-  "network": { "local_port": 12444, "remotes": [ "localhost:12445" ] }
+  "network": { "nat": true, "udp": { "local_port": 12444, "remote": "localhost:12445" } }
 }
 </pre></td></tr></table>
 
@@ -309,7 +309,7 @@ halt</b>
   "machine": { "serial_nr": 1, "type": "sgi", "model": "o2", "memory_mb": 1024 },
   "boot": { "load": [ "bsd.rd.IP32" ] },
   "display": { "enabled": true },
-  "network": { "remotes": [ "localhost:12444" ], "local_port": 12445 }
+  "network": { "nat": true, "udp": { "local_port": 12445, "remote": "localhost:12444" } }
 }
 </pre></td></tr></table>
 

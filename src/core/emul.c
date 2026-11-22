@@ -815,7 +815,7 @@ bool emul_simple_init(struct emul *emul, char* tap_devname)
 	emul->net = net_init(emul, NET_INIT_FLAG_GATEWAY,
 	    tap_devname,
 	    NET_DEFAULT_IPV4_MASK,
-	    NET_DEFAULT_IPV4_LEN,
+	    NET_DEFAULT_IPV4_LEN, NULL,
 	    NULL, 0, 0, NULL);
 
 	if (emul->net == NULL)

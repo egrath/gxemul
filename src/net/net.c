@@ -686,6 +686,28 @@ static void net_gateway_init(struct net *net)
 
 
 /*
+ *  net_set_gateway_ipv4():
+ *
+ *  Moves the simulated gateway to another address on the network than the
+ *  default (e.g. 10.0.0.254 on 10.0.0.0/8).  Returns false if addr isn't
+ *  an IPv4 address.
+ */
+static bool net_set_gateway_ipv4(struct net *net, const char *addr)
+{
+	struct in_addr a;
+
+#ifdef HAVE_INET_PTON
+	if (inet_pton(AF_INET, addr, &a) < 1)
+#else
+	if (inet_aton(addr, &a) < 1)
+#endif
+		return false;
+	memcpy(net->gateway_ipv4_addr, &a, 4);
+	return true;
+}
+
+
+/*
  *  net_dumpinfo():
  *
  *  Called from the debugger's "machine" command, to print some info about
@@ -763,7 +785,9 @@ void net_dumpinfo(struct net *net)
  *
  *  This function creates a network, and returns a pointer to it.
  *
- *  ipv4addr should be something like "10.0.0.0", netipv4len = 8.
+ *  ipv4addr should be something like "10.0.0.0", netipv4len = 8.  The
+ *  gateway is at gateway_ipv4, or if that is NULL or "", at the last
+ *  address (e.g. 10.0.0.254).
  *
  *  If n_remote is more than zero, remote should be a pointer to an array
  *  of strings of the following format: "host:portnr".
@@ -775,7 +799,7 @@ void net_dumpinfo(struct net *net)
  */
 struct net *net_init(struct emul *emul, int init_flags,
 	const char *tapdev,
-	const char *ipv4addr, int netipv4len,
+	const char *ipv4addr, int netipv4len, const char *gateway_ipv4,
 	char **remote, int n_remote, int local_port,
 	const char *settings_prefix)
 {
@@ -910,8 +934,17 @@ struct net *net_init(struct emul *emul, int init_flags,
 	}
 
 	net->gateway = (init_flags & NET_INIT_FLAG_GATEWAY) != 0;
-	if (net->gateway)
+	if (net->gateway) {
 		net_gateway_init(net);
+		if (gateway_ipv4 != NULL && gateway_ipv4[0] != '\0' &&
+		    !net_set_gateway_ipv4(net, gateway_ipv4)) {
+			debugmsg(SUBSYS_NET, "net", VERBOSITY_ERROR,
+			    "the gateway address %s isn't an IPv4 address",
+			    gateway_ipv4);
+			free(net);
+			return NULL;
+		}
+	}
 
 	net_dumpinfo(net);
 

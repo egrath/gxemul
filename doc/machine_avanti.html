@@ -222,11 +222,7 @@ simulated network:
   "enabled": true
  },
  "network": {
-  "enabled": true,
-  "type": "simulated",
-  "ipv4": "10.0.0.0",
-  "ipv4len": 8,
-  "gateway": true
+  "nat": { "net": "10.0.0.0/8", "gateway": "10.0.0.254" }
  }
 }
 </pre>

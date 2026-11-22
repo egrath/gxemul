@@ -49,12 +49,15 @@
  *	  "display": { "enabled": false, "scale": 0, "cards": -1 },
  *	  "serial": { "telnet": false },
  *	  "slots": { "0": "PMAG-BA.bin" },
- *	  "network": { "enabled": true, "type": "simulated",
- *	               "ipv4": "10.0.0.0", "ipv4len": 8,
- *	               "local_port": 0, "remotes": [], "tapdev": "",
- *	               "mac": "", "gateway": true,
- *	               "l2tp": { "enabled": false, "session": 1,
- *	                         "cookie": "", "counter": true } },
+ *	  "network": { "enabled": true, "mac": "",
+ *	               "nat": { "enabled": true, "net": "10.0.0.0/8",
+ *	                        "gateway": "10.0.0.254" },
+ *	               "udp": { "enabled": true, "local_port": 0,
+ *	                        "remote": "host:port" },
+ *	               "l2tpv3": { "enabled": true, "session": 1,
+ *	                           "cookie": "", "counter": true,
+ *	                           "local_port": 0, "remote": "host:1701" },
+ *	               "tap": { "enabled": true, "tapdev": "/dev/tap0" } },
  *	  "devices": []
  *	}
  *
@@ -66,13 +69,17 @@
  *  machine with a known ROM address, "rom" is used only without PROM
  *  emulation, and "load", "bootname", "bootarg", and "netboot" only with it.
  *
- *  The network's "type" is "simulated" (the gateway, with DHCP and NAT),
- *  "bridged" (to the host interface or tap device "tapdev"), "udp" (raw
- *  frames to and from "remotes" and "local_port"), or "l2tpv3" (the same,
- *  in static L2TPv3, with the "l2tp" settings); "gateway" is whether a UDP
- *  or L2TPv3 network also has the simulated gateway.  Without a "type"
- *  (older files), it is bridged with a "tapdev", UDP or L2TPv3 (as "l2tp"
- *  says) with "remotes" or a "local_port", and else simulated.
+ *  The network has what its sections name (a section is used unless it
+ *  says "enabled": false, and a section can be just true or false): "nat"
+ *  is the simulated gateway, with DHCP, DNS and NAT to the host's
+ *  network; "udp" carries raw frames to and from "remote" (one "host:port",
+ *  or a list of them) and "local_port"; "l2tpv3" is the same in static
+ *  L2TPv3; and "tap" bridges to a host interface or tap device, and is
+ *  then the only one.  UDP and L2TPv3 can't both be used.  Without any of
+ *  them, the network has NAT.  "mac" is the first NIC's Ethernet address,
+ *  "" = a random one in the maker's block (08:00:2b:xx:xx:xx for DEC),
+ *  saved in the file.  Older files' "type", "ipv4", "ipv4len",
+ *  "local_port", "remotes", "tapdev", "gateway" and "l2tp" are read too.
  */
 
 #include <ctype.h>
@@ -204,16 +211,40 @@ struct machine_config *machine_config_new(void)
 	c->scale = 0;
 	c->gfx_cards = -1;
 	c->net = true;
-	c->net_ipv4 = xstrdup(NET_DEFAULT_IPV4_MASK);
-	c->net_ipv4len = NET_DEFAULT_IPV4_LEN;
-	c->net_tapdev = xstrdup("");
 	c->net_mac = xstrdup("");
-	c->net_gateway = true;
+	c->net_nat = true;
+	c->net_nat_net = xstrdup(NET_DEFAULT_IPV4_MASK "/8");
+	c->net_nat_gateway = xstrdup("10.0.0.254");
+	c->net_tapdev = xstrdup("");
 	c->net_l2tp_session = 1;
 	c->net_l2tp_cookie = xstrdup("");
 	c->net_l2tp_counter = true;
 
 	return c;
+}
+
+
+static void free_link(struct mc_net_link *l)
+{
+	int i;
+
+	for (i = 0; i < l->n_remotes; i++)
+		free(l->remotes[i]);
+	free(l->remotes);
+	l->n_remotes = 0;
+	l->remotes = NULL;
+}
+
+
+static void copy_link(struct mc_net_link *l, const struct mc_net_link *src)
+{
+	int i;
+
+	*l = *src;
+	l->n_remotes = 0; l->remotes = NULL;
+	for (i = 0; i < src->n_remotes; i++)
+		machine_config_add_string(&l->n_remotes, &l->remotes,
+		    src->remotes[i]);
 }
 
 
@@ -235,10 +266,9 @@ void machine_config_free(struct machine_config *c)
 	free(c->drives);
 	for (i = 0; i < MC_MAX_SLOTS; i++)
 		free(c->slot_rom[i]);
-	free(c->net_ipv4);
-	for (i = 0; i < c->n_net_remotes; i++)
-		free(c->net_remotes[i]);
-	free(c->net_remotes);
+	free(c->net_nat_net); free(c->net_nat_gateway);
+	free_link(&c->net_udp);
+	free_link(&c->net_l2tp);
 	free(c->net_tapdev); free(c->net_l2tp_cookie); free(c->net_mac);
 	for (i = 0; i < c->n_devices; i++)
 		free(c->devices[i]);
@@ -287,11 +317,10 @@ struct machine_config *machine_config_copy(const struct machine_config *src)
 		c->slot_rom[i] = src->slot_rom[i] ? xstrdup(src->slot_rom[i])
 		    : NULL;
 
-	c->net_ipv4 = xstrdup(src->net_ipv4);
-	c->n_net_remotes = 0; c->net_remotes = NULL;
-	for (i = 0; i < src->n_net_remotes; i++)
-		machine_config_add_string(&c->n_net_remotes, &c->net_remotes,
-		    src->net_remotes[i]);
+	c->net_nat_net = xstrdup(src->net_nat_net);
+	c->net_nat_gateway = xstrdup(src->net_nat_gateway);
+	copy_link(&c->net_udp, &src->net_udp);
+	copy_link(&c->net_l2tp, &src->net_l2tp);
 	c->net_tapdev = xstrdup(src->net_tapdev);
 	c->net_mac = xstrdup(src->net_mac);
 	c->net_l2tp_cookie = xstrdup(src->net_l2tp_cookie);
@@ -399,16 +428,87 @@ bool machine_config_parse_mac(const char *s, unsigned char *mac)
 /*
  *  machine_config_generate_mac():
  *
- *  Sets c->net_mac to a new random 08:00:2b:xx:xx:xx Ethernet address.
+ *  Sets c->net_mac to a new random Ethernet address, in the block of the
+ *  machine's maker (e.g. 08:00:2b:xx:xx:xx for DEC, 08:00:3e:2x:xx:xx
+ *  for Motorola's MVME boards).
  */
 void machine_config_generate_mac(struct machine_config *c)
 {
+	unsigned char mac[6];
 	char buf[20];
 
-	snprintf(buf, sizeof(buf), "08:00:2b:%02x:%02x:%02x",
-	    (int) (random() & 0xff), (int) (random() & 0xff),
-	    (int) (random() & 0xff));
+	net_random_mac(machine_config_machine_type(c->type), mac);
+	snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+	    mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	machine_config_set(&c->net_mac, buf);
+}
+
+
+/*
+ *  machine_config_parse_ipv4():
+ *
+ *  Reads a dotted IPv4 address, e.g. 10.0.0.254.
+ */
+bool machine_config_parse_ipv4(const char *s, uint32_t *ap)
+{
+	uint32_t a = 0;
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		char *end;
+		long v;
+		if (!isdigit((unsigned char) s[0]))
+			return false;
+		v = strtol(s, &end, 10);
+		if (v > 255 || end - s > 3)
+			return false;
+		a = (a << 8) | (uint32_t) v;
+		s = end;
+		if (i < 3) {
+			if (*s != '.')
+				return false;
+			s++;
+		}
+	}
+	*ap = a;
+	return *s == '\0';
+}
+
+
+/*
+ *  machine_config_parse_ipv4_net():
+ *
+ *  Reads a network, e.g. 10.0.0.0/8.  Returns NULL, or what is wrong with
+ *  it (the caller frees it).
+ */
+char *machine_config_parse_ipv4_net(const char *s, uint32_t *netp, int *lenp)
+{
+	const char *slash = strchr(s, '/');
+	char addr[20], *end;
+	long len;
+	uint32_t a, mask;
+
+	if (slash == NULL || slash - s >= (long) sizeof(addr))
+		return xprintf("the network \"%s\" isn't an address and a "
+		    "prefix length, e.g. 10.0.0.0/8", s);
+	memcpy(addr, s, slash - s);
+	addr[slash - s] = '\0';
+	len = strtol(slash + 1, &end, 10);
+	if (!machine_config_parse_ipv4(addr, &a) || slash[1] == '\0' ||
+	    *end != '\0')
+		return xprintf("the network \"%s\" isn't an address and a "
+		    "prefix length, e.g. 10.0.0.0/8", s);
+	if (len < 1 || len > 30)
+		return xprintf("the network %s's prefix length must be 1 to 30",
+		    s);
+	mask = 0xffffffffU << (32 - len);
+	if (a & ~mask)
+		return xprintf("%s isn't a network's address (%u.%u.%u.%u/%i?)",
+		    s, (a & mask) >> 24, ((a & mask) >> 16) & 255,
+		    ((a & mask) >> 8) & 255, a & mask & 255, (int) len);
+	*netp = a;
+	*lenp = (int) len;
+	return NULL;
 }
 
 
@@ -808,8 +908,6 @@ static void rebase_paths(struct machine_config *c, const char *newdir)
  *  JSON
  */
 
-static const char *net_type_names[MC_N_NET_TYPES] = { "simulated",
-    "bridged", "udp", "l2tpv3" };
 static const char *kind_names[] = { "disk", "cdrom", "tape", "floppy" };
 static const char *bus_names[] = { "default", "scsi", "ide" };
 
@@ -1149,25 +1247,68 @@ static const struct key_alias serial_aliases[] = {
 };
 
 static const char *network_keys[] = {
-	"enabled", "gateway", "ipv4", "ipv4len", "l2tp",
-	"local_port", "mac", "remotes", "tapdev", "type"
+	"enabled", "l2tpv3", "mac", "nat", "tap", "udp",
+	/*  Older files':  */
+	"gateway", "ipv4", "ipv4len", "l2tp", "local_port", "remotes",
+	"tapdev", "type"
 };
 static const struct key_alias network_aliases[] = {
 	{ "enable", "enabled" },
-	{ "tap", "tapdev" },
-	{ "device", "tapdev" },
-	{ "interface", "tapdev" },
-	{ "ip", "ipv4" },
-	{ "ip_address", "ipv4" },
-	{ "netmask", "ipv4len" },
-	{ "mask", "ipv4len" },
-	{ "port", "local_port" },
-	{ "remote", "remotes" },
-	{ "peers", "remotes" },
+	{ "simulated", "nat" },
+	{ "bridged", "tap" },
+	{ "bridge", "tap" },
+	{ "pcap", "tap" },
 	{ "ethernet", "mac" },
 	{ "mac_address", "mac" }
 };
 
+static const char *nat_keys[] = {
+	"enabled", "gateway", "net"
+};
+static const struct key_alias nat_aliases[] = {
+	{ "enable", "enabled" },
+	{ "network", "net" },
+	{ "ipv4", "net" },
+	{ "subnet", "net" },
+	{ "router", "gateway" }
+};
+
+static const char *udp_keys[] = {
+	"enabled", "local_port", "remote"
+};
+static const struct key_alias udp_aliases[] = {
+	{ "enable", "enabled" },
+	{ "port", "local_port" },
+	{ "remotes", "remote" },
+	{ "peer", "remote" },
+	{ "peers", "remote" }
+};
+
+static const char *l2tpv3_keys[] = {
+	"cookie", "counter", "enabled", "local_port", "remote", "session"
+};
+static const struct key_alias l2tpv3_aliases[] = {
+	{ "enable", "enabled" },
+	{ "session_id", "session" },
+	{ "id", "session" },
+	{ "counters", "counter" },
+	{ "port", "local_port" },
+	{ "remotes", "remote" },
+	{ "peer", "remote" },
+	{ "peers", "remote" }
+};
+
+static const char *tap_keys[] = {
+	"enabled", "tapdev"
+};
+static const struct key_alias tap_aliases[] = {
+	{ "enable", "enabled" },
+	{ "device", "tapdev" },
+	{ "interface", "tapdev" },
+	{ "dev", "tapdev" }
+};
+
+/*  The older "l2tp" in "network":  */
 static const char *l2tp_keys[] = {
 	"cookie", "counter", "enabled", "session"
 };
@@ -1177,6 +1318,201 @@ static const struct key_alias l2tp_aliases[] = {
 	{ "id", "session" },
 	{ "counters", "counter" }
 };
+
+#define	N_KEYS(a)	(int) (sizeof(a) / sizeof(a[0]))
+
+
+/*
+ *  A network's "remote": one "host:port", or a list of them.
+ */
+static void get_remotes(cJSON *o, const char *sec, struct mc_net_link *l,
+	char **errp)
+{
+	cJSON *v = cJSON_GetObjectItemCaseSensitive(o, "remote");
+
+	if (v == NULL || cJSON_IsNull(v))
+		return;
+	free_link(l);
+	if (cJSON_IsString(v))
+		machine_config_add_string(&l->n_remotes, &l->remotes,
+		    v->valuestring);
+	else if (cJSON_IsArray(v))
+		get_list(o, sec, "remote", &l->n_remotes, &l->remotes, errp);
+	else if (*errp == NULL)
+		*errp = xprintf("in \"%s\": \"remote\" should be \"host:port\", "
+		    "or a list of them", sec);
+}
+
+
+/*
+ *  One of a network's "nat", "udp", "l2tpv3" or "tap": an object (used
+ *  unless it says "enabled": false), or just true or false.  Returns the
+ *  object, or NULL.
+ */
+static cJSON *net_part(cJSON *o, const char *key, const char *sec,
+	const char **keys, int n_keys, const struct key_alias *aliases,
+	int n_aliases, bool *enabled, char **errp)
+{
+	cJSON *v = cJSON_GetObjectItemCaseSensitive(o, key);
+
+	if (v == NULL)
+		return NULL;
+	if (cJSON_IsBool(v)) {
+		*enabled = cJSON_IsTrue(v);
+		return NULL;
+	}
+	if (!cJSON_IsObject(v)) {
+		if (*errp == NULL)
+			*errp = xprintf("in \"network\": \"%s\" should be an "
+			    "object, or true or false", key);
+		return NULL;
+	}
+	check_unknown_fields(v, sec, keys, n_keys, aliases, n_aliases, errp);
+	*enabled = true;
+	get_bool(v, sec, "enabled", enabled, errp);
+	return v;
+}
+
+
+/*
+ *  An older file's network: a "type" ("simulated", "bridged", "udp" or
+ *  "l2tpv3"; without one, bridged with a "tapdev", UDP or L2TPv3 (as
+ *  "l2tp" says) with "remotes" or a "local_port", and else simulated),
+ *  with all of its settings in "network" itself.
+ */
+static void parse_old_network(cJSON *o, struct machine_config *c,
+	char **errp)
+{
+	static const char *types[] = { "simulated", "bridged", "udp",
+	    "l2tpv3" };
+	char *type = NULL, *ipv4 = NULL;
+	int ipv4len = NET_DEFAULT_IPV4_LEN, session = c->net_l2tp_session, t;
+	bool gateway = true, l2tp = false;
+	struct mc_net_link link;
+	cJSON *v;
+
+	memset(&link, 0, sizeof(link));
+	get_str(o, "network", "type", &type, errp);
+	get_str(o, "network", "ipv4", &ipv4, errp);
+	get_int(o, "network", "ipv4len", &ipv4len, errp);
+	get_int(o, "network", "local_port", &link.local_port, errp);
+	get_list(o, "network", "remotes", &link.n_remotes, &link.remotes,
+	    errp);
+	get_str(o, "network", "tapdev", &c->net_tapdev, errp);
+	get_bool(o, "network", "gateway", &gateway, errp);
+	if ((v = cJSON_GetObjectItemCaseSensitive(o, "l2tp")) != NULL &&
+	    cJSON_IsObject(v)) {
+		check_unknown_fields(v, "network.l2tp", l2tp_keys,
+		    N_KEYS(l2tp_keys), l2tp_aliases, N_KEYS(l2tp_aliases),
+		    errp);
+		get_bool(v, "network.l2tp", "enabled", &l2tp, errp);
+		get_int(v, "network.l2tp", "session", &session, errp);
+		get_str(v, "network.l2tp", "cookie", &c->net_l2tp_cookie, errp);
+		get_bool(v, "network.l2tp", "counter", &c->net_l2tp_counter,
+		    errp);
+	}
+	c->net_l2tp_session = session;
+
+	if (type != NULL) {
+		t = name_index(type, types, N_KEYS(types));
+		if (t < 0 && *errp == NULL)
+			*errp = xprintf("in \"network\": unknown network type "
+			    "\"%s\" (valid types: simulated, bridged, udp, "
+			    "l2tpv3)", type);
+	} else if (c->net_tapdev[0] != '\0')
+		t = 1;
+	else if (link.n_remotes > 0 || link.local_port != 0)
+		t = l2tp ? 3 : 2;
+	else
+		t = 0;
+
+	if (ipv4 != NULL || cJSON_GetObjectItemCaseSensitive(o, "ipv4len")) {
+		char *net = xprintf("%s/%i", ipv4 != NULL ? ipv4 :
+		    NET_DEFAULT_IPV4_MASK, ipv4len);
+		free(c->net_nat_net);
+		c->net_nat_net = net;
+		machine_config_set(&c->net_nat_gateway, "");
+	}
+
+	c->net_nat = t == 0 || (t >= 2 && gateway);
+	c->net_tap = t == 1;
+	if (t >= 2) {
+		struct mc_net_link *l = t == 3 ? &c->net_l2tp : &c->net_udp;
+		free_link(l);
+		*l = link;
+		l->enabled = true;
+	} else
+		free_link(&link);
+	free(type);
+	free(ipv4);
+}
+
+
+static void parse_network(cJSON *o, struct machine_config *c, char **errp)
+{
+	static const char *old_keys[] = { "gateway", "ipv4", "ipv4len",
+	    "l2tp", "local_port", "remotes", "tapdev", "type" };
+	bool old = false;
+	cJSON *v;
+	int i;
+
+	check_unknown_fields(o, "network", network_keys, N_KEYS(network_keys),
+	    network_aliases, N_KEYS(network_aliases), errp);
+	get_bool(o, "network", "enabled", &c->net, errp);
+	get_str(o, "network", "mac", &c->net_mac, errp);
+
+	for (i = 0; i < N_KEYS(old_keys); i++)
+		if (cJSON_GetObjectItemCaseSensitive(o, old_keys[i]) != NULL)
+			old = true;
+	if (old)
+		parse_old_network(o, c, errp);
+
+	/*  Only what the sections name, or else NAT:  */
+	if (cJSON_GetObjectItemCaseSensitive(o, "nat") == NULL &&
+	    cJSON_GetObjectItemCaseSensitive(o, "udp") == NULL &&
+	    cJSON_GetObjectItemCaseSensitive(o, "l2tpv3") == NULL &&
+	    cJSON_GetObjectItemCaseSensitive(o, "tap") == NULL)
+		return;
+	c->net_nat = c->net_udp.enabled = c->net_l2tp.enabled =
+	    c->net_tap = false;
+
+	if ((v = net_part(o, "nat", "network.nat", nat_keys, N_KEYS(nat_keys),
+	    nat_aliases, N_KEYS(nat_aliases), &c->net_nat, errp)) != NULL) {
+		/*  (Another network without a gateway has its last
+		    address as the gateway.)  */
+		if (cJSON_GetObjectItemCaseSensitive(v, "net") != NULL)
+			machine_config_set(&c->net_nat_gateway, "");
+		get_str(v, "network.nat", "net", &c->net_nat_net, errp);
+		get_str(v, "network.nat", "gateway", &c->net_nat_gateway, errp);
+	}
+
+	if ((v = net_part(o, "udp", "network.udp", udp_keys, N_KEYS(udp_keys),
+	    udp_aliases, N_KEYS(udp_aliases), &c->net_udp.enabled,
+	    errp)) != NULL) {
+		get_int(v, "network.udp", "local_port", &c->net_udp.local_port,
+		    errp);
+		get_remotes(v, "network.udp", &c->net_udp, errp);
+	}
+
+	if ((v = net_part(o, "l2tpv3", "network.l2tpv3", l2tpv3_keys,
+	    N_KEYS(l2tpv3_keys), l2tpv3_aliases, N_KEYS(l2tpv3_aliases),
+	    &c->net_l2tp.enabled, errp)) != NULL) {
+		int session = c->net_l2tp_session;
+		get_int(v, "network.l2tpv3", "session", &session, errp);
+		c->net_l2tp_session = session;
+		get_str(v, "network.l2tpv3", "cookie", &c->net_l2tp_cookie,
+		    errp);
+		get_bool(v, "network.l2tpv3", "counter", &c->net_l2tp_counter,
+		    errp);
+		get_int(v, "network.l2tpv3", "local_port",
+		    &c->net_l2tp.local_port, errp);
+		get_remotes(v, "network.l2tpv3", &c->net_l2tp, errp);
+	}
+
+	if ((v = net_part(o, "tap", "network.tap", tap_keys, N_KEYS(tap_keys),
+	    tap_aliases, N_KEYS(tap_aliases), &c->net_tap, errp)) != NULL)
+		get_str(v, "network.tap", "tapdev", &c->net_tapdev, errp);
+}
 
 
 static char *read_file(const char *path, char **errp)
@@ -1525,75 +1861,8 @@ struct machine_config *machine_config_parse(const char *text,
 		}
 	}
 
-	if ((o = section(root, "network", &err)) != NULL) {
-		int session = c->net_l2tp_session;
-		char *type = NULL;
-		bool l2tp = false;
-		int t;
-		check_unknown_fields(o, "network", network_keys,
-		    sizeof(network_keys) / sizeof(network_keys[0]),
-		    network_aliases, sizeof(network_aliases) / sizeof(network_aliases[0]), &err);
-		get_bool(o, "network", "enabled", &c->net, &err);
-		get_str(o, "network", "type", &type, &err);
-		get_str(o, "network", "ipv4", &c->net_ipv4, &err);
-		get_int(o, "network", "ipv4len", &c->net_ipv4len, &err);
-		get_int(o, "network", "local_port", &c->net_local_port, &err);
-		get_list(o, "network", "remotes", &c->n_net_remotes, &c->net_remotes,
-		    &err);
-		get_str(o, "network", "tapdev", &c->net_tapdev, &err);
-		get_str(o, "network", "mac", &c->net_mac, &err);
-		get_bool(o, "network", "gateway", &c->net_gateway, &err);
-		if ((v = section(o, "l2tp", &err)) != NULL) {
-			check_unknown_fields(v, "network.l2tp", l2tp_keys,
-			    sizeof(l2tp_keys) / sizeof(l2tp_keys[0]),
-			    l2tp_aliases, sizeof(l2tp_aliases) / sizeof(l2tp_aliases[0]), &err);
-			get_bool(v, "network.l2tp", "enabled", &l2tp, &err);
-			get_int(v, "network.l2tp", "session", &session, &err);
-			get_str(v, "network.l2tp", "cookie", &c->net_l2tp_cookie, &err);
-			get_bool(v, "network.l2tp", "counter", &c->net_l2tp_counter, &err);
-		}
-		c->net_l2tp_session = session;
-
-		if (type != NULL) {
-			for (t = 0; t < MC_N_NET_TYPES; t++)
-				if (strcmp(type, net_type_names[t]) == 0)
-					break;
-			if (t < MC_N_NET_TYPES)
-				c->net_type = t;
-			else if (err == NULL) {
-				char *suggest = NULL;
-				if (strcasecmp(type, "l2tp") == 0)
-					suggest = xstrdup(" (did you mean \"l2tpv3\"?)");
-				else if (strcasecmp(type, "nat") == 0)
-					suggest = xstrdup(" (did you mean \"simulated\"?)");
-				else if (strcasecmp(type, "bridge") == 0)
-					suggest = xstrdup(" (did you mean \"bridged\"?)");
-				else {
-					int bd = 999, k;
-					const char *bm = NULL;
-					for (k = 0; k < MC_N_NET_TYPES; k++) {
-						int dist = levenshtein_distance(type, net_type_names[k]);
-						if (dist < bd) {
-							bd = dist;
-							bm = net_type_names[k];
-						}
-					}
-					if (bm != NULL && bd <= 2)
-						suggest = xprintf(" (did you mean \"%s\"?)", bm);
-				}
-				err = xprintf("in \"network\": unknown network type \"%s\"%s "
-				    "(valid types: simulated, bridged, udp, l2tpv3)",
-				    type, suggest != NULL ? suggest : "");
-				free(suggest);
-			}
-			free(type);
-		} else if (c->net_tapdev[0] != '\0')
-			c->net_type = MC_NET_BRIDGED;
-		else if (c->n_net_remotes > 0 || c->net_local_port != 0)
-			c->net_type = l2tp ? MC_NET_L2TP : MC_NET_UDP;
-		else
-			c->net_type = MC_NET_SIMULATED;
-	}
+	if ((o = section(root, "network", &err)) != NULL)
+		parse_network(o, c, &err);
 
 	get_list(root, "", "devices", &c->n_devices, &c->devices, &err);
 
@@ -1619,6 +1888,16 @@ static void add_list(cJSON *o, const char *key, int n, char **list)
 }
 
 
+/*  A network's "remote": one "host:port", or a list:  */
+static void add_remotes(cJSON *o, const struct mc_net_link *l)
+{
+	if (l->n_remotes == 1)
+		cJSON_AddStringToObject(o, "remote", l->remotes[0]);
+	else if (l->n_remotes > 1)
+		add_list(o, "remote", l->n_remotes, l->remotes);
+}
+
+
 /*
  *  machine_config_save():
  *
@@ -1632,7 +1911,7 @@ bool machine_config_save(struct machine_config *c, const char *path,
 {
 	char *abs = machine_config_clean_path(path), *dir = dirname_of(abs);
 	char *text, *tmp;
-	cJSON *root, *o, *a, *d, *l2;
+	cJSON *root, *o, *a, *d, *n;
 	FILE *f;
 	int i;
 
@@ -1708,21 +1987,41 @@ bool machine_config_save(struct machine_config *c, const char *path,
 			cJSON_AddStringToObject(o, key, c->slot_rom[i]);
 		}
 
+	/*  The network, with only the parts that are used:  */
 	o = cJSON_AddObjectToObject(root, "network");
-	cJSON_AddBoolToObject(o, "enabled", c->net);
-	cJSON_AddStringToObject(o, "type", net_type_names[c->net_type]);
-	cJSON_AddStringToObject(o, "ipv4", c->net_ipv4);
-	cJSON_AddNumberToObject(o, "ipv4len", c->net_ipv4len);
-	cJSON_AddNumberToObject(o, "local_port", c->net_local_port);
-	add_list(o, "remotes", c->n_net_remotes, c->net_remotes);
-	cJSON_AddStringToObject(o, "tapdev", c->net_tapdev);
+	if (!c->net)
+		cJSON_AddBoolToObject(o, "enabled", false);
 	cJSON_AddStringToObject(o, "mac", c->net_mac);
-	cJSON_AddBoolToObject(o, "gateway", c->net_gateway);
-	l2 = cJSON_AddObjectToObject(o, "l2tp");
-	cJSON_AddBoolToObject(l2, "enabled", c->net_type == MC_NET_L2TP);
-	cJSON_AddNumberToObject(l2, "session", c->net_l2tp_session);
-	cJSON_AddStringToObject(l2, "cookie", c->net_l2tp_cookie);
-	cJSON_AddBoolToObject(l2, "counter", c->net_l2tp_counter);
+	if (c->net_nat) {
+		n = cJSON_AddObjectToObject(o, "nat");
+		cJSON_AddBoolToObject(n, "enabled", true);
+		cJSON_AddStringToObject(n, "net", c->net_nat_net);
+		cJSON_AddStringToObject(n, "gateway", c->net_nat_gateway);
+	}
+	if (c->net_udp.enabled) {
+		n = cJSON_AddObjectToObject(o, "udp");
+		cJSON_AddBoolToObject(n, "enabled", true);
+		cJSON_AddNumberToObject(n, "local_port", c->net_udp.local_port);
+		add_remotes(n, &c->net_udp);
+	}
+	if (c->net_l2tp.enabled) {
+		n = cJSON_AddObjectToObject(o, "l2tpv3");
+		cJSON_AddBoolToObject(n, "enabled", true);
+		cJSON_AddNumberToObject(n, "session", c->net_l2tp_session);
+		cJSON_AddStringToObject(n, "cookie", c->net_l2tp_cookie);
+		cJSON_AddBoolToObject(n, "counter", c->net_l2tp_counter);
+		cJSON_AddNumberToObject(n, "local_port", c->net_l2tp.local_port);
+		add_remotes(n, &c->net_l2tp);
+	}
+	if (c->net_tap) {
+		n = cJSON_AddObjectToObject(o, "tap");
+		cJSON_AddBoolToObject(n, "enabled", true);
+		cJSON_AddStringToObject(n, "tapdev", c->net_tapdev);
+	}
+	/*  (Without any of them, a network would have NAT.)  */
+	if (!c->net_nat && !c->net_udp.enabled && !c->net_l2tp.enabled &&
+	    !c->net_tap)
+		cJSON_AddBoolToObject(o, "nat", false);
 
 	add_list(root, "devices", c->n_devices, c->devices);
 
@@ -2034,6 +2333,79 @@ char *machine_config_check(const struct machine_config *c)
 	return machine_config_check_ex(c, false);
 }
 
+static char *check_link(const struct mc_net_link *l, const char *what)
+{
+	int i;
+
+	if (l->n_remotes == 0 && l->local_port == 0)
+		return xprintf("%s needs a remote host or a local port", what);
+	if (l->local_port < 0 || l->local_port > 65535)
+		return xprintf("%s's local port must be 0 to 65535", what);
+	for (i = 0; i < l->n_remotes; i++) {
+		const char *colon = strrchr(l->remotes[i], ':');
+		if (colon == NULL || colon == l->remotes[i] ||
+		    atoi(colon + 1) < 1 || atoi(colon + 1) > 65535)
+			return xprintf("%s's remote \"%s\" isn't host:port",
+			    what, l->remotes[i]);
+	}
+	return NULL;
+}
+
+
+static char *check_network(const struct machine_config *c)
+{
+	char *err;
+
+	if (c->net_tap && (c->net_nat || c->net_udp.enabled ||
+	    c->net_l2tp.enabled))
+		return xstrdup("a tap device or host interface can't be used "
+		    "with NAT, UDP or L2TPv3 (the machine is on that network "
+		    "itself)");
+	if (c->net_udp.enabled && c->net_l2tp.enabled)
+		return xstrdup("UDP and L2TPv3 can't both be used (they share "
+		    "one UDP port)");
+	if (c->net_tap && c->net_tapdev[0] == '\0')
+		return xstrdup("a tap network needs a host interface or a "
+		    "tap device");
+
+	if (c->net_nat) {
+		uint32_t net, gw, mask;
+		int len;
+		if ((err = machine_config_parse_ipv4_net(c->net_nat_net, &net,
+		    &len)) != NULL)
+			return err;
+		mask = 0xffffffffU << (32 - len);
+		if (c->net_nat_gateway[0] != '\0') {
+			if (!machine_config_parse_ipv4(c->net_nat_gateway, &gw))
+				return xprintf("the gateway \"%s\" isn't an "
+				    "IPv4 address", c->net_nat_gateway);
+			if ((gw & mask) != net || gw == net ||
+			    gw == (net | ~mask))
+				return xprintf("the gateway %s isn't an address "
+				    "on %s", c->net_nat_gateway,
+				    c->net_nat_net);
+		}
+	}
+
+	if (c->net_udp.enabled && (err = check_link(&c->net_udp, "UDP")) != NULL)
+		return err;
+	if (c->net_l2tp.enabled) {
+		size_t n = strlen(c->net_l2tp_cookie);
+		if ((err = check_link(&c->net_l2tp, "L2TPv3")) != NULL)
+			return err;
+		if (c->net_l2tp_session == 0)
+			return xstrdup("the L2TPv3 session ID can't be 0");
+		if (n >= 2 && c->net_l2tp_cookie[0] == '0' &&
+		    (c->net_l2tp_cookie[1] == 'x' || c->net_l2tp_cookie[1] == 'X'))
+			n -= 2;
+		if (n != 0 && n != 8 && n != 16)
+			return xstrdup("the L2TPv3 cookie must be 8 or 16 hex "
+			    "digits, or empty");
+	}
+	return NULL;
+}
+
+
 char *machine_config_check_ex(const struct machine_config *c,
 	bool missing_disks_ok)
 {
@@ -2060,15 +2432,8 @@ char *machine_config_check_ex(const struct machine_config *c,
 			return xprintf("the Ethernet address %s is a multicast "
 			    "address (its first byte is odd)", c->net_mac);
 	}
-	if (c->net && c->net_type == MC_NET_BRIDGED && c->net_tapdev[0] == '\0')
-		return xstrdup("a bridged network needs a host interface or a "
-		    "tap device");
-	if (c->net && (c->net_type == MC_NET_UDP || c->net_type ==
-	    MC_NET_L2TP) && c->n_net_remotes == 0 && c->net_local_port == 0)
-		return xstrdup("a UDP or L2TPv3 network needs a remote host or "
-		    "a local port");
-	if (c->net && c->net_type == MC_NET_L2TP && c->net_l2tp_session == 0)
-		return xstrdup("the L2TPv3 session ID can't be 0");
+	if (c->net && (err = check_network(c)) != NULL)
+		return err;
 	if (c->scale != 0 && (c->scale < 10 || c->scale > 800))
 		return xstrdup("the window scale must be a percentage from 10 "
 		    "to 800, or 0 (fit the screen)");
@@ -3193,19 +3558,30 @@ bool machine_config_apply(struct machine_config *c, struct emul *emul,
 		m->nic_mac_set = true;
 
 	if (c->net) {
-		bool udp = c->net_type == MC_NET_UDP ||
-		    c->net_type == MC_NET_L2TP;
-		emul->net = net_init(emul, c->net_type == MC_NET_SIMULATED ||
-		    (udp && c->net_gateway) ? NET_INIT_FLAG_GATEWAY : 0,
-		    c->net_type == MC_NET_BRIDGED ? c->net_tapdev : NULL,
-		    c->net_ipv4, c->net_ipv4len, udp ? c->net_remotes : NULL,
-		    udp ? c->n_net_remotes : 0, udp ? c->net_local_port : 0,
-		    NULL);
+		const struct mc_net_link *l = c->net_l2tp.enabled ?
+		    &c->net_l2tp : c->net_udp.enabled ? &c->net_udp : NULL;
+		char addr[20];
+		uint32_t a = 0x0a000000;
+		int len = NET_DEFAULT_IPV4_LEN;
+		char *net_err;
+
+		if (c->net_nat && (net_err = machine_config_parse_ipv4_net(
+		    c->net_nat_net, &a, &len)) != NULL) {
+			fprintf(stderr, "%s\n", net_err);
+			free(net_err);
+			return false;
+		}
+		snprintf(addr, sizeof(addr), "%u.%u.%u.%u", a >> 24,
+		    (a >> 16) & 255, (a >> 8) & 255, a & 255);
+		emul->net = net_init(emul, c->net_nat ? NET_INIT_FLAG_GATEWAY
+		    : 0, c->net_tap ? c->net_tapdev : NULL, addr, len,
+		    c->net_nat_gateway, l != NULL ? l->remotes : NULL, l != NULL ? l->n_remotes : 0,
+		    l != NULL ? l->local_port : 0, NULL);
 		if (emul->net == NULL) {
 			fprintf(stderr, "Could not set up the network.\n");
 			return false;
 		}
-		if (c->net_type == MC_NET_L2TP && !net_l2tp_init(emul->net,
+		if (c->net_l2tp.enabled && !net_l2tp_init(emul->net,
 		    c->net_l2tp_session, c->net_l2tp_cookie,
 		    c->net_l2tp_counter)) {
 			fprintf(stderr, "Bad L2TPv3 settings.\n");
