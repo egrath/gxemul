@@ -233,13 +233,11 @@ DEVICE_ACCESS(8259)
 		break;
 	default:
 		if (writeflag == MEM_WRITE) {
-			debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: unimplemented write to address 0x%x"
-			    " data=0x%02x ]", (int)relative_addr, (int)idata);
-			cpu->running = 0;
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "8259", "unimplemented write to address 0x%x"
+			    " data=0x%02x", (int)relative_addr, (int)idata);
 		} else {
-			debugmsg(SUBSYS_DEVICE, "8259", VERBOSITY_DEBUG, "[ 8259: unimplemented read from address 0x%x "
-			    "]", (int)relative_addr);
-			cpu->running = 0;
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "8259", "unimplemented read from address 0x%x",
+			    (int)relative_addr);
 		}
 	}
 

@@ -230,10 +230,8 @@ int yamon_emul(struct cpu *cpu)
 
 	default:
 		cpu_register_dump(cpu->machine, cpu, 1, 0);
-		debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "\n");
-		debugmsg(SUBSYS_PROMEMUL, "yamon", VERBOSITY_DEBUG, "[ yamon_emul(): unimplemented yamon function 0x%"
-		    PRIx32" ]", ofs);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "yamon", "yamon_emul(): unimplemented yamon function 0x%"
+		    PRIx32, ofs);
 	}
 
 	return 1;

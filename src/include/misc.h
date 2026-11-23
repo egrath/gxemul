@@ -265,6 +265,7 @@ void fatal_error(int subsystem, const char *name, const char *fmt, ...)
 void fatal_error_cpu(struct cpu *cpu, int subsystem, const char *name,
 	const char *fmt, ...) GXEMUL_PRINTF(4, 5);
 void fatal_error_cpu_stop(struct cpu *cpu);
+void fatal_error_cpu_halt(struct cpu *cpu);
 void debugmsg_init(void);
 int debugmsg_register_subsystem(const char* name);
 int debugmsg_subsystem_lookup(const char *name);
@@ -295,6 +296,10 @@ static inline bool debugmsg_is_active(int subsys, int reqverb)
 	extern size_t debugmsg_nr_of_subsystems;
 	extern bool single_step;
 	extern bool about_to_enter_single_step;
+
+	/*  Errors are always shown (on the console even without --log):  */
+	if (reqverb <= VERBOSITY_ERROR)
+		return true;
 
 	if (__builtin_expect(debugmsg_active_verbosity < reqverb, 1))
 		return false;

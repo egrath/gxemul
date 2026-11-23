@@ -133,9 +133,8 @@ void alpha_prom_call(struct cpu *cpu)
 		case PROM_E_TTY_DEV:
 			s = "";		/*  TODO  */
 			break;
-		default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha PALcode: GXemul PROM getenv %" PRIu64 ": TODO "
-			    "]", cpu->cd.alpha.r[ALPHA_A1]);
-			cpu->running = 0;
+		default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha PALcode: GXemul PROM getenv %" PRIu64 ": TODO",
+			    cpu->cd.alpha.r[ALPHA_A1]);
 		}
 		/*  Copy at most a3 bytes.  */
 		len = a3;
@@ -144,9 +143,8 @@ void alpha_prom_call(struct cpu *cpu)
 		store_buf(cpu, a2, s, len);
 		break;
 
-	default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha PALcode: GXemul PROM call, a0=0x%" PRIx64" ]",
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha PALcode: unimplemented GXemul PROM call, a0=0x%" PRIx64,
 		    (uint64_t) cpu->cd.alpha.r[ALPHA_A0]);
-		cpu->running = 0;
 	}
 
 	/*  Return from the PROM call.  */
@@ -185,8 +183,7 @@ void alpha_palcode(struct cpu *cpu, uint32_t palcode)
 	    palcode == 0xae || palcode == 0xaa || palcode == 0x86 ||
 	    palcode == 0x9e || palcode == 0x92 || palcode == 0x9f)) {
 		// opDec fault.
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Privileged Alpha PALcode called from user mode: TODO ]");
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Privileged Alpha PALcode called from user mode: TODO");
 		return;
 	}
 
@@ -319,10 +316,9 @@ Make sure they are correct, as documented in the Manual.
 		if (a1 < N_ALPHA_KENTRY)
 			cpu->cd.alpha.kentry[a1] = a0;
 		else {
-			debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha PALcode: PAL_OSF1_wrent: attempt to "
-			    "write to non-implemented selector %i ]",
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha PALcode: PAL_OSF1_wrent: attempt to "
+			    "write to non-implemented selector %i",
 			    (int)a1);
-			cpu->running = 0;
 		}
 		break;
 	case 0x35:	/*  PAL_OSF1_swpipl  */
@@ -378,8 +374,7 @@ Make sure they are correct, as documented in the Manual.
 	case 0x3fffffe:
 		alpha_prom_call(cpu);
 		break;
-	default:debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha PALcode 0x%x unimplemented! ]", palcode);
-		cpu->running = 0;
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha PALcode 0x%x unimplemented!", palcode);
 	}
 
 	/*

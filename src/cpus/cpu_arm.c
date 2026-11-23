@@ -1085,7 +1085,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 	if (!(cpu->pc & 1) || !(cpu->cd.arm.cpsr & ARM_FLAG_T)) {
 		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW called when not in "
 			"THUMB mode?\n");
-		cpu->running = 0;
 		return 0;
 	}
 
@@ -1093,7 +1092,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			sizeof(ib), MEM_READ, CACHE_INSTRUCTION)) {
 		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not read "
 			"the instruction\n");
-		cpu->running = 0;
 		return 0;
 	}
 	
@@ -1361,8 +1359,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 					cpu->cd.arm.flags |= ARM_F_N;
 				break;
 			default:
-				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented DPI %i at pc 0x%08x\n", (iw >> 6) & 15, (int)cpu->pc);
-				cpu->running = 0;
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented DPI %i at pc 0x%08x", (iw >> 6) & 15, (int)cpu->pc);
 				return 0;
 			}
 			break;
@@ -1376,8 +1373,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 				cpu->cd.arm.r[rd] = cpu->cd.arm.r[r3];
 				if (r3 == ARM_PC) {
 					if (cpu->pc & 1) {
-						debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: double check with manual whether it is correct to use old pc + 8 here; at pc 0x%08x\n", (int)cpu->pc);
-						cpu->running = 0;
+						fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: double check with manual whether it is correct to use old pc + 8 here; at pc 0x%08x", (int)cpu->pc);
 						return 0;
 					}
 					cpu->cd.arm.r[rd] = cpu->pc + 8;
@@ -1401,14 +1397,12 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 					if (rm == ARM_LR && cpu->machine->show_trace_tree)
 						cpu_functioncall_trace_return(cpu);
 				} else {
-					debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
-					cpu->running = 0;
+					fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x", main_opcode, op11_8, (int)cpu->pc);
 					return 0;
 				}
 				break;
 			default:
-				debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
-				cpu->running = 0;
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x", main_opcode, op11_8, (int)cpu->pc);
 				return 0;
 			}
 			break;
@@ -1424,7 +1418,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			if (!cpu->memory_rw(cpu, cpu->mem, tmp, &word[0],
 					sizeof(word), MEM_READ, CACHE_INSTRUCTION)) {
 				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load pc-relative word\n");
-				cpu->running = 0;
 				return 0;
 			}
 
@@ -1437,8 +1430,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			break;
 
 		default:
-			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op10, (int)cpu->pc);
-			cpu->running = 0;
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x", main_opcode, op10, (int)cpu->pc);
 			return 0;
 		}
 		break;
@@ -1467,7 +1459,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 		if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 				len, isLoad ? MEM_READ : MEM_WRITE, CACHE_DATA)) {
 			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load with immediate offset\n");
-			cpu->running = 0;
 			return 0;
 		}
 
@@ -1496,7 +1487,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 					sizeof(word), MEM_READ, CACHE_DATA)) {
 				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not load sp-relative word\n");
-				cpu->running = 0;
 				return 0;
 			}
 
@@ -1520,7 +1510,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			if (!cpu->memory_rw(cpu, cpu->mem, addr, &word[0],
 					sizeof(word), MEM_WRITE, CACHE_DATA)) {
 				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "arm_cpu_interpret_thumb_SLOW(): could not store sp-relative word\n");
-				cpu->running = 0;
 				return 0;
 			}
 		}
@@ -1556,8 +1545,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 				cpu->pc += sizeof(uint16_t);
 			return 1;
 		default:
-			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x\n", main_opcode, op11_8, (int)cpu->pc);
-			cpu->running = 0;
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented opcode 0x%x,%i at pc 0x%08x", main_opcode, op11_8, (int)cpu->pc);
 			return 0;
 		}
 		break;
@@ -1623,8 +1611,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 			arm_exception(cpu, ARM_EXCEPTION_SWI);
 			return 1;
 		} else {
-			debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x, non-branch, at pc 0x%08x\n", main_opcode, (int)cpu->pc);
-			cpu->running = 0;
+			fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented opcode 0x%x, non-branch, at pc 0x%08x", main_opcode, (int)cpu->pc);
 			return 0;
 		}
 		break;
@@ -1636,7 +1623,6 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 
 			if (iw & 1) {
 				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "lowest bit set in thumb blx instruction?\n");
-				cpu->running = 0;
 				return 0;
 			}
 
@@ -1676,8 +1662,7 @@ int arm_cpu_interpret_thumb_SLOW(struct cpu *cpu)
 		break;
 
 	default:
-		debugmsg(SUBSYS_CPU, "cpu_arm", VERBOSITY_DEBUG, "TODO: unimplemented opcode 0x%x at pc 0x%08x\n", main_opcode, (int)cpu->pc);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu_arm", "TODO: unimplemented opcode 0x%x at pc 0x%08x", main_opcode, (int)cpu->pc);
 		return 0;
 	}
 

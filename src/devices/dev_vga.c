@@ -654,9 +654,8 @@ DEVICE_ACCESS(vga_graphics)
 				data[i] = random();
 		}
 		break;
-	default:fatal_error(SUBSYS_DEVICE, "vga", "dev_vga: Unimplemented graphics mode %i",
+	default:fatal_error_cpu(cpu, SUBSYS_DEVICE, "vga", "dev_vga: Unimplemented graphics mode %i",
 		    d->graphics_mode);
-		cpu->running = 0;
 	}
 
 	if (modified) {

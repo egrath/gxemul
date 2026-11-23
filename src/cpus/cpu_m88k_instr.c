@@ -1541,7 +1541,7 @@ X(prom_call)
 		mvmeprom_emul(cpu);
 		break;
 
-	default:debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "m88k",
 		    "prom_call: unimplemented machine type");
 		ABORT_EXECUTION;
 	}
@@ -2078,9 +2078,8 @@ X(to_be_translated)
 	 *  scratch register instead).
 	 */
 	if (cpu->cd.m88k.r[M88K_ZERO_REG] != 0) {
-		debugmsg_cpu(cpu, SUBSYS_CPU, "to_be_translated", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, SUBSYS_CPU, "to_be_translated",
 		    "INTERNAL ERROR! M88K_ZERO_REG != 0");
-		cpu->running = false;
 		goto bad;
 	}
 

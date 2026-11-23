@@ -43,7 +43,7 @@
 	}
 
 #define	ABORT_EXECUTION	  {	SYNCH_PC;				\
-				fatal_error(SUBSYS_CPU, "cpu", "Execution aborted at: pc = 0x%08x", (int)cpu->pc); \
+				fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Execution aborted at: pc = 0x%08x", (int)cpu->pc); \
 				cpu->cd.sh.next_ic = &nothing_call;	\
 				cpu->running = false; }
 
@@ -2684,7 +2684,7 @@ X(fsrra_frn)
 
 	if (cpu->cd.sh.fpscr & SH_FPSCR_PR) {
 		/*  Double-precision:  */
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "Double-precision fsrra? TODO\n");
+		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_ERROR, "Double-precision fsrra? TODO");
 		ABORT_EXECUTION;
 		return;
 	} else {

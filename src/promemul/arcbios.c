@@ -1199,8 +1199,7 @@ void arcbios_sgi_emul(struct cpu *cpu)
 		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n");
-		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented SGI vector 0x%x", vector);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented SGI vector 0x%x", vector);
 	}
 }
 
@@ -1947,17 +1946,15 @@ int arcbios_emul(struct cpu *cpu)
 		/*
 		 *  Magical crash if there is no exception handling code.
 		 */
-		fatal_error(SUBSYS_PROMEMUL, "arcbios", "EXCEPTION, but no exception handler installed yet.\n");
 		cpu_register_dump(machine, cpu, 1, 0x1);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "arcbios", "EXCEPTION, but no exception handler installed yet.");
 		break;
 	default:
 		cpu_register_dump(machine, cpu, 1, 0x1);
 		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "a0 points to: ");
 		dump_mem_string(cpu, cpu->cd.mips.gpr[MIPS_GPR_A0]);
 		debugmsg(SUBSYS_PROMEMUL, "arcbios", VERBOSITY_DEBUG, "\n");
-		fatal_error(SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented vector 0x%x", vector);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "arcbios", "ARCBIOS: unimplemented vector 0x%x", vector);
 	}
 
 	return 1;

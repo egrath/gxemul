@@ -316,10 +316,8 @@ void riscv_irq_interrupt_deassert(struct interrupt *interrupt)
  */
 void riscv_exception(struct cpu *cpu, int vector, int is_trap)
 {
-	debugmsg_cpu(cpu, SUBSYS_EXCEPTION, "", VERBOSITY_ERROR,
+	fatal_error_cpu(cpu, SUBSYS_EXCEPTION, "",
 	    "riscv_exception(): TODO");
-
-	cpu->running = false;
 
 	riscv_pc_to_pointers(cpu);
 }

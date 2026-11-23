@@ -118,9 +118,8 @@ int dec_jumptable_func(struct cpu *cpu, int vector)
 		 *  is ignored, and a file handle value of 1 is returned.
 		 */
 		if (file_opened) {
-			fatal_error(SUBSYS_PROMEMUL, "dec_prom", "\ndec_jumptable_func(): opening more than one "
-			    "file isn't supported yet.\n");
-			cpu->running = 0;
+			fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "dec_prom", "dec_jumptable_func(): opening more than one "
+			    "file isn't supported yet.");
 		}
 		file_opened = 1;
 		cpu->cd.mips.gpr[MIPS_GPR_V0] = 1;
@@ -192,9 +191,8 @@ int dec_jumptable_func(struct cpu *cpu, int vector)
 				debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[%02x]", ch);
 		}
 		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "\n");
-		fatal_error(SUBSYS_PROMEMUL, "dec_prom", "PROM emulation: unimplemented JUMP TABLE vector "
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "dec_prom", "PROM emulation: unimplemented JUMP TABLE vector "
 		    "0x%x (decimal function %i)", vector, vector/8);
-		cpu->running = 0;
 	}
 
 	return 0;
@@ -679,11 +677,10 @@ int decstation_prom_emul(struct cpu *cpu)
 			cpu->running = 0;
 			break;
 		default:
-			fatal_error(SUBSYS_PROMEMUL, "dec_prom", "DEC prom emulation: unknown rex() a0=0x%" PRIx64
+			fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "dec_prom", "DEC prom emulation: unknown rex() a0=0x%" PRIx64
 			    " ('%c')",
 			    (int64_t) cpu->cd.mips.gpr[MIPS_GPR_A0],
 			    (char) cpu->cd.mips.gpr[MIPS_GPR_A0]);
-			cpu->running = 0;
 		}
 		break;
 	default:
@@ -700,9 +697,8 @@ int decstation_prom_emul(struct cpu *cpu)
 				debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "[%02x]", chTmp);
 		}
 		debugmsg(SUBSYS_PROMEMUL, "dec_prom", VERBOSITY_DEBUG, "\n");
-		fatal_error(SUBSYS_PROMEMUL, "dec_prom", "PROM emulation: unimplemented callback vector 0x%x",
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "dec_prom", "PROM emulation: unimplemented callback vector 0x%x",
 		    vector);
-		cpu->running = 0;
 	}
 
 	return 1;

@@ -141,9 +141,8 @@ int mb89352_dreg_read(struct cpu* cpu, struct mb89352_data *d, int writeflag)
 	int odata;
 
 	if (d->xferp == NULL) {
-		debugmsg_cpu(cpu, d->subsys, "", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, d->subsys, "",
 	    	    "DREG: no ongoing transfer to read from?");
-	    	cpu->running = 0;
 	    	return 0;
 	}
 	
@@ -164,16 +163,14 @@ int mb89352_dreg_read(struct cpu* cpu, struct mb89352_data *d, int writeflag)
 		len = d->xferp->msg_in_len;
 		break;
 	default:
-		debugmsg_cpu(cpu, d->subsys, "", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, d->subsys, "",
 	    	    "DREG: read in unimplemented phase %i", d->phase);
-	    	cpu->running = 0;
 	    	return 0;
 	}
 
 	if (d->transfer_bufpos >= len) {
-		debugmsg_cpu(cpu, d->subsys, "", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, d->subsys, "",
 	    	    "DREG: read longer than buffer?");
-	    	cpu->running = 0;
 	    	return 0;
 	}
 
@@ -230,16 +227,14 @@ void mb89352_dreg_write(struct cpu* cpu, struct mb89352_data *d, int writeflag, 
 		len = d->xferp->cmd_len;
 		break;
 	default:
-		debugmsg_cpu(cpu, d->subsys, "", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, d->subsys, "",
 	    	    "DREG: write in unimplemented phase %i", d->phase);
-	    	cpu->running = 0;
 	    	return;
 	}
 
 	if (d->transfer_bufpos >= len) {
-		debugmsg_cpu(cpu, d->subsys, "", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, d->subsys, "",
 	    	    "DREG: write longer than buffer?");
-	    	cpu->running = 0;
 	    	return;
 	}
 
@@ -277,9 +272,8 @@ void mb89352_dreg_write(struct cpu* cpu, struct mb89352_data *d, int writeflag, 
 		break;
 
 	default:
-		debugmsg_cpu(cpu, d->subsys, "", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, d->subsys, "",
 	    	    "DREG write: UNIMPLEMENTED PHASE %i", d->phase);
-	    	cpu->running = 0;
 	}
 	
 	d->reg[PSNS] |= PSNS_REQ;
@@ -301,7 +295,7 @@ DEVICE_ACCESS(mb89352)
 	    	    (int) relative_addr, (int) idata);
 
 		if (mb89352_abort_on_unimplemented_stuff) {
-			cpu->running = 0;
+			fatal_error_cpu_halt(cpu);
 			return 0;
 		}
 	}
@@ -450,7 +444,7 @@ DEVICE_ACCESS(mb89352)
 			    	    "unimplemented SCMD: 0x%x", (int) idata);
 
 				if (mb89352_abort_on_unimplemented_stuff) {
-					cpu->running = 0;
+					fatal_error_cpu_halt(cpu);
 					return 0;
 				}
 			}
@@ -607,7 +601,7 @@ DEVICE_ACCESS(mb89352)
 			    (int) relative_addr);
 
 		if (mb89352_abort_on_unimplemented_stuff) {
-			cpu->running = 0;
+			fatal_error_cpu_halt(cpu);
 			return 0;
 		}
 	}

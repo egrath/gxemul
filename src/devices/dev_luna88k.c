@@ -865,13 +865,10 @@ DEVICE_ACCESS(luna88k)
 			    (int) addr,
 			    (int) idata);
 		else
-			debugmsg_cpu(cpu, SUBSYS_DEVICE, "luna88k", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "luna88k",
 		    	    "unimplemented %zu-bit READ from address 0x%x",
 		    	    len * 8,
 			    (int) addr);
-
-		// Stop the emulation immediately.
-		cpu->running = 0;
 		return 0;
 	}
 

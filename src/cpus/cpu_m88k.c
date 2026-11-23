@@ -461,9 +461,8 @@ void m88k_ldcr(struct cpu *cpu, uint32_t *r32ptr, int cr)
 		 */
 		if (!!(cpu->cd.m88k.cr[M88K_CR_PSR] & M88K_PSR_BO)
 		    != !!(retval & DMT_BO) && retval & DMT_VALID) {
-			debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_CPU, "m88k",
 			    "ldcr: DMT byte order not same as CPUs?");
-			cpu->running = false;
 			return;
 		}
 
@@ -478,18 +477,16 @@ void m88k_ldcr(struct cpu *cpu, uint32_t *r32ptr, int cr)
 		 *  should always be zero.
 		 */
 		if (retval & 3) {
-			debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_CPU, "m88k",
 			    "ldcr: DMAx not word-aligned? Internal error.");
-			cpu->running = false;
 			return;
 		}
 
 		break;
 
-	default:debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
-		    "ldcr: UNIMPLEMENTED cr = 0x%02x (%s)\n",
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "m88k",
+		    "ldcr: UNIMPLEMENTED cr = 0x%02x (%s)",
 		    cr, m88k_cr_name(cpu, cr));
-		cpu->running = false;
 		return;
 	}
 
@@ -520,11 +517,10 @@ void m88k_stcr(struct cpu *cpu, uint32_t value, int cr, int rte)
 		    && !(value & M88K_PSR_BO)) ||
 		    (cpu->byte_order == EMUL_BIG_ENDIAN
 		    && (value & M88K_PSR_BO))) {
-			debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_CPU, "m88k",
 			    "stcr: TODO: attempt to change endianness by flipping"
 			    " the endianness bit in the PSR. How should this"
 			    " be handled? Aborting.");
-			cpu->running = false;
 			return;
 		}
 
@@ -588,10 +584,9 @@ void m88k_stcr(struct cpu *cpu, uint32_t value, int cr, int rte)
 		cpu->cd.m88k.cr[cr] = value;
 		break;
 
-	default:debugmsg_cpu(cpu, SUBSYS_CPU, "m88k", VERBOSITY_ERROR,
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "m88k",
 		    "stcr: UNIMPLEMENTED cr = 0x%02x (%s)",
 		    cr, m88k_cr_name(cpu, cr));
-		cpu->running = false;
 		return;
 	}
 }

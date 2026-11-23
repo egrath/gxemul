@@ -381,10 +381,8 @@ void dreamcast_emul(struct cpu *cpu)
 
 bad:
 	cpu_register_dump(cpu->machine, cpu, 1, 0);
-	debugmsg(SUBSYS_PROMEMUL, "dreamcast", VERBOSITY_DEBUG, "\n");
-	debugmsg(SUBSYS_PROMEMUL, "dreamcast", VERBOSITY_DEBUG, "[ dreamcast_emul(): unimplemented dreamcast PROM call, "
-	    "pc=0x%08" PRIx32" (vectorAddr=0x%08" PRIx32") ]", (uint32_t)cpu->pc, vectorAddr);
-	cpu->running = 0;
+	fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "dreamcast", "dreamcast_emul(): unimplemented dreamcast PROM call, "
+	    "pc=0x%08" PRIx32" (vectorAddr=0x%08" PRIx32")", (uint32_t)cpu->pc, vectorAddr);
 	return;
 }
 

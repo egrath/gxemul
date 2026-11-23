@@ -396,6 +396,26 @@ void fatal_error_cpu_stop(struct cpu *cpu)
 	}
 }
 
+/*
+ *  fatal_error_cpu_halt():
+ *
+ *  Stops one CPU after a fatal error in its context that has already been
+ *  reported, and drops to the debugger console (as fatal_error_cpu() does
+ *  after printing its message).  Before emulation has started, exits.
+ */
+void fatal_error_cpu_halt(struct cpu *cpu)
+{
+	fflush(NULL);
+
+	if (emul_executing) {
+		fatal_error_cpu_stop(cpu);
+		fatal_error_dropped = true;
+		debugger_ctl_stop("fatal error");
+	} else {
+		exit(1);
+	}
+}
+
 void fatal_error(int subsystem, const char *name, const char *fmt, ...)
 {
 	va_list argp;
@@ -436,15 +456,8 @@ void fatal_error_cpu(struct cpu *cpu, int subsystem, const char *name,
 	va_start(argp, fmt);
 	debugmsg_va(cpu, subsystem, name, VERBOSITY_ERROR, argp, fmt);
 	va_end(argp);
-	fflush(NULL);
 
-	if (emul_executing) {
-		fatal_error_cpu_stop(cpu);
-		fatal_error_dropped = true;
-		debugger_ctl_stop("fatal error");
-	} else {
-		exit(1);
-	}
+	fatal_error_cpu_halt(cpu);
 }
 
 

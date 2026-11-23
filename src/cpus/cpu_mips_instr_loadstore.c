@@ -91,11 +91,10 @@ void LS_GENERIC_N(struct cpu *cpu, struct mips_instr_call *ic)
 #endif
 		    0, addr, 0, vaddr_vpn2, vaddr_asid, 0);
 #else
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "{ mips dyntrans alignment exception, size = %i,"
-		    " addr = %016"PRIx64", pc = %016"PRIx64" }", LS_SIZE,
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "mips dyntrans alignment exception, size = %i,"
+		    " addr = %016"PRIx64", pc = %016"PRIx64, LS_SIZE,
 		    (uint64_t) addr, cpu->pc);
 
-		cpu->running = false;
 		cpu->cd.mips.next_ic = &nothing_call;
 #endif
 		return;

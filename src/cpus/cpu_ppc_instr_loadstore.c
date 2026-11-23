@@ -62,10 +62,9 @@ void LS_GENERIC_N(struct cpu *cpu, struct ppc_instr_call *ic)
 
 #ifndef LS_B
 	if ((addr & 0xfff) + LS_SIZE-1 > 0xfff) {
-		debugmsg_cpu(cpu, SUBSYS_CPU, "ppc", VERBOSITY_ERROR,
+		fatal_error_cpu(cpu, SUBSYS_CPU, "ppc",
 		    "PPC LOAD/STORE misalignment across page boundary: TODO"
-		    " (addr=0x%08x, LS_SIZE=%i)\n", (int)addr, LS_SIZE);
-		cpu->running = false;
+		    " (addr=0x%08x, LS_SIZE=%i)", (int)addr, LS_SIZE);
 		cpu->cd.ppc.next_ic = &nothing_call;
 		return;
 	}

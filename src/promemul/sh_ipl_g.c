@@ -81,10 +81,8 @@ static int sh_ipl_g_promcall(struct cpu *cpu)
 		break;
 
 	default:cpu_register_dump(cpu->machine, cpu, 1, 0);
-		debugmsg(SUBSYS_PROMEMUL, "sh_ipl_g", VERBOSITY_DEBUG, "\n");
-		debugmsg(SUBSYS_PROMEMUL, "sh_ipl_g", VERBOSITY_DEBUG, "[ SH-IPL+G PROM emulation: unimplemented function 0x%"
-		    PRIx32" ]", cpu->cd.sh.r_bank[0]);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "sh_ipl_g", "SH-IPL+G PROM emulation: unimplemented function 0x%"
+		    PRIx32, cpu->cd.sh.r_bank[0]);
 		return 0;
 	}
 
@@ -103,11 +101,9 @@ int sh_ipl_g_emul(struct cpu *cpu)
 		return sh_ipl_g_promcall(cpu);
 	} else {
 		cpu_register_dump(cpu->machine, cpu, 1, 0);
-		debugmsg(SUBSYS_PROMEMUL, "sh_ipl_g", VERBOSITY_DEBUG, "\n");
-		debugmsg(SUBSYS_PROMEMUL, "sh_ipl_g", VERBOSITY_DEBUG, "[ SH-IPL+G PROM emulation: expevt=0x%x, "
-		    " tra=0x%x ]", (int)cpu->cd.sh.expevt,
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "sh_ipl_g", "SH-IPL+G PROM emulation: unimplemented expevt=0x%x, "
+		    " tra=0x%x", (int)cpu->cd.sh.expevt,
 		    (int)cpu->cd.sh.tra);
-		cpu->running = 0;
 		return 0;
 	}
 }

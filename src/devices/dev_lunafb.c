@@ -84,13 +84,10 @@ DEVICE_ACCESS(lunafb_a)
 			    (int) addr,
 			    (int) idata);
 		else
-			debugmsg_cpu(cpu, SUBSYS_DEVICE, "lunafb_a", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "lunafb_a",
 		    	    "unimplemented %zu-bit READ from address 0x%x",
 		    	    len * 8,
 			    (int) addr);
-
-		// Stop the emulation immediately.
-		cpu->running = 0;
 		return 0;
 	}
 
@@ -155,15 +152,13 @@ DEVICE_ACCESS(lunafb_b)
 		/*  Function 5 is "ROP copy", according to OpenBSD sources.  */
 		/*  See hitachi_hm53462_rop.h  */
 		if (writeflag == MEM_READ) {
-			debugmsg_cpu(cpu, SUBSYS_DEVICE, "lunafb_b", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "lunafb_b",
 		    	    "TODO: lunafb READ from BMAP_FN ROP register");
-			cpu->running = 0;
 			return 0;
 		}
 		if (idata != 0xffffffff) {
-			debugmsg_cpu(cpu, SUBSYS_DEVICE, "lunafb_b", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "lunafb_b",
 		    	    "TODO: lunafb write which does not set ALL bits");
-			cpu->running = 0;
 			return 0;
 		}
 		break;
@@ -176,13 +171,10 @@ DEVICE_ACCESS(lunafb_b)
 			    (int) addr,
 			    (int) idata);
 		else
-			debugmsg_cpu(cpu, SUBSYS_DEVICE, "lunafb_b", VERBOSITY_ERROR,
+			fatal_error_cpu(cpu, SUBSYS_DEVICE, "lunafb_b",
 		    	    "unimplemented %zu-bit READ from address 0x%x",
 		    	    len * 8,
 			    (int) addr);
-
-		// Stop the emulation immediately.
-		cpu->running = 0;
 		return 0;
 	}
 

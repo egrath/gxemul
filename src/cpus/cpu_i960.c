@@ -366,10 +366,8 @@ void i960_irq_interrupt_deassert(struct interrupt *interrupt)
  */
 void i960_exception(struct cpu *cpu, int vector, int is_trap)
 {
-	debugmsg_cpu(cpu, SUBSYS_EXCEPTION, "", VERBOSITY_ERROR,
+	fatal_error_cpu(cpu, SUBSYS_EXCEPTION, "",
 	    "i960_exception(): TODO");
-
-	cpu->running = false;
 
 	i960_pc_to_pointers(cpu);
 }

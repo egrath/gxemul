@@ -719,6 +719,7 @@ PCIINIT(pcn)
 
 	default:fatal_error(SUBSYS_DEVICE, "bus_pci", "pcn in non-implemented machine type %i",
 		    machine->machine_type);
+		return;
 	}
 
 	PCI_SET_DATA(PCI_INTERRUPT_REG, 0x01100000 | irq);

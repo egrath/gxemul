@@ -130,7 +130,7 @@ X(end_of_page2)
 	if (cpu->delay_slot == NOT_DELAYED)
 		return;
 
-	debugmsg_cpu(cpu, SUBSYS_CPU, "i960", VERBOSITY_ERROR,
+	fatal_error_cpu(cpu, SUBSYS_CPU, "i960",
 	    "end_of_page2: fatal error, we're in a delay slot");
 	ABORT_EXECUTION;
 }

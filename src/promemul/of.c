@@ -1154,12 +1154,8 @@ int of_emul(struct cpu *cpu)
 
 	if (os == NULL) {
 		cpu_register_dump(cpu->machine, cpu, 1, 0);
-		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_DEBUG, "\n");
-		debugmsg(SUBSYS_PROMEMUL, "of", VERBOSITY_ERROR, "[ of: unimplemented service \"%s\" with %i input "
-		    "args and %i output values ]", service, nargs, nret);
-		cpu->running = 0;
-		fatal_error_dropped = true;
-		debugger_drop_to_console("unimplemented OF service");
+		fatal_error_cpu(cpu, SUBSYS_PROMEMUL, "of", "unimplemented service \"%s\" with %i input "
+		    "args and %i output values", service, nargs, nret);
 	}
 
 	for (i=0; i<nargs; i++)

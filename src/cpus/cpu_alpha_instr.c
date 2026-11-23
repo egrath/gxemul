@@ -707,33 +707,35 @@ void alpha_exception(struct cpu *cpu, int type)
 		return;
 	}
 
+	/*  Without PALcode to take it, the exception stops the CPU:  */
+	char msg[200];
 	switch (type) {
 	case ALPHA_EXC_ARITH:
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: arithmetic trap, pc 0x%016" PRIx64 ", exc_sum "
-		    "0x%02" PRIx64 ", exc_mask 0x%016" PRIx64 " ]",
+		snprintf(msg, sizeof(msg), "arithmetic trap, pc 0x%016" PRIx64
+		    ", exc_sum 0x%02" PRIx64 ", exc_mask 0x%016" PRIx64,
 		    (uint64_t) cpu->pc, (uint64_t) cpu->cd.alpha.exc_sum,
 		    (uint64_t) cpu->cd.alpha.exc_mask);
 		break;
 	case ALPHA_EXC_OPCDEC:
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: reserved instruction, pc 0x%016" PRIx64 " ]",
-		    (uint64_t) cpu->pc);
+		snprintf(msg, sizeof(msg), "reserved instruction, pc 0x%016"
+		    PRIx64, (uint64_t) cpu->pc);
 		break;
 	case ALPHA_EXC_UNALIGN:
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: unaligned access, pc 0x%016" PRIx64 ", va "
-		    "0x%016" PRIx64 ", opcode 0x%02x, reg %i ]",
+		snprintf(msg, sizeof(msg), "unaligned access, pc 0x%016" PRIx64
+		    ", va 0x%016" PRIx64 ", opcode 0x%02x, reg %i",
 		    (uint64_t) cpu->pc, (uint64_t) cpu->cd.alpha.exc_va,
 		    cpu->cd.alpha.exc_opcode, cpu->cd.alpha.exc_reg);
 		break;
 	case ALPHA_EXC_FEN:
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: floating point disabled, pc 0x%016" PRIx64
-		    " ]", (uint64_t) cpu->pc);
+		snprintf(msg, sizeof(msg), "floating point disabled, pc 0x%016"
+		    PRIx64, (uint64_t) cpu->pc);
 		break;
 	default:
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: exception %i, pc 0x%016" PRIx64 " ]",
-		    type, (uint64_t) cpu->pc);
+		snprintf(msg, sizeof(msg), "unimplemented exception %i, pc "
+		    "0x%016" PRIx64, type, (uint64_t) cpu->pc);
 	}
 
-	cpu->running = 0;
+	fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha: %s", msg);
 	cpu->cd.alpha.next_ic = &nothing_call;
 }
 
@@ -1121,8 +1123,7 @@ static int fp_mem(struct cpu *cpu, struct alpha_instr_call *ic,
 			alpha_pc_to_pointers(cpu);
 			return 0;
 		}
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ Alpha: fp load/store failed: TODO ]\n");
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "Alpha: fp load/store failed: TODO");
 		cpu->cd.alpha.next_ic = &nothing_call;
 		return 0;
 	}

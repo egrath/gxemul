@@ -174,9 +174,8 @@ DEVICE_ACCESS(ether)
 			dev_ether_tick(cpu, d);
 			break;
 
-		default:debugmsg(SUBSYS_DEVICE, "ether", VERBOSITY_DEBUG, "[ ether: UNIMPLEMENTED command 0x"
-			    "%02" PRIx64 " ]", idata);
-			cpu->running = 0;
+		default:fatal_error_cpu(cpu, SUBSYS_DEVICE, "ether", "UNIMPLEMENTED command 0x"
+			    "%02" PRIx64, idata);
 		}
 		break;
 

@@ -362,8 +362,7 @@ X(bx)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ARM pc misaligned? 0x%08x", (int)cpu->pc);
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -393,8 +392,7 @@ X(bx_trace)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ARM pc misaligned? 0x%08x", (int)cpu->pc);
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -446,8 +444,7 @@ X(blx_imm)
 	if (cpu->pc & 1)
 		cpu->cd.arm.cpsr |= ARM_FLAG_T;
 	else {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ blx_imm internal error. Should have switched to THUMB! 0x%08x ]", (int)cpu->pc);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "blx_imm internal error. Should have switched to THUMB! 0x%08x", (int)cpu->pc);
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -457,8 +454,7 @@ X(blx_imm)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ARM pc misaligned? 0x%08x", (int)cpu->pc);
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -494,8 +490,7 @@ X(blx_reg)
 		cpu->cd.arm.next_ic = &nothing_call;
 
 	if (cpu->pc & 2 && ((cpu->pc & 1) == 0)) {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "[ ARM pc misaligned? 0x%08x ]", (int)cpu->pc);
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "ARM pc misaligned? 0x%08x", (int)cpu->pc);
 		cpu->n_translated_instrs --;
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
@@ -877,18 +872,17 @@ X(msr_imm_spsr)
 		cpu->cd.arm.spsr_svc &= ~mask;
 		cpu->cd.arm.spsr_svc |= (new_value & mask);
 		break;
-	default:fatal_error(SUBSYS_CPU, "cpu", "msr_spsr: unimplemented mode %i",
-		    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
+	default:
 		{
 			/*  Synchronize the program counter:  */
-			uint32_t old_pc, low_pc = ((size_t)ic - (size_t)
+			uint32_t low_pc = ((size_t)ic - (size_t)
 			    cpu->cd.arm.cur_ic_page) / sizeof(struct arm_instr_call);
 			cpu->pc &= ~((ARM_IC_ENTRIES_PER_PAGE-1) << ARM_INSTR_ALIGNMENT_SHIFT);
 			cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
-			old_pc = cpu->pc;
-			printf("msr_spsr: old pc = 0x%08" PRIx32"\n", old_pc);
 		}
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "msr_spsr: unimplemented "
+		    "mode %i, pc = 0x%08" PRIx32, cpu->cd.arm.cpsr & ARM_FLAG_MODE,
+		    (uint32_t) cpu->pc);
 		cpu->cd.arm.next_ic = &nothing_call;
 	}
 }
@@ -930,8 +924,7 @@ X(mrs_spsr)
 	case ARM_MODE_SVC32: reg(ic->arg[0]) = cpu->cd.arm.spsr_svc; break;
 	case ARM_MODE_USR32:
 	case ARM_MODE_SYS32: reg(ic->arg[0]) = 0; break;
-	default:fatal_error(SUBSYS_CPU, "cpu", "mrs_spsr: unimplemented mode %i", cpu->cd.arm.cpsr & ARM_FLAG_MODE);
-		cpu->running = 0;
+	default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "mrs_spsr: unimplemented mode %i", cpu->cd.arm.cpsr & ARM_FLAG_MODE);
 		cpu->cd.arm.next_ic = &nothing_call;
 	}
 }
@@ -1481,7 +1474,6 @@ void arm_pop(struct cpu* cpu, uint32_t* np, int p_bit, int u_bit, int s_bit, int
 			new_cpsr = cpu->cd.arm.spsr_svc; break;
 		default:fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "bdt_load: unimplemented mode %i",
 			    cpu->cd.arm.cpsr & ARM_FLAG_MODE);
-			cpu->running = 0;
 			cpu->cd.arm.next_ic = &nothing_call;
 			return;
 		}
@@ -1698,8 +1690,7 @@ X(ldrex)
 	cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: ldrex unaligned access: exception\n");
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "TODO: ldrex unaligned access: exception");
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
 	}
@@ -1743,8 +1734,7 @@ X(strex)
 	cpu->pc += (low_pc << ARM_INSTR_ALIGNMENT_SHIFT);
 
 	if (addr & (sizeof(word)-1)) {
-		debugmsg(SUBSYS_CPU, "cpu", VERBOSITY_DEBUG, "TODO: strex unaligned access: exception\n");
-		cpu->running = 0;
+		fatal_error_cpu(cpu, SUBSYS_CPU, "cpu", "TODO: strex unaligned access: exception");
 		cpu->cd.arm.next_ic = &nothing_call;
 		return;
 	}

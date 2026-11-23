@@ -668,9 +668,11 @@ bool memory_warn_about_unimplemented_addr(struct cpu *cpu, struct memory *mem,
 
 	if (cpu->machine->halt_on_nonexistant_memaccess) {
 		// Halt all CPUs, even though the bad memory access was on
-		// just one of them.
+		// just one of them, and drop to the debugger:
 		for (int i = 0; i < cpu->machine->ncpus; ++i)
-			cpu->machine->cpus[i]->running = 0;
+			if (cpu->machine->cpus[i] != cpu)
+				cpu->machine->cpus[i]->running = false;
+		fatal_error_cpu_halt(cpu);
 
 		return true;
 	}
