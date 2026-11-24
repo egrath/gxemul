@@ -5973,3 +5973,5 @@ Changelog for GXemul:
 		  calendar (a leap year), as the PROMs and Ultrix read and set
 		  it: day n of the year is day n of 1972. After February of
 		  other years, Ultrix's date was a day ahead.
+20261124	Simulated gateway: the ACK of the guest's FIN counts the FIN
+		  (a FIN takes one sequence number).
