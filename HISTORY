@@ -5942,6 +5942,56 @@ Changelog for GXemul:
 		a BOOTP reply, which a DHCP client does not take. A renewal,
 		which a client sends to the gateway, reaches it too. Windows
 		NT 3.5 gets its address with DHCP. (Antoni Sawicki)
+20261117	Errors and debug output go through one logging framework, with
+		  subsystems and verbosity levels (--log, the debugger's log
+		  command, GXEMUL_LOGLEVEL and GXEMUL_LOGFILE; see
+		  doc/debugging.html). An error while the emulation runs no
+		  longer exits gxemul: it stops the CPU that hit it and drops
+		  to the debugger. "breakpoint subsystem <name> <level>" stops
+		  at a subsystem's messages.
+		Configuration window: a machine.json, ROM, kernel or drive
+		  image that can't be read opens the window with the problem,
+		  instead of exiting (not with --control or --vnc).
+20261118	MVME187 preset in the configuration window: 187Bug, a disk that
+		  SYSTEM V/88's installer knows (a Seagate ST31200N; the Drives
+		  page offers other Seagate and Fujitsu disks), an empty CD-ROM
+		  drive and an empty tape drive.
+		Simulated gateway: GXEMUL_NAMESERVER chooses the nameserver
+		  that DNS queries go to, and a reverse lookup that it can't
+		  answer gets a made-up name (ip-a-b-c-d.nat), as SYSTEM V/88's
+		  resolver needs one.
+20261120	Debugger: breakpoints and -t no longer halt the CPU, so
+		  "continue" works again; disassembly, register dumps, -i, -r
+		  and the call trace print to the console again. The arguments
+		  of debugmsg() and fatal_error() are checked like printf's,
+		  which found wrong values in VNC traces and other messages.
+20261121	Motorola 88200 CMMU: PATC invalidate and probe commands ignore
+		  bit 3 of the command, as the 88200 does. SYSTEM V/88 R32V3
+		  boots to "Console Login:".
+		MVME187: a BREAK on the serial console (telnet's BRK, or Send
+		  Break in the Machine menu) reaches 187Bug. The Machine menu
+		  (and the debugger's action command) can press the ABORT
+		  switch, and set the NVRAM's memory settings for the
+		  configured memory.
+		Motorola M88K: the first write to a page sets its Modified
+		  bit, so SYSTEM V/88 R4 no longer loses files written at run
+		  time.
+20261122	Motorola M88K: the 88100 is mask D24B (version 11), which
+		  SYSTEM V/88 R4's installer wants and R32 accepts; xmem with
+		  rD the same as rS1 or rS2 stores to the right address; a
+		  faulting load into r0 no longer stops the emulator. The
+		  FH40.41 and FH40.44 tapes install.
+		MVME187: the Drives page offers the Seagate ST11200N and
+		  ST12400N, which every SYSTEM V/88 R4 release knows.
+		Network: machine.json's "network" has a part for each thing
+		  it can have: "nat", "udp", "l2tpv3" and "tap" (older files
+		  are read too). The gateway's address can be set, and MAC
+		  addresses come from the machine's maker. DHCP and RARP give
+		  addresses on the configured network. Reset can bind the
+		  network's ports again, and a failed send to a remote is a
+		  warning.
+		Errors are always shown, also without --log, and stopping on
+		  one drops to the debugger.
 20261123	The control socket's keyboard types the control characters
 		in text as they are (\r, \t, \b and ESC as Return, Tab,
 		BackSpace and Escape type them), so MCP's enter, which adds a
@@ -5984,3 +6034,7 @@ Changelog for GXemul:
 		  from the gateway, and from a reserved port when the client on
 		  the host used one (as rsh and rlogin do). See
 		  doc/networking.html.
+
+
+
+==============  RELEASE 1.0.35  ==============
